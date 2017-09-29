@@ -1,0 +1,26 @@
+{
+  "name": "Xcout",
+  "authors": [
+    "Sergio Díaz del Pino <sergiodiazdp@gmail.com>"
+  ],
+  "description": "Large mammalian chromosome previewer",
+  "main": "",
+  "keywords": [
+    "bioinformatics",
+    "chromosomes"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "d3": "3",
+    "jquery": "^3.2.1"
+  }
+}
