@@ -2,4 +2,28 @@
 {%load staticfiles%}
 {%block content%}
 
+    <script type="text/javascript" src="{% static 'js/visualizationManager.js' %}"></script>
+    <script> var myJSON = "{{ chromosomes }}"</script>
+
+
+    <select>
+    {% for chromosome in chromosomes %}
+        <option value="{{ chromosome }}">{{ chromosome }}</option>
+    {% endfor %}
+    </select>
+
+    <select>
+    {% for chromosome in chromosomes %}
+        <option value="{{ chromosome }}">{{ chromosome }}</option>
+    {% endfor %}
+    </select>
+
+
+    <div class="heatmap" style="float:left"></div>
+
+
+
+
+
+
 {% endblock %}

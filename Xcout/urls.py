@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 
 urlpatterns = [
+    url(r'^', include('coreViewController.urls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^',include('coreViewController.urls') ),
+    url(r'^API/',include('comparisonManager.urls') ),
 ]
