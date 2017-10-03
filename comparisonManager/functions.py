@@ -9,8 +9,8 @@ import json
 @authentication_classes([])
 @permission_classes([])
 def generateJSONComparisonFromTwoSpecies(request):
-    specieX = "Homo Sapiens"
-    specieY = "Felis Catus"
+    specieX = request.GET.get('specieX', '')
+    specieY = request.GET.get('specieY', '')
     comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY)
 
     jsonChromosomeList = []
