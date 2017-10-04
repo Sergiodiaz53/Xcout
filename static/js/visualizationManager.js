@@ -9,7 +9,6 @@ var itemSize = 16,
 var width = 800 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
 
-
 function getFullComparisonOf(specieX, specieY){
 
     var full_comparison;
@@ -34,9 +33,19 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     var data = full_comparison_json;
 
-    //Get elements for X and Y Axis
-    var x_elements = d3.set(data.map(function( comparison ) { return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
-        y_elements = d3.set(data.map(function( comparison ) { return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
+    var speciesX_numbers = {};
+    var speciesY_numbers = {};
+
+
+    //Get elements for X,Y and UpperLevelXYAxis
+    var x_elements = d3.set(data.map(function( comparison ) {
+        speciesX_numbers[comparison.specieX] = (speciesX_numbers[comparison.specieX] || 0)+1;
+        return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
+
+        y_elements = d3.set(data.map(function( comparison ) {
+            speciesY_numbers[comparison.specieX] = (speciesY_numbers[comparison.specieY] || 0)+1;
+            return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
+
 
     //Set xScale
     var xScale = d3.scale.ordinal()
@@ -51,6 +60,21 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         })
         .orient("top");
 
+    //Set upperLevelxScale
+    var upperLevelxScale = d3.scale.ordinal()
+        .domain(Object.keys(speciesX_numbers))
+        .rangeBands((function(){
+            var values = Object.values(speciesX_numbers).map(function(x){return (x * itemSize)});
+            values.unshift(0);
+            return values;
+        })());
+
+
+    //Set upperLevelxAxis
+    var upperLevelxAxis = d3.svg.axis()
+        .scale(upperLevelxScale)
+        .orient("top");
+
     //Set yScale
     var yScale = d3.scale.ordinal()
         .domain(y_elements)
@@ -59,6 +83,20 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     //Set yAxis
     var yAxis = d3.svg.axis()
         .scale(yScale)
+        .orient("left");
+
+    //Set upperLevelyScale
+    var upperLevelyScale = d3.scale.ordinal()
+        .domain(Object.keys(speciesY_numbers))
+        .rangeBands((function(){
+            var values = Object.values(speciesY_numbers).map(function(x){return (x * itemSize)});
+            values.unshift(0);
+            return values;
+        })());
+
+    //Set upperLevelyAxis
+    var upperLevelyAxis = d3.svg.axis()
+        .scale(upperLevelyScale)
         .tickFormat(function (d) {
             return d;
         })
@@ -71,14 +109,16 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     //Create SVG
     var svg = d3.select("svg > g");
-    if(svg.empty()){
-        svg = d3.select('.heatmap')
-                .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    if(!svg.empty()){
+        d3.select("svg").remove();
     }
+
+    svg = d3.select('.heatmap')
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var cells = svg.selectAll('rect')
         .data(data)
@@ -129,6 +169,15 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr('font-weight', 'normal');
 
     svg.append("g")
+        .attr("class", "y axis")
+        .call(upperLevelyAxis)
+        .selectAll('text')
+        .attr('font-weight', 'normal')
+        .attr("transform", function (d) {
+            return "rotate(-90)";
+        });
+
+    svg.append("g")
         .attr("class", "x axis")
         .call(xAxis)
         .selectAll('text')
@@ -139,4 +188,12 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr("transform", function (d) {
             return "rotate(-65)";
         });
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .call(upperLevelxAxis)
+        .selectAll('text')
+        .attr('font-weight', 'normal');
+
+    showAlert("Loaded", "Comparison loaded", "Success")
 }

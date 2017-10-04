@@ -6,23 +6,33 @@
     <script> var myJSON = "{{ chromosomes }}"</script>
 
 
-    <select>
-    {% for chromosome in chromosomes %}
-        <option value="{{ chromosome }}">{{ chromosome }}</option>
-    {% endfor %}
-    </select>
+    <div class="form-inline">
 
-    <select>
-    {% for chromosome in chromosomes %}
-        <option value="{{ chromosome }}">{{ chromosome }}</option>
-    {% endfor %}
-    </select>
+    <div class="form-group">
+        <select class="form-control" id="specieX">
+        {% for chromosome in chromosomes %}
+            <option value="{{ chromosome }}">{{ chromosome }}</option>
+        {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <select class="form-control" id="specieY">
+        {% for chromosome in chromosomes %}
+            <option value="{{ chromosome }}">{{ chromosome }}</option>
+        {% endfor %}
+        </select>
+    </div>
+
+        <button type="button" class="btn btn-default" id="addComparison">+</button>
+
+    </div>
 
 
     <div class="heatmap" style="float:left"></div>
 
 
-
+    <script type="text/javascript" src="{% static "js/controllers/indexController.js" %}"></script>
 
 
 
