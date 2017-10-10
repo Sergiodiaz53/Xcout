@@ -4,7 +4,7 @@
 
 var itemSize = 16,
     cellSize = itemSize - 1,
-    margin = {top: 120, right: 20, bottom: 20, left: 200};
+    margin = {top: 220, right: 20, bottom: 20, left: 200};
 
 var width = 800 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
@@ -43,8 +43,14 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
 
         y_elements = d3.set(data.map(function( comparison ) {
-            speciesY_numbers[comparison.specieX] = (speciesY_numbers[comparison.specieY] || 0)+1;
+            speciesY_numbers[comparison.specieY] = (speciesY_numbers[comparison.specieY] || 0)+1;
             return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
+
+    //Sorting elements and axis
+    x_elements.sort();
+    y_elements.sort();
+    speciesX_numbers = sortObject(speciesX_numbers);
+    speciesY_numbers = sortObject(speciesY_numbers);
 
 
     //Set xScale
@@ -66,6 +72,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .rangeBands((function(){
             var values = Object.values(speciesX_numbers).map(function(x){return (x * itemSize)});
             values.unshift(0);
+            console.log(values);
             return values;
         })());
 
@@ -87,10 +94,12 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     //Set upperLevelyScale
     var upperLevelyScale = d3.scale.ordinal()
-        .domain(Object.keys(speciesY_numbers))
+        .domain(Object.keys(speciesY_numbers).sort())
         .rangeBands((function(){
+            console.log(speciesY_numbers);
             var values = Object.values(speciesY_numbers).map(function(x){return (x * itemSize)});
             values.unshift(0);
+            console.log(values);
             return values;
         })());
 
@@ -105,7 +114,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     //Set colorScale
     var colorScale = d3.scale.linear()
         .range(['green', 'black','red']) // or use hex values
-        .domain([0,50,100]);
+        .domain([0,250,500]);
 
     //Create SVG
     var svg = d3.select("svg > g");
@@ -126,8 +135,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr('class', 'cell')
         .attr('width', cellSize)
         .attr('height', cellSize)
-        .attr('y', function(d) { return yScale(d.specieX); })
-        .attr('x', function(d) { return xScale(d.specieY); })
+        .attr('y', function(d) { return yScale(d.specieX + " - " + d.chromosomeX_number); })
+        .attr('x', function(d) { return xScale(d.specieY + " - " + d.chromosomeY_number); })
         .attr('fill', function(d) { return colorScale(d.score); })
         .on("click", function(d) {
             var string = "";
@@ -173,8 +182,10 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .call(upperLevelyAxis)
         .selectAll('text')
         .attr('font-weight', 'normal')
-        .attr("transform", function (d) {
-            return "rotate(-90)";
+        .style('font-size', '10px')
+        .style('text-anchor', 'middle')
+        .attr('transform', function (d) {
+            return "translate(-160,0)rotate(-90)";
         });
 
     svg.append("g")
@@ -186,14 +197,18 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr("dx", ".8em")
         .attr("dy", ".5em")
         .attr("transform", function (d) {
-            return "rotate(-65)";
+            return "rotate(-90)";
         });
 
     svg.append("g")
         .attr("class", "x axis")
         .call(upperLevelxAxis)
         .selectAll('text')
-        .attr('font-weight', 'normal');
+        .style('font-size', '10px')
+        .attr('font-weight', 'normal')
+        .attr('transform', function (d) {
+            return "translate(0,-160)";
+        });
 
     showAlert("Loaded", "Comparison loaded", "Success")
 }
