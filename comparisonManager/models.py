@@ -16,7 +16,6 @@ class Chromosome(models.Model):
     specie = models.ForeignKey(Specie, on_delete=models.CASCADE)
     fasta = models.URLField(max_length=250)
     number = models.CharField(max_length=2,null=False)
-    #number = models.SmallIntegerField()
 
     def __str__(self):
         return u'%s %s' % (self.specie, self.number)

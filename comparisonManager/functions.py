@@ -6,6 +6,8 @@ from django.http import HttpResponse
 import json
 
 from .models import *
+from django.http import HttpResponse
+from django.core.files.images import ImageFile
 import csv
 
 @api_view(['GET'])
@@ -47,7 +49,7 @@ def updateDBfromCSV(request):
             ### SPECIES --
             # Specie X
             n_sp_x = row[0].split('.')[0]
-            print("########### " + n_sp_x)
+            print("##### SPECIE ##### " + n_sp_x)
             check_sp_x = Specie.objects.filter(name = n_sp_x).count()
             if check_sp_x > 0:
                 spX = Specie.objects.get(name = n_sp_x)
@@ -66,7 +68,7 @@ def updateDBfromCSV(request):
 
             # Specie Y
             n_sp_y = row[1].split('.')[0]
-            print("########### " + n_sp_y)
+            print("##### SPECIE ##### " + n_sp_y)
             check_sp_y = Specie.objects.filter(name = n_sp_y).count()
             if check_sp_y > 0:
                 spY = Specie.objects.get(name = n_sp_y)
@@ -86,7 +88,7 @@ def updateDBfromCSV(request):
             ### CHROMOSOMES --
             # Chr X - nCX
             n_chr_x = row[5]
-            print("########### " + n_chr_x)
+            print("##### CHROMOSOME ##### " + n_chr_x)
             check_chr_x = Chromosome.objects.filter(specie=spX, number=n_chr_x).count()
             if check_chr_x > 0:
                 chrX = Chromosome.objects.get(specie=spX, number=n_chr_x)
@@ -98,7 +100,7 @@ def updateDBfromCSV(request):
             print("### ADDED ### " + n_chr_x)
             # Chr Y - nCY
             n_chr_y = row[6]
-            print("########### " + n_chr_y)
+            print("##### CHROMOSOME ##### " + n_chr_y)
             check_chr_y = Chromosome.objects.filter(specie=spY, number=n_chr_y).count()
             if check_chr_y > 0:
                 chrY = Chromosome.objects.get(specie=spY, number=n_chr_y)
@@ -111,17 +113,21 @@ def updateDBfromCSV(request):
             ### COMPARISON --
             # Image
             img_name = "images/" + row[4]
-            print("########### " + img_name)
-            check_img = Comparison.objects.filter(chromosome_x=chrX, chromosome_y=chrY, img=img_name).count()
+            print("##### IMAGE ##### " + img_name)
+            check_img = Comparison.objects.filter(chromosome_x=chrX, chromosome_y=chrY).count()
             if check_img > 0:
                 # Image Exists alredy
-                img_comp = Comparison.objects.get(chromosome_x=chrX, chromosome_y=chrY, img=img_name)
+                img_comp = Comparison.objects.get(chromosome_x=chrX, chromosome_y=chrY)
                 print("-- ALREDY EXISTS --")
             else:
                 current_score = row[7]
-                img_comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score, img=img_name)
+                img_comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score)
+                with open(img_name, 'r') as f:
+                    img_comp.img = ImageFile(img_name)
+                    img_comp.save()
+                
 
             print("### ADDED ### " + img_name)
-    print("Done")
+    print("------------------ Done -------------------")
 
-    return HttpResponse('OK')
+    return HttpResponse('OK', content_type="text/plain")
