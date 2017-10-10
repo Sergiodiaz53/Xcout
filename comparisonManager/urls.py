@@ -5,4 +5,5 @@ from comparisonManager import functions
 
 urlpatterns = [
         url(r'^comparison/', functions.generateJSONComparisonFromTwoSpecies, name='generateJSONComparisonFromTwoSpecies'),
+        url(r'^updateDB/', functions.updateDBfromCSV, name='updateDBfromCSV'),
 ]
