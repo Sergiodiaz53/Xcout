@@ -2,9 +2,9 @@
  * Created by Sergio on 2/10/17.
  */
 
-var itemSize = 16,
+var itemSize = 8,
     cellSize = itemSize - 1,
-    margin = {top: 220, right: 20, bottom: 20, left: 200};
+    margin = {top: 120, right: 20, bottom: 20, left: 200};
 
 var width = 800 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
@@ -38,20 +38,25 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
 
     //Get elements for X,Y and UpperLevelXYAxis
-    var x_elements = d3.set(data.map(function( comparison ) {
-        speciesX_numbers[comparison.specieX] = (speciesX_numbers[comparison.specieX] || 0)+1;
-        return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
+    var x_elements = d3.set(data.map(function( comparison ) {return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
+        y_elements = d3.set(data.map(function( comparison ) {return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
 
-        y_elements = d3.set(data.map(function( comparison ) {
-            speciesY_numbers[comparison.specieY] = (speciesY_numbers[comparison.specieY] || 0)+1;
-            return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
+    for (var i = 0, j = x_elements.length; i < j; i++) {
+       speciesX_numbers[x_elements[i].split(" - ")[0]] = (speciesX_numbers[x_elements[i].split(" - ")[0]] || 0) + 1;
+    }
+
+    for (var i = 0, j = y_elements.length; i < j; i++) {
+       speciesY_numbers[y_elements[i].split(" - ")[0]] = (speciesY_numbers[y_elements[i].split(" - ")[0]] || 0) + 1;
+    }
 
     //Sorting elements and axis
-    x_elements.sort();
-    y_elements.sort();
+    x_elements.sort(naturalCompare);
+    y_elements.sort(naturalCompare);
     speciesX_numbers = sortObject(speciesX_numbers);
     speciesY_numbers = sortObject(speciesY_numbers);
 
+    console.log(y_elements);
+    console.log(x_elements);
 
     //Set xScale
     var xScale = d3.scale.ordinal()
@@ -135,8 +140,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr('class', 'cell')
         .attr('width', cellSize)
         .attr('height', cellSize)
-        .attr('y', function(d) { return yScale(d.specieX + " - " + d.chromosomeX_number); })
-        .attr('x', function(d) { return xScale(d.specieY + " - " + d.chromosomeY_number); })
+        .attr('x', function(d) { return xScale(d.specieX + " - " + d.chromosomeX_number); })
+        .attr('y', function(d) { return yScale(d.specieY + " - " + d.chromosomeY_number); })
         .attr('fill', function(d) { return colorScale(d.score); })
         .on("click", function(d) {
             var string = "";
@@ -175,6 +180,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr("class", "y axis")
         .call(yAxis)
         .selectAll('text')
+        .style('font-size', '10px')
         .attr('font-weight', 'normal');
 
     svg.append("g")
@@ -185,7 +191,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .style('font-size', '10px')
         .style('text-anchor', 'middle')
         .attr('transform', function (d) {
-            return "translate(-160,0)rotate(-90)";
+            return "translate(-140,0)rotate(-90)";
         });
 
     svg.append("g")
@@ -193,9 +199,10 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .call(xAxis)
         .selectAll('text')
         .attr('font-weight', 'normal')
+        .style('font-size', '9px')
         .style("text-anchor", "start")
         .attr("dx", ".8em")
-        .attr("dy", ".5em")
+        .attr("dy", "1.3em")
         .attr("transform", function (d) {
             return "rotate(-90)";
         });
@@ -207,7 +214,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .style('font-size', '10px')
         .attr('font-weight', 'normal')
         .attr('transform', function (d) {
-            return "translate(0,-160)";
+            return "translate(0,-100)";
         });
 
     showAlert("Loaded", "Comparison loaded", "Success")
