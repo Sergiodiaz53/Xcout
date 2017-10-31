@@ -6,31 +6,65 @@
     <script> var myJSON = "{{ chromosomes }}"</script>
 
 
-    <div class="form-inline">
+    <div class="row">
 
-    <div class="form-group">
-        <select class="form-control" id="specieX">
-        {% for chromosome in chromosomes %}
-            <option value="{{ chromosome }}">{{ chromosome }}</option>
-        {% endfor %}
-        </select>
+        <div class="col-sm-3 center-block sidemenu">
+
+        <div class="form-inline text-center sidemenu_member">
+                Cell size: <div class="form-group" id="itemSize_slider">
+                </div>
+        </div>
+
+            <div class="form-inline text-center sidemenu_member">
+                <div class="form-group">
+                    <select class="form-control input-sm" id="specieX">
+                    {% for chromosome in chromosomes %}
+                        <option value="{{ chromosome }}">{{ chromosome }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <select class="form-control input-sm" id="specieY">
+                    {% for chromosome in chromosomes %}
+                        <option value="{{ chromosome }}">{{ chromosome }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+
+                    <button type="button" class="btn btn-default" id="addComparison">+</button>
+            </div>
+
+
+        <div id="comparisonList">
+            <table class="table table-striped">
+                <tbody>
+                <thead>
+                      <tr>
+                          <th class="col-md-5">Specie X</th>
+                          <th class="col-md-2"> </th>
+                          <th class="col-md-5">Specie Y</th>
+                      </tr>
+
+                    </thead>
+                </tbody>
+            </table>
+
+        </div>
+
+
+        </div>
+
+        <div class="col-sm-9">
+            <div class="heatmap" style="float:left"></div>
+        </div>
+
+
     </div>
 
-    <div class="form-group">
-        <select class="form-control" id="specieY">
-        {% for chromosome in chromosomes %}
-            <option value="{{ chromosome }}">{{ chromosome }}</option>
-        {% endfor %}
-        </select>
-    </div>
 
-        <button type="button" class="btn btn-default" id="addComparison">+</button>
-
-    </div>
-
-
-    <div class="heatmap" style="float:left"></div>
-
+    <link rel="stylesheet" href="{% static "bower_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" %}">
+    <script type="text/javascript" src="{% static "bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js" %}"></script>
 
     <script type="text/javascript" src="{% static "js/controllers/indexController.js" %}"></script>
 

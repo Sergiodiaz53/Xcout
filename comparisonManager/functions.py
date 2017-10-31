@@ -14,25 +14,31 @@ import csv
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([])
-def generateJSONComparisonFromTwoSpecies(request):
-    specieX = request.GET.get('specieX', '')
-    specieY = request.GET.get('specieY', '')
+def generateJSONComparisonFromSpecies(request):
 
-    comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY)
-
-    if not comparisons:
-        comparisons = Comparison.objects.all().filter(chromosome_x__specie__name=specieY, chromosome_y__specie__name=specieX)
+    comparisons = request.GET.get('comparisons', '')
+    comparisons = json.loads(comparisons)
 
     jsonChromosomeList = []
     auxChromosomeDict = {}
+
     for comparison in comparisons:
-        auxChromosomeDict["specieX"] = specieX
-        auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_x.number
-        auxChromosomeDict["specieY"] = specieY
-        auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_y.number
-        auxChromosomeDict["score"] = comparison.score
-        auxChromosomeDict["img"] = comparison.img.url
-        jsonChromosomeList.append(auxChromosomeDict.copy())
+        specieX = comparison["specieX"]
+        specieY = comparison["specieY"]
+
+        comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY)
+
+        if not comparisons:
+            comparisons = Comparison.objects.all().filter(chromosome_x__specie__name=specieY, chromosome_y__specie__name=specieX)
+
+        for comparison in comparisons:
+            auxChromosomeDict["specieX"] = specieX
+            auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_x.number
+            auxChromosomeDict["specieY"] = specieY
+            auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_y.number
+            auxChromosomeDict["score"] = comparison.score
+            auxChromosomeDict["img"] = comparison.img.url
+            jsonChromosomeList.append(auxChromosomeDict.copy())
 
     return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
 

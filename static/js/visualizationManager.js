@@ -13,21 +13,29 @@ function getFullComparisonOf(specieX, specieY){
 
     var full_comparison;
 
+    comparisonJson = [];
+    for (var i = 0; i<specieX.length; i++){
+        auxComparison  = {
+            specieX: specieX[i],
+            specieY: specieY[i]
+        }
+        addComparisonToComparisonList(specieX[i], specieY[i]);
+        comparisonJson.push(auxComparison)
+    }
+
     $.ajax({
         type:"GET",
         url:"/API/comparison",
         data: {
-            'specieX': specieX,
-            'specieY': specieY
+            'comparisons': JSON.stringify(comparisonJson)
         },
         success: function(content) {
             full_comparison = JSON.parse(content);
-            console.log(full_comparison)
+            console.log(full_comparison);
             visualizeFullComparisonFromJSON(full_comparison)
         }
     });
 }
-
 
 function visualizeFullComparisonFromJSON(full_comparison_json) {
 
@@ -55,9 +63,6 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     speciesX_numbers = sortObject(speciesX_numbers);
     speciesY_numbers = sortObject(speciesY_numbers);
 
-    console.log(y_elements);
-    console.log(x_elements);
-
     //Set xScale
     var xScale = d3.scale.ordinal()
         .domain(x_elements)
@@ -72,12 +77,14 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .orient("top");
 
     //Set upperLevelxScale
+    var previousValues = 0;
     var upperLevelxScale = d3.scale.ordinal()
         .domain(Object.keys(speciesX_numbers))
-        .rangeBands((function(){
-            var values = Object.values(speciesX_numbers).map(function(x){return (x * itemSize)});
+        .range((function(){
+            var values = Object.values(speciesX_numbers).map(function(x){
+                previousValues += (x * itemSize);
+                return previousValues});
             values.unshift(0);
-            console.log(values);
             return values;
         })());
 
@@ -98,13 +105,14 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .orient("left");
 
     //Set upperLevelyScale
+    previousValues = 0;
     var upperLevelyScale = d3.scale.ordinal()
         .domain(Object.keys(speciesY_numbers).sort())
-        .rangeBands((function(){
-            console.log(speciesY_numbers);
-            var values = Object.values(speciesY_numbers).map(function(x){return (x * itemSize)});
+        .range((function(){
+            var values = Object.values(speciesY_numbers).map(function(x){
+                previousValues += (x * itemSize);
+                return previousValues});
             values.unshift(0);
-            console.log(values);
             return values;
         })());
 
@@ -127,6 +135,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         d3.select("svg").remove();
     }
 
+    width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
+    height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
     svg = d3.select('.heatmap')
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -191,7 +201,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .style('font-size', '10px')
         .style('text-anchor', 'middle')
         .attr('transform', function (d) {
-            return "translate(-140,0)rotate(-90)";
+            return "translate(-140,100)rotate(-90)";
         });
 
     svg.append("g")
@@ -214,8 +224,16 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .style('font-size', '10px')
         .attr('font-weight', 'normal')
         .attr('transform', function (d) {
-            return "translate(0,-100)";
+            return "translate(100,-100)";
         });
 
     showAlert("Loaded", "Comparison loaded", "Success")
+}
+
+function addComparisonToComparisonList(specieX, specieY){
+    newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td>";
+
+    //If comparison doesn't exists, add it.
+    if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
+
 }
