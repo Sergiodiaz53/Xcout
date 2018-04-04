@@ -25,7 +25,7 @@ $("#addComparison").click(function(){
 });
 
 
-//Slider
+//Slider cell size
 $('#itemSize_slider').bootstrapSlider({
 	formatter: function(value) {
 		return 'Current value: ' + value;
@@ -40,5 +40,13 @@ $('#itemSize_slider').bootstrapSlider({
 $('#itemSize_slider').bootstrapSlider().on("slideStop", function(callback){
     itemSize = callback.value;
     cellSize = itemSize - 1;
+    $("#addComparison").click();
+});
+
+
+//Slider color config
+$('#Color_slider').bootstrapSlider().on("slideStop", function(callback){
+    colorValueLow = callback.value[0]/100;
+    colorValueHigh = callback.value[1]/100;
     $("#addComparison").click();
 });

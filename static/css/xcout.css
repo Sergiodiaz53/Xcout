@@ -4,6 +4,8 @@
       height: 100%;
     }
 
+    body { padding-top: 70px; }
+
     /** Navbar **/
     .navbar-brand
     {
@@ -24,27 +26,59 @@
         top:5px;
         width:50%;
         max-width: 500px;
+        z-index:100;
     }
 
 /* #######################  */
 
-.sidemenu {
-    background-color:#e7e7e7;
-    height: 100%;
-    margin-top:-20px;
-    padding-top:50px;
-    padding-right:0px !important;
-}
+    /** SideMenu **/
 
-.row {
-    height: 100%;
-}
+    .sidemenu {
+        background-color:#e7e7e7;
+        height: 100%;
+        margin-top:-20px;
+        padding-top:50px;
+        padding-right:0px !important;
+        z-index: 100;
+    }
 
-.table th,td {
-    margin-top:10px;
-    text-align: center;
-}
+    .row {
+        height: 100%;
+    }
 
-.sidemenu_member {
-    margin-bottom:15px;
-}
+    .table th,td {
+        margin-top:10px;
+        text-align: center;
+    }
+
+    .sidemenu_member {
+        margin-bottom:15px;
+    }
+
+    #comparisonPreview {
+        width: 520px;
+        height: 520px;
+        padding-left:15px;
+        padding-right:15px;
+    }
+
+    /** Config Modal **/
+
+    #modalColors .slider-track-low {
+        background: red;
+    }
+
+     #modalColors .slider-selection {
+        background: green;
+    }
+
+     #modalColors .slider-track-high {
+        background: white;
+    }
+
+
+
+
+
+
+/* #######################  */

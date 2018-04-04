@@ -9,6 +9,8 @@ var itemSize = 8,
 var width = 800 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
 
+var colorValueLow = 0.25, colorValueHigh = 0.75;
+
 function getFullComparisonOf(specieX, specieY){
 
     var full_comparison;
@@ -126,8 +128,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     //Set colorScale
     var colorScale = d3.scale.linear()
-        .range(['green', 'black','red']) // or use hex values
-        .domain([0,250,500]);
+        .range(['red', 'green','green','white']) // or use hex values
+        .domain([0,colorValueLow,colorValueHigh,1]);
 
     //Create SVG
     var svg = d3.select("svg > g");
@@ -155,36 +157,12 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr('fill', function(d) { return colorScale(d.score); })
         .on("click", function(d) {
             var string = "";
-
-            if(d3.select(this).classed("clicked")){
-                d3.select(this).classed("clicked", false);
-                div.transition()
-                    .duration(200)
-                    .style("opacity", 0);
-                div.html(string);
-            } else {
-                d3.select(this).classed("clicked", true);
-                div.transition()
-                    .duration(200)
-                    .style("opacity", 1);
-                var image_path = d.img;
-                string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
-                div.html(string)
-                    .style("left", (d3.event.pageX + 10) + "px")
-                    .style("top", (d3.event.pageY + 50) + "px")
-                    .style("font-color", "white");
-            }
-
+            var div = $("#comparisonPreview");
+            d3.select(this).classed("clicked", true);
+            var image_path = d.img;
+            string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
+            div.html(string)
           });
-
-    var div = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0)
-        .style("max-width", "500px")
-        .style("max-height", "500px")
-        .style("float", "right")
-        .style("margin-right","100px")
-        .style("border","solid 1px black");
 
     svg.append("g")
         .attr("class", "y axis")
@@ -231,9 +209,31 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 }
 
 function addComparisonToComparisonList(specieX, specieY){
-    newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td>";
+    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
+
 
     //If comparison doesn't exists, add it.
     if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
+
+    $(".removeButton").click(function(){
+        $(this).closest("tr").remove();
+
+        var specieX = [],
+            specieY = [];
+
+        $('#comparisonList .specieX_name').each(function() {
+            specieX.push($(this).html())
+        });
+
+        $('#comparisonList .specieY_name').each(function() {
+            specieY.push($(this).html())
+        });
+
+        getFullComparisonOf(specieX, specieY)
+    });
+}
+
+function getComparisonFromLocalFile(){
+
 
 }

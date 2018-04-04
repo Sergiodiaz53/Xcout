@@ -8,12 +8,24 @@
 
     <div class="row">
 
-        <div class="col-sm-3 center-block sidemenu">
+        <div class="col-sm-5 center-block">
+        <div class="affix sidemenu">
 
-        <div class="form-inline text-center sidemenu_member">
-                Cell size: <div class="form-group" id="itemSize_slider">
-                </div>
-        </div>
+            <div class="btn-group" role="group" aria-label="Button tools menu">
+              <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#modalColors">Config</button>
+              <button type="button" class="btn btn-secondary">Dummy1</button>
+              <button type="button" class="btn btn-secondary">Dummy2</button>
+            </div>
+
+            <div id="comparisonPreview" class="form-inline text-center sidemenu_member">
+
+
+            </div>
+
+
+            <div class="form-inline text-center sidemenu_member">
+                    Cell size: <div class="form-group" id="itemSize_slider"> </div>
+            </div>
 
             <div class="form-inline text-center sidemenu_member">
                 <div class="form-group">
@@ -36,31 +48,64 @@
             </div>
 
 
-        <div id="comparisonList">
-            <table class="table table-striped">
-                <tbody>
-                <thead>
-                      <tr>
-                          <th class="col-md-5">Specie X</th>
-                          <th class="col-md-2"> </th>
-                          <th class="col-md-5">Specie Y</th>
-                      </tr>
+            <div id="comparisonList">
+                <table class="table table-striped">
+                    <tbody>
+                    <thead>
+                          <tr>
+                              <th class="col-md-4">Specie X</th>
+                              <th class="col-md-2"> </th>
+                              <th class="col-md-4">Specie Y</th>
+                              <th class="col-md-2"></th>
+                          </tr>
 
-                    </thead>
-                </tbody>
-            </table>
+                        </thead>
+                    </tbody>
+                </table>
+
+            </div>
 
         </div>
-
-
         </div>
 
-        <div class="col-sm-9">
+        <div class="col-sm-7">
             <div class="heatmap" style="float:left"></div>
         </div>
 
 
     </div>
+
+
+    <!-- Config Modal -->
+
+    <div class="modal fade" id="modalColors" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Configuration</h4>
+          </div>
+          <div class="modal-body">
+              <div class="row">
+                  <div class="col-md-12">
+                      <input id="Color_slider" type="text" class="span2" value="" data-slider-min="1" data-slider-max="100" data-slider-step="1" data-slider-value="[25,75]"/>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <script>
+        $("#CS").slider({});
+    </script>
+
+
+    <!-- Config Modal End -->
 
 
     <link rel="stylesheet" href="{% static "bower_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" %}">
