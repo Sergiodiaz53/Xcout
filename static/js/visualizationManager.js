@@ -237,3 +237,30 @@ function getComparisonFromLocalFile(){
 
 
 }
+
+function fitToScreen() {
+    var svg = $(".heatmap > svg")[0];
+
+	var bb=svg.getBBox();
+	var bbx=bb.x
+	var bby=bb.y
+	var bbw=bb.width
+	var bbh=bb.height
+	//---center of graph---
+	var cx=bbx+.5*bbw
+	var cy=bby+.5*bbh
+    //---create scale: ratio of desired width vs current width--
+	var width=390 //---desired width (or height)
+	var scale=width/bbw //--if height use myHeight/bbh--
+	//---where to move it center of my pane---
+	var targetX=200
+	var targetY=200
+	//---move its center to target x,y ---
+	var transX=(-cx)*scale + targetX
+	var transY=(-cy)*scale + targetY
+	svg.setAttribute("transform","translate("+transX+" "+transY+")scale("+scale+" "+scale+")")
+
+
+}
+
+s
