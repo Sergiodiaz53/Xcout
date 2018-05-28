@@ -4,7 +4,9 @@
       height: 100%;
     }
 
-    body { padding-top: 70px; }
+    body {
+        padding-top: 70px;
+    }
 
     /** Navbar **/
     .navbar-brand
@@ -35,11 +37,13 @@
 
     .sidemenu {
         background-color:#e7e7e7;
-        height: 100%;
+        height: 99%;
         margin-top:-20px;
-        padding-top:50px;
+        padding-top:25px;
+        padding-bottom:100px;
         padding-right:0px !important;
         z-index: 100;
+        overflow-y: scroll;
     }
 
     .row {
@@ -56,8 +60,8 @@
     }
 
     #comparisonPreview {
-        width: 520px;
-        height: 520px;
+        width: 450px;
+        height: 450px;
         padding-left:15px;
         padding-right:15px;
     }

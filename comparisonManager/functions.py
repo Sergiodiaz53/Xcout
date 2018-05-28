@@ -23,21 +23,29 @@ def generateJSONComparisonFromSpecies(request):
     auxChromosomeDict = {}
 
     for comparison in comparisons:
+        inverted = False
         specieX = comparison["specieX"]
         specieY = comparison["specieY"]
 
         comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY)
 
         if not comparisons:
+            inverted = True
             comparisons = Comparison.objects.all().filter(chromosome_x__specie__name=specieY, chromosome_y__specie__name=specieX)
 
         for comparison in comparisons:
             auxChromosomeDict["specieX"] = specieX
-            auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_x.number
             auxChromosomeDict["specieY"] = specieY
-            auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_y.number
+            if(not inverted):
+                auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_x.number
+                auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_y.number
+            else:
+                auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_y.number
+                auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_x.number
+
             auxChromosomeDict["score"] = comparison.score
             auxChromosomeDict["img"] = comparison.img.url
+
             jsonChromosomeList.append(auxChromosomeDict.copy())
 
     return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
