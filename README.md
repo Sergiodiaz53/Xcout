@@ -30,6 +30,13 @@ Requirements: Python 3 & Bower (Virtualenv is recommended)
 * `cd static`
 * `bower install`
 
+- Setup Django
+* `python manage.py migrate`
+* `python manage.py createsuperuser`
+
+- Load Database
+* ``
+* ``
 
 - Run Xcout (python manage.py runserver_plus)
 * `python manage.py runserver_plus`
