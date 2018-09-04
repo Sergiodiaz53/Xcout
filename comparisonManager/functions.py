@@ -2,7 +2,9 @@ from comparisonManager.models import *
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes, permission_classes
+from django.http import HttpResponse
 import json
+import os
 
 from .models import *
 from django.http import HttpResponse
@@ -12,21 +14,39 @@ import csv
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([])
-def generateJSONComparisonFromTwoSpecies(request):
-    specieX = request.GET.get('specieX', '')
-    specieY = request.GET.get('specieY', '')
-    comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY)
+def generateJSONComparisonFromSpecies(request):
+
+    comparisons = request.GET.get('comparisons', '')
+    comparisons = json.loads(comparisons)
 
     jsonChromosomeList = []
     auxChromosomeDict = {}
+
     for comparison in comparisons:
-        auxChromosomeDict["specieX"] = specieX
-        auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_x.number
-        auxChromosomeDict["specieY"] = specieY
-        auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_y.number
-        auxChromosomeDict["score"] = comparison.score
-        auxChromosomeDict["img"] = comparison.img.url
-        jsonChromosomeList.append(auxChromosomeDict.copy())
+        inverted = False
+        specieX = comparison["specieX"]
+        specieY = comparison["specieY"]
+
+        comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY)
+
+        if not comparisons:
+            inverted = True
+            comparisons = Comparison.objects.all().filter(chromosome_x__specie__name=specieY, chromosome_y__specie__name=specieX)
+
+        for comparison in comparisons:
+            auxChromosomeDict["specieX"] = specieX
+            auxChromosomeDict["specieY"] = specieY
+            if(not inverted):
+                auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_x.number
+                auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_y.number
+            else:
+                auxChromosomeDict["chromosomeX_number"] = comparison.chromosome_y.number
+                auxChromosomeDict["chromosomeY_number"] = comparison.chromosome_x.number
+
+            auxChromosomeDict["score"] = comparison.score
+            auxChromosomeDict["img"] = comparison.img.url
+
+            jsonChromosomeList.append(auxChromosomeDict.copy())
 
     return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
 
@@ -36,6 +56,7 @@ def updateDBfromCSV(request):
         next(reader, None)
         #  0    1    2    3    4     5         6           7
         # SpX, SpY, IDX, IDY, IMG, CHNumberX, CHNumberY, Score
+
         for row in reader:
             ### SPECIES --
             # Specie X
@@ -103,7 +124,7 @@ def updateDBfromCSV(request):
             print("### ADDED ### " + n_chr_y)
             ### COMPARISON --
             # Image
-            img_name = "images/" + row[4]
+            img_name = row[4]
             print("##### IMAGE ##### " + img_name)
             check_img = Comparison.objects.filter(chromosome_x=chrX, chromosome_y=chrY).count()
             if check_img > 0:
@@ -112,11 +133,10 @@ def updateDBfromCSV(request):
                 print("-- ALREDY EXISTS --")
             else:
                 current_score = row[7]
-                img_comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score)
-                with open(img_name, 'r') as f:
-                    img_comp.img = ImageFile(img_name)
-                    img_comp.save()
-                
+                os.rename("images/"+img_name, "media/"+img_name)
+                comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score, img=img_name)
+                comp.save()
+
 
             print("### ADDED ### " + img_name)
     print("------------------ Done -------------------")

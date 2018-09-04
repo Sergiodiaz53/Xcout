@@ -2,32 +2,42 @@
  * Created by Sergio on 2/10/17.
  */
 
-var itemSize = 16,
+var itemSize = 8,
     cellSize = itemSize - 1,
     margin = {top: 120, right: 20, bottom: 20, left: 200};
 
 var width = 800 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
 
+var colorValueLow = 0.25, colorValueHigh = 0.75;
+
 function getFullComparisonOf(specieX, specieY){
 
     var full_comparison;
+
+    comparisonJson = [];
+    for (var i = 0; i<specieX.length; i++){
+        auxComparison  = {
+            specieX: specieX[i],
+            specieY: specieY[i]
+        }
+        addComparisonToComparisonList(specieX[i], specieY[i]);
+        comparisonJson.push(auxComparison)
+    }
 
     $.ajax({
         type:"GET",
         url:"/API/comparison",
         data: {
-            'specieX': specieX,
-            'specieY': specieY
+            'comparisons': JSON.stringify(comparisonJson)
         },
         success: function(content) {
             full_comparison = JSON.parse(content);
-            console.log(full_comparison)
+            console.log(full_comparison);
             visualizeFullComparisonFromJSON(full_comparison)
         }
     });
 }
-
 
 function visualizeFullComparisonFromJSON(full_comparison_json) {
 
@@ -38,14 +48,22 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
 
     //Get elements for X,Y and UpperLevelXYAxis
-    var x_elements = d3.set(data.map(function( comparison ) {
-        speciesX_numbers[comparison.specieX] = (speciesX_numbers[comparison.specieX] || 0)+1;
-        return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
+    var x_elements = d3.set(data.map(function( comparison ) {return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
+        y_elements = d3.set(data.map(function( comparison ) {return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
 
-        y_elements = d3.set(data.map(function( comparison ) {
-            speciesY_numbers[comparison.specieX] = (speciesY_numbers[comparison.specieY] || 0)+1;
-            return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
+    for (var i = 0, j = x_elements.length; i < j; i++) {
+       speciesX_numbers[x_elements[i].split(" - ")[0]] = (speciesX_numbers[x_elements[i].split(" - ")[0]] || 0) + 1;
+    }
 
+    for (var i = 0, j = y_elements.length; i < j; i++) {
+       speciesY_numbers[y_elements[i].split(" - ")[0]] = (speciesY_numbers[y_elements[i].split(" - ")[0]] || 0) + 1;
+    }
+
+    //Sorting elements and axis
+    x_elements.sort(naturalCompare);
+    y_elements.sort(naturalCompare);
+    speciesX_numbers = sortObject(speciesX_numbers);
+    speciesY_numbers = sortObject(speciesY_numbers);
 
     //Set xScale
     var xScale = d3.scale.ordinal()
@@ -61,10 +79,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .orient("top");
 
     //Set upperLevelxScale
+    var previousValues = 0;
     var upperLevelxScale = d3.scale.ordinal()
         .domain(Object.keys(speciesX_numbers))
-        .rangeBands((function(){
-            var values = Object.values(speciesX_numbers).map(function(x){return (x * itemSize)});
+        .range((function(){
+            var values = Object.values(speciesX_numbers).map(function(x){
+                previousValues += (x * itemSize);
+                return previousValues});
             values.unshift(0);
             return values;
         })());
@@ -86,10 +107,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .orient("left");
 
     //Set upperLevelyScale
+    previousValues = 0;
     var upperLevelyScale = d3.scale.ordinal()
-        .domain(Object.keys(speciesY_numbers))
-        .rangeBands((function(){
-            var values = Object.values(speciesY_numbers).map(function(x){return (x * itemSize)});
+        .domain(Object.keys(speciesY_numbers).sort())
+        .range((function(){
+            var values = Object.values(speciesY_numbers).map(function(x){
+                previousValues += (x * itemSize);
+                return previousValues});
             values.unshift(0);
             return values;
         })());
@@ -104,8 +128,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     //Set colorScale
     var colorScale = d3.scale.linear()
-        .range(['green', 'black','red']) // or use hex values
-        .domain([0,50,100]);
+        .range(['red', 'green','green','white']) // or use hex values
+        .domain([0,colorValueLow,colorValueHigh,1]);
 
     //Create SVG
     var svg = d3.select("svg > g");
@@ -113,6 +137,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         d3.select("svg").remove();
     }
 
+    width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
+    height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
     svg = d3.select('.heatmap')
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -126,46 +152,23 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr('class', 'cell')
         .attr('width', cellSize)
         .attr('height', cellSize)
-        .attr('y', function(d) { return yScale(d.specieX); })
-        .attr('x', function(d) { return xScale(d.specieY); })
+        .attr('x', function(d) { return xScale(d.specieX + " - " + d.chromosomeX_number); })
+        .attr('y', function(d) { return yScale(d.specieY + " - " + d.chromosomeY_number); })
         .attr('fill', function(d) { return colorScale(d.score); })
         .on("click", function(d) {
             var string = "";
-
-            if(d3.select(this).classed("clicked")){
-                d3.select(this).classed("clicked", false);
-                div.transition()
-                    .duration(200)
-                    .style("opacity", 0);
-                div.html(string);
-            } else {
-                d3.select(this).classed("clicked", true);
-                div.transition()
-                    .duration(200)
-                    .style("opacity", 1);
-                var image_path = d.img;
-                string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
-                div.html(string)
-                    .style("left", (d3.event.pageX + 10) + "px")
-                    .style("top", (d3.event.pageY + 50) + "px")
-                    .style("font-color", "white");
-            }
-
+            var div = $("#comparisonPreview");
+            d3.select(this).classed("clicked", true);
+            var image_path = d.img;
+            string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
+            div.html(string)
           });
-
-    var div = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0)
-        .style("max-width", "500px")
-        .style("max-height", "500px")
-        .style("float", "right")
-        .style("margin-right","100px")
-        .style("border","solid 1px black");
 
     svg.append("g")
         .attr("class", "y axis")
         .call(yAxis)
         .selectAll('text')
+        .style('font-size', '10px')
         .attr('font-weight', 'normal');
 
     svg.append("g")
@@ -173,8 +176,10 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .call(upperLevelyAxis)
         .selectAll('text')
         .attr('font-weight', 'normal')
-        .attr("transform", function (d) {
-            return "rotate(-90)";
+        .style('font-size', '10px')
+        .style('text-anchor', 'middle')
+        .attr('transform', function (d) {
+            return "translate(-140,100)rotate(-90)";
         });
 
     svg.append("g")
@@ -182,18 +187,80 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .call(xAxis)
         .selectAll('text')
         .attr('font-weight', 'normal')
+        .style('font-size', '9px')
         .style("text-anchor", "start")
         .attr("dx", ".8em")
-        .attr("dy", ".5em")
+        .attr("dy", "1.3em")
         .attr("transform", function (d) {
-            return "rotate(-65)";
+            return "rotate(-90)";
         });
 
     svg.append("g")
         .attr("class", "x axis")
         .call(upperLevelxAxis)
         .selectAll('text')
-        .attr('font-weight', 'normal');
+        .style('font-size', '10px')
+        .attr('font-weight', 'normal')
+        .attr('transform', function (d) {
+            return "translate(100,-100)";
+        });
 
     showAlert("Loaded", "Comparison loaded", "Success")
 }
+
+function addComparisonToComparisonList(specieX, specieY){
+    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
+
+
+    //If comparison doesn't exists, add it.
+    if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
+
+    $(".removeButton").click(function(){
+        $(this).closest("tr").remove();
+
+        var specieX = [],
+            specieY = [];
+
+        $('#comparisonList .specieX_name').each(function() {
+            specieX.push($(this).html())
+        });
+
+        $('#comparisonList .specieY_name').each(function() {
+            specieY.push($(this).html())
+        });
+
+        getFullComparisonOf(specieX, specieY)
+    });
+}
+
+function getComparisonFromLocalFile(){
+
+
+}
+
+function fitToScreen() {
+    var svg = $(".heatmap > svg")[0];
+
+	var bb=svg.getBBox();
+	var bbx=bb.x
+	var bby=bb.y
+	var bbw=bb.width
+	var bbh=bb.height
+	//---center of graph---
+	var cx=bbx+.5*bbw
+	var cy=bby+.5*bbh
+    //---create scale: ratio of desired width vs current width--
+	var width=390 //---desired width (or height)
+	var scale=width/bbw //--if height use myHeight/bbh--
+	//---where to move it center of my pane---
+	var targetX=200
+	var targetY=200
+	//---move its center to target x,y ---
+	var transX=(-cx)*scale + targetX
+	var transY=(-cy)*scale + targetY
+	svg.setAttribute("transform","translate("+transX+" "+transY+")scale("+scale+" "+scale+")")
+
+
+}
+
+s

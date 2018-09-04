@@ -4,6 +4,10 @@
       height: 100%;
     }
 
+    body {
+        padding-top: 70px;
+    }
+
     /** Navbar **/
     .navbar-brand
     {
@@ -24,6 +28,61 @@
         top:5px;
         width:50%;
         max-width: 500px;
+        z-index:100;
     }
+
+/* #######################  */
+
+    /** SideMenu **/
+
+    .sidemenu {
+        background-color:#e7e7e7;
+        height: 99%;
+        margin-top:-20px;
+        padding-top:25px;
+        padding-bottom:100px;
+        padding-right:0px !important;
+        z-index: 100;
+        overflow-y: scroll;
+    }
+
+    .row {
+        height: 100%;
+    }
+
+    .table th,td {
+        margin-top:10px;
+        text-align: center;
+    }
+
+    .sidemenu_member {
+        margin-bottom:15px;
+    }
+
+    #comparisonPreview {
+        width: 450px;
+        height: 450px;
+        padding-left:15px;
+        padding-right:15px;
+    }
+
+    /** Config Modal **/
+
+    #modalColors .slider-track-low {
+        background: red;
+    }
+
+     #modalColors .slider-selection {
+        background: green;
+    }
+
+     #modalColors .slider-track-high {
+        background: lightgrey;
+    }
+
+
+
+
+
 
 /* #######################  */
