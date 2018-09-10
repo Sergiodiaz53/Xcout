@@ -9,6 +9,8 @@ local/
 share/
 
 static/bower_components/
+images/
+comparisonManager/migrations/
 
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio

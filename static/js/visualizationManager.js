@@ -2,7 +2,7 @@
  * Created by Sergio on 2/10/17.
  */
 
-var itemSize = 8,
+var itemSize = 14,
     cellSize = itemSize - 1,
     margin = {top: 120, right: 20, bottom: 20, left: 200};
 
@@ -10,6 +10,7 @@ var width = 800 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
 
 var colorValueLow = 0.25, colorValueHigh = 0.75;
+var overlay_threshold = 0.75
 
 function getFullComparisonOf(specieX, specieY){
 
@@ -24,7 +25,6 @@ function getFullComparisonOf(specieX, specieY){
         addComparisonToComparisonList(specieX[i], specieY[i]);
         comparisonJson.push(auxComparison)
     }
-
     $.ajax({
         type:"GET",
         url:"/API/comparison",
@@ -51,6 +51,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     var x_elements = d3.set(data.map(function( comparison ) {return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
         y_elements = d3.set(data.map(function( comparison ) {return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
 
+    //Get number of chromosomes for specie
     for (var i = 0, j = x_elements.length; i < j; i++) {
        speciesX_numbers[x_elements[i].split(" - ")[0]] = (speciesX_numbers[x_elements[i].split(" - ")[0]] || 0) + 1;
     }
@@ -64,6 +65,72 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     y_elements.sort(naturalCompare);
     speciesX_numbers = sortObject(speciesX_numbers);
     speciesY_numbers = sortObject(speciesY_numbers);
+
+    //Calculate OverlayBox positions
+    var curr_ind = 0;
+    for(specie of Object.keys(speciesX_numbers)) {
+        text = specie + " - Overlay";
+        x_elements.splice(speciesX_numbers[specie] + curr_ind, 0, text);
+        speciesX_numbers[specie] = speciesX_numbers[specie]+1;
+        curr_ind = speciesX_numbers[specie];
+    }
+
+    curr_ind = 0;
+    for(specie of Object.keys(speciesY_numbers)) {
+        text = specie + " - Overlay";
+        y_elements.splice(speciesY_numbers[specie] + curr_ind, 0, text);
+        speciesY_numbers[specie] = speciesY_numbers[specie]+1;
+        curr_ind = speciesX_numbers[specie];
+    }
+    console.log("X_ELEMENTS :: " + x_elements.length + " || Y_ELEMENTS :: " + y_elements.length)
+
+    // Add overlay to data
+    for(tick_x of x_elements){
+        let items_x = tick_x.split(" - ");
+
+        if(items_x[1] == "Overlay"){
+            for(tick_y of y_elements){
+                let score, items_y = tick_y.split(" - ");
+                if(items_x[0]==items_y[0]) score = -20; else score = -10;
+
+                if(items_y[1] != "Overlay"){
+                    data.push({
+                        chromosomeX_number:items_x[1],
+                        chromosomeY_number:items_y[1],
+                        img:"none",
+                        score:score,
+                        specieX:items_x[0],
+                        specieY:items_y[0]
+                    })
+                }
+            }
+        }
+
+    }
+
+    for(tick_y of y_elements){
+        let items_y = tick_y.split(" - ");
+
+        if(items_y[1] == "Overlay"){
+            for(tick_x of x_elements){
+                let score, items_x = tick_x.split(" - ");
+                if(items_x[0]==items_y[0]) score = -20; else score = -10;
+                if(items_x[1] != "Overlay"){
+                    data.push({
+                        chromosomeX_number:items_x[1],
+                        chromosomeY_number:items_y[1],
+                        img:"none",
+                        score:score,
+                        specieX:items_x[0],
+                        specieY:items_y[0]
+                    });
+                }
+            }
+        }
+
+    }
+
+    // --- Paint ---
 
     //Set xScale
     var xScale = d3.scale.ordinal()
@@ -131,6 +198,10 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .range(['red', 'green','green','white']) // or use hex values
         .domain([0,colorValueLow,colorValueHigh,1]);
 
+    var blueColor = d3.scale.linear()
+        .domain([-15, -5])  
+        .range(["blue", "blue"]);
+
     //Create SVG
     var svg = d3.select("svg > g");
     if(!svg.empty()){
@@ -139,29 +210,88 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
     height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
+    
     svg = d3.select('.heatmap')
         .append("svg")
         .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
+        .attr("height", height + margin.top + margin.bottom)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+        .append("g")                                                                                                                                                
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
+    
     var cells = svg.selectAll('rect')
         .data(data)
         .enter().append('g').append('rect')
         .attr('class', 'cell')
         .attr('width', cellSize)
         .attr('height', cellSize)
-        .attr('x', function(d) { return xScale(d.specieX + " - " + d.chromosomeX_number); })
-        .attr('y', function(d) { return yScale(d.specieY + " - " + d.chromosomeY_number); })
-        .attr('fill', function(d) { return colorScale(d.score); })
+        .attr('x', function(d) {return xScale(d.specieX + " - " + d.chromosomeX_number); })
+        .attr('y', function(d) {return yScale(d.specieY + " - " + d.chromosomeY_number); })
+        .attr('fill', function(d) {
+            if(d.score == -10) return "#0099cc";
+            else if(d.score == -20) return "white";
+            else return colorScale(d.score); 
+        })
         .on("click", function(d) {
-            var string = "";
-            var div = $("#comparisonPreview");
-            d3.select(this).classed("clicked", true);
-            var image_path = d.img;
-            string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
-            div.html(string)
+            overlayOn();
+            spinnerOn("Creating image...");
+            collapser("collapseOverlay");
+            hider("comparisonInfo");
+            
+            if (d.score != -20){
+                var string = "";
+                var div = $("#comparisonPreview");
+                d3.select(this).classed("clicked", true);
+                
+                if(d.score == -10) {
+                    let sp_x = d.specieX, sp_y = d.specieY
+                    let chr_x = d.chromosomeX_number, chr_y = d.chromosomeY_number;
+                    $.ajax({
+                        type:"GET",
+                        url:"/API/overlay",
+                        data: {
+                            'specieX': sp_x,
+                            'specieY': sp_y,
+                            'chromosomeX': chr_x,
+                            'chromosomeY': chr_y,
+                            'threshold': overlay_threshold
+                        },
+                        success: function(content)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  {
+                            response = JSON.parse(content)
+                            tmp_test = response;
+                            string = "<img style='height: 100%; width: 100%; object-fit: contain' src='data:image/jpeg;base64, " + response.img + "' />";
+                            div.html(string);
+                            toggler("comparisonInfo");
+                            
+                            let chr_n, color;
+                            let rows = [];
+                            for(i in response.urls){
+                                chr_n = imgUrlParser(response.urls[i], response.overlay_axis, response.inverted)
+                                if(i == 0)
+                                    color = "black";
+                                else
+                                    color = response.color[i-1]//rgb(response.color_r[i-1], response.color_g[i-1], response.color_b[i-1]);
+                                
+                                rows.push([color, chr_n]);
+                            }
+
+                            string = ""
+                            for(row in rows){
+                                if(row % 5 == 0)
+                                    string+='';
+                                string += "<tr\> <th scope='row' bgcolor='" + row[0] + "'> </th> <td>" + row[1] + "</td> </tr>"
+                            }
+                            $("#collapseOverlayInfo").html(string)
+                        }
+                    });
+                }
+                else{
+                    var image_path = d.img;
+                    string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
+                    div.html(string)
+                }
+                overlayOff();
+                spinnerOff();
+            }
           });
 
     svg.append("g")
@@ -205,9 +335,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
             return "translate(100,-100)";
         });
 
-    showAlert("Loaded", "Comparison loaded", "Success")
+    //showAlert("Loaded", "Comparison loaded", "Success")
 }
-
+var tmp_test;
 function addComparisonToComparisonList(specieX, specieY){
     var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
 
@@ -262,5 +392,3 @@ function fitToScreen() {
 
 
 }
-
-s

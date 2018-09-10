@@ -16,9 +16,10 @@ class Chromosome(models.Model):
     specie = models.ForeignKey(Specie, on_delete=models.CASCADE)
     fasta = models.URLField(max_length=250)
     number = models.CharField(max_length=2,null=False)
+    length = models.IntegerField(null=False)
 
     def __str__(self):
-        return u'%s %s' % (self.specie, self.number)
+        return u'%s %s %s' % (self.specie, self.number, self.length)
 
 class Comparison(models.Model):
     chromosome_x = models.ForeignKey(Chromosome, on_delete=models.CASCADE, related_name='chromosome_specie_X')
@@ -27,7 +28,7 @@ class Comparison(models.Model):
     img = models.ImageField(max_length=500)
 
     def __str__(self):
-        return u'%s vs %s' % (self.chromosome_x, self.chromosome_y)
+        return u'%s vs %s | Score :: %s' % (self.chromosome_x, self.chromosome_y, str(self.score))
 
 
 

@@ -11,6 +11,15 @@ from django.http import HttpResponse
 from django.core.files.images import ImageFile
 import csv
 
+# Image Overlay
+import base64
+from PIL import Image
+from os import listdir
+from os.path import isfile, join
+from io import BytesIO
+import re
+import random
+
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([])
@@ -54,8 +63,8 @@ def updateDBfromCSV(request):
     with open("images/test.csv") as f:
         reader = csv.reader(f, delimiter=',')
         next(reader, None)
-        #  0    1    2    3    4     5         6           7
-        # SpX, SpY, IDX, IDY, IMG, CHNumberX, CHNumberY, Score
+        #  0    1    2    3    4     5         6           7    8       9
+        # SpX, SpY, IDX, IDY, IMG, CHNumberX, CHNumberY, Score, LenX, LenY
 
         for row in reader:
             ### SPECIES --
@@ -106,7 +115,8 @@ def updateDBfromCSV(request):
                 chrX = Chromosome.objects.get(specie=spX, number=n_chr_x)
                 print("-- ALREDY EXISTS --")
             else:
-                chrX = Chromosome.objects.create(specie=spX, fasta='www.test.com', number=n_chr_x)
+                len_x = int(row[8])
+                chrX = Chromosome.objects.create(specie=spX, fasta='www.test.com', number=n_chr_x, length=len_x)
                 chrX.save()
 
             print("### ADDED ### " + n_chr_x)
@@ -118,7 +128,8 @@ def updateDBfromCSV(request):
                 chrY = Chromosome.objects.get(specie=spY, number=n_chr_y)
                 print("-- ALREDY EXISTS --")
             else:
-                chrY = Chromosome.objects.create(specie=spY, fasta='www.test.com', number=n_chr_y)
+                len_y = int(row[9])
+                chrY = Chromosome.objects.create(specie=spY, fasta='www.test.com', number=n_chr_y, length=len_y)
                 chrY.save()
 
             print("### ADDED ### " + n_chr_y)
@@ -139,6 +150,200 @@ def updateDBfromCSV(request):
 
 
             print("### ADDED ### " + img_name)
+
     print("------------------ Done -------------------")
 
     return HttpResponse('OK', content_type="text/plain")
+
+### Image Overlay ###
+
+
+# Constants
+BACKGROUND_INIT_H = 50
+BACKGROUND_END_W = 1000
+
+PLOT_INIT_PIXEL = 60
+PLOT_MAX_PIXEL_W = 970
+PLOT_MAX_PIXEL_H = 925
+
+DIFF_H = PLOT_INIT_PIXEL-BACKGROUND_INIT_H
+
+R_color = [192, 41, 126, 241, 39, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68, 160, 80, 43, 185, 34, 96, 150, 98, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 57, 128, 126, 174, 196]
+G_color = [57, 128, 230, 196, 174, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 34, 179, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68]
+B_color = [43, 185, 34, 15, 96, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 15, 173, 133, 44, 192, 41, 230, 54, 23, 15, 173, 133, 44, 192, 41, 96, 15, 173, 133, 44, 192, 41, 230, 241, 142, 22, 62, 57, 128, 174]
+
+# Request
+@api_view(['GET'])
+def createOverlayedImage(request):
+    # Retrieve data from request
+    specieX = request.GET.get('specieX', '')
+    specieY = request.GET.get('specieY', '')
+    chromosomeX = request.GET.get('chromosomeX', '')
+    chromosomeY = request.GET.get('chromosomeY', '')
+    threshold = request.GET.get('threshold', '')
+    overlay_axis = 'X' if chromosomeX == 'Overlay' else 'Y'
+    inverted = False
+    #max_len_chromosome = False#True if request.GET.get('max_len_chromosome', '') == 'True' else False
+
+    # Retrieve wanted comparison
+    if overlay_axis != 'X':
+        comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY, chromosome_x__number = chromosomeX)
+    else:
+        comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY, chromosome_y__number = chromosomeY)
+
+    if not comparisons:
+        inverted = True
+        if overlay_axis != 'X' :
+            comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieY, chromosome_y__specie__name = specieX, chromosome_y__number = chromosomeX)
+        else:
+            comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieY, chromosome_y__specie__name = specieX, chromosome_x__number = chromosomeY)
+
+    print("---- DEBUG -----")
+    print("specieX :: " + specieX)
+    print("specieY :: " + specieY)
+    print("chromosomeX :: " + chromosomeX)
+    print("chromosomeY :: " + chromosomeY)
+    print("threshold :: " + threshold)
+    print("overlay_axis :: " + overlay_axis)
+    print("inverted :: " + str(inverted))
+    #print("max_len_chromosome :: " + str(max_len_chromosome))
+    print("---- DEBUG -----")
+
+    # Filter comparisons by threshold
+    print(comparisons)
+
+    cmp_data = []
+
+    for comparison in comparisons:
+        if comparison.score <= float(threshold):
+            if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
+                tmp_len = comparison.chromosome_y.length
+            else:
+                tmp_len = comparison.chromosome_x.length
+
+            cmp_info = (comparison.img.url[1:], tmp_len)
+            cmp_data.append(cmp_info)
+
+
+    if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
+        BACKGROUND_INIT_W = 25
+        BACKGROUND_END_H = 1000
+    else:
+        BACKGROUND_INIT_W = 0
+        BACKGROUND_END_H = 965
+
+    DIFF_W = PLOT_INIT_PIXEL-BACKGROUND_INIT_W
+
+    # Sort comparison data
+    cmp_data = sorted_properly(cmp_data)
+
+    urls = [f[0] for f in cmp_data]
+    seq_lengths = [f[1] for f in cmp_data]
+
+    # Check if URLS is EMPTY
+    if(len(urls) == 0):
+        # SEND ERROR
+        return HttpResponse("ERROR - NO COMPARISONS FOUND BELOW THRESHOLD", content_type="text/plain")
+
+    images_paths = urls
+    max_len = max(seq_lengths)# if max_len_chromosome == True else sum(seq_lengths)
+    colors = []
+    
+    # Create new image
+    background = transparent_background(images_paths[0])
+    background = background.crop((BACKGROUND_INIT_W, BACKGROUND_INIT_H, BACKGROUND_END_W, BACKGROUND_END_H))
+    background_h = background.size[1]
+
+    #rgb = create_rgb_colors(len(urls)-1)
+    i=0
+
+    for img_path in images_paths[1:]:
+        current_img = transparent_background(img_path)
+        current_img = current_img.crop((PLOT_INIT_PIXEL, PLOT_INIT_PIXEL, PLOT_MAX_PIXEL_W, PLOT_MAX_PIXEL_H))
+        current_img = resize_crop(current_img, max_len, seq_lengths[i], overlay_axis, inverted)
+        
+        change_color_transparent_img(current_img, (R_color[i], G_color[i], B_color[i]))
+        colors.append('#%02x%02x%02x' % (R_color[i], G_color[i], B_color[i]))
+        i+=1
+        
+        background.paste(current_img, (DIFF_W, DIFF_H), current_img)
+    
+    # Base64 Encode Image
+    buffered = BytesIO()
+    background.convert("RGB").save(buffered, format = "PNG")
+    img_str = base64.b64encode(buffered.getvalue())
+    
+    # Send Response
+    response_data = {
+        'urls': urls,
+        'lengths': seq_lengths,
+        'color_r': R_color[:i],
+        'color_g': G_color[:i],
+        'color_b': B_color[:i],
+        'color': colors,
+        'img': str(img_str)[2:],
+        'overlay_axis': overlay_axis,
+        'inverted': str(inverted)
+    }
+    #response = HttpResponse(img_str, content_type="text/plain")
+    response = JsonResponse(json.dumps(response_data), safe=False)
+    return response
+
+
+# Helpers
+def transparent_background(img_path):
+    img = Image.open(img_path)
+    img = img.convert("RGBA")
+    data = img.getdata()
+
+    new_data = []
+    for item in data:
+        if item[0] == 255 and item[1] == 255 and item[2] == 255:
+            new_data.append((255, 255, 255, 0))
+        else:
+            new_data.append(item)
+
+    img.putdata(new_data)
+    
+    return img
+
+def change_color_transparent_img(img_obj, rgb):
+    new_data = []
+
+    for item in img_obj.getdata():
+        if item[3] != 0:
+            new_data.append(rgb)
+        else:
+            new_data.append(item)
+    
+    img_obj.putdata(new_data)
+
+def resize_crop(img_obj, max_len, curr_len, overlay_axis, inverted):
+    current_size = img_obj.size
+    if (not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X'):
+        new_dim = curr_len * current_size[1] / max_len
+        return img_obj.resize((current_size[0], int(new_dim)))
+    else:
+        new_dim = curr_len * current_size[0] / max_len
+        return img_obj.resize((int(new_dim),current_size[1]))
+
+def sorted_properly(l):
+    convert = lambda text: int(text) if text.isdigit() else text
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    return sorted(l, key = lambda val: alphanum_key(val[0]))
+
+def create_rgb_colors(n):
+  ret = []
+  r = int(random.random() * 256)
+  g = int(random.random() * 256)
+  b = int(random.random() * 256)
+  step = 256 / n
+  for i in range(n):
+    r += step
+    g += step
+    b += step
+    r = int(r) % 256
+    g = int(g) % 256
+    b = int(b) % 256
+    ret.append((r,g,b)) 
+  return ret
