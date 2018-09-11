@@ -39,7 +39,7 @@ $('#itemSize_slider').bootstrapSlider({
 //Slider color config
 $('#Color_slider').bootstrapSlider({
 	formatter: function(value) {
-		return 'Green max: ' + (1-value[0]) + ' | Red max: ' + (1-value[1]);
+		return 'Red max: ' + value[0] + ' | Green max: ' + value[1];
 	},
     min: 1,
     max: 100,
@@ -73,8 +73,8 @@ $('#itemSize_slider').bootstrapSlider().on("slideStop", function(callback){
 
 //Slider color config
 $('#Color_slider').bootstrapSlider().on("slideStop", function(callback){
-    colorValueLow = 1-callback.value[1]/100;
-    colorValueHigh = 1-callback.value[0]/100;
+    colorValueLow = callback.value[0]/100;
+    colorValueHigh = callback.value[1]/100;
     $("#addComparison").click();
 });
 
@@ -89,21 +89,21 @@ $('#threshold_slider').bootstrapSlider().on("slideStop", function(callback){
 function spinnerOn(loadText){
     var spinner = document.getElementById("spinner");
     spinner.style.display = "block";
-  
+
     $("#loadingtext").text(loadText);
-  }
-  function spinnerOff(){
+}
+function spinnerOff(){
     var spinner = document.getElementById("spinner");
     spinner.style.display = "none";
-  }
-  function overlayOn(){
+}
+function overlayOn(){
     var overlay = document.getElementById("overlay");
     overlay.style.display = "block";
-  }
-  function overlayOff(){
+}
+function overlayOff(){
     var overlay = document.getElementById("overlay");
     overlay.style.display = "none";
-  }
+}
 
 // --- Add Comparison Behavior ---
 

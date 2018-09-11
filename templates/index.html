@@ -5,22 +5,25 @@
     <script> var myJSON = "{{ chromosomes }}"</script>
 
 
+
     <div class="row">
 
+        <div id="overlay">
+            <div id="spinner" class="spinner">
+                <div class="rect1"></div>
+                <div class="rect2"></div>
+                <div class="rect3"></div>
+                <div class="rect4"></div>
+                <div class="rect5"></div>
+                <p id="loadingtext">Loading...<p>
+            </div>
+        </div>
+        
         <div class="col-sm-5 center-block">
         <div class="affix sidemenu">
         
             <div id="comparisonPreview" class="form-inline text-center sidemenu_member">
-                <div id="overlay">
-                    <div id="spinner" class="spinner">
-                    <div class="rect1"></div>
-                    <div class="rect2"></div>
-                    <div class="rect3"></div>
-                    <div class="rect4"></div>
-                    <div class="rect5"></div>
-                        <p id="loadingtext">Loading...<p>
-                    </div>
-                </div>
+
             </div>
 
             <div id="comparisonInfo" style="display: none" class="form-inline text-center sidemenu_member">
@@ -29,12 +32,9 @@
                 </div>
 
                 <div id="collapseOverlay" class="panel-collapse collapse">
-                    <table class="table">
+                    <table class="table"> 
                     <thead>
-                        <tr>
-                        <th scope="col">Color</th>
-                        <th scope="col">Chromosome</th>
-                        </tr>
+                        <!-- <tr> <th scope="col">Color</th> <th scope="col">Chromosome</th> </tr> -->
                     </thead>
                     <tbody id="collapseOverlayInfo">
                         

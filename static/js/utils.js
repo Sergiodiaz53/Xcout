@@ -65,3 +65,24 @@ function imgUrlParser(img_url, overlay_axis, inverted){
 function rgb(r,g,b){
     return ("rgb("+r+","+g+","+b+")")
 }
+
+function select_x_axis_label(d) {
+    console.log(d3.select('.xaxis').selectAll('text'))
+    return d3.select('.xaxis')
+        .selectAll('text')
+        .filter(function(x) { console.log(x); return x == d.specieX + " - " + d.chromosomeX_number; });
+}
+
+function select_y_axis_label(d) {
+    return d3.select('.yaxis')
+        .selectAll('text')
+        .filter(function(x) { console.log(x); return x == d.specieY + " - " + d.chromosomeY_number; });
+}
+
+/*
+d3.select(xAxis(xScale(d.specieX + " - " + d.chromosomeX_number)))
+.attr({'font-weight': 'bold'})
+d3.select(yAxis(yScale(d.specieY + " - " + d.chromosomeY_number)))
+.attr({'font-weight': 'bold'})
+*/
+var tmp_test, tmp_var;

@@ -174,6 +174,8 @@ B_color = [43, 185, 34, 15, 96, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 62
 
 # Request
 @api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
 def createOverlayedImage(request):
     # Retrieve data from request
     specieX = request.GET.get('specieX', '')
@@ -243,7 +245,7 @@ def createOverlayedImage(request):
     # Check if URLS is EMPTY
     if(len(urls) == 0):
         # SEND ERROR
-        return HttpResponse("ERROR - NO COMPARISONS FOUND BELOW THRESHOLD", content_type="text/plain")
+        return JsonResponse({'status':'false','message':'No selected comparisons found below the threshold'}, status=500)
 
     images_paths = urls
     max_len = max(seq_lengths)# if max_len_chromosome == True else sum(seq_lengths)
