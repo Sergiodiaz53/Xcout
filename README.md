@@ -17,7 +17,7 @@ Requirements: Python 3 & Bower (Virtualenv is recommended)
 - Install Postgres (See below database config)
 * `sudo apt-get install postgresql postgresql-contrib`
 * `sudo -u postgres createuser xcoutdjango`
-* `sudo -u postgres createdb `
+* `sudo -u postgres createdb xcoutdb`
 * `sudo -u postgres psql`
 * `alter user xcoutdjango with encrypted password 'bitlab2310';`
 * `grant all privileges on database xcoutdb to xcoutdjango;`
@@ -31,6 +31,7 @@ Requirements: Python 3 & Bower (Virtualenv is recommended)
 * `bower install`
 
 - Setup Django
+* `python manage.py makemigrations`
 * `python manage.py migrate`
 * `python manage.py createsuperuser`
 
@@ -41,8 +42,6 @@ Requirements: Python 3 & Bower (Virtualenv is recommended)
 - Run Xcout (python manage.py runserver_plus)
 * `python manage.py runserver_plus`
 
-
-* ``
 * ``
 
 ## Database config for Xcout: 

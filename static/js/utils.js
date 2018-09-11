@@ -1,10 +1,10 @@
 /**
- * Created by Sergio on 4/10/17.
+ * Created by Sergio and Plabolo on 4/10/17.
  */
 
 function showAlert(title, content, type) {
     $("#alertContainer").bootstrapAlert({
-        type: 'success', // Optional, , default: 'info',  values: 'success', 'info', 'warning' or 'danger'
+        type: type, // Optional, , default: 'info',  values: 'success', 'info', 'warning' or 'danger'
         dismissible: true, // Optional, default: true
         heading: title, // Optional, default: ''
         message: content,  // Required,
@@ -36,6 +36,8 @@ function naturalCompare(a, b) {
     return ax.length - bx.length;
 }
 
+// --- DOM Behavior
+
 function toggler(divId) {
     $("#" + divId).toggle();
 }
@@ -47,6 +49,8 @@ function hider(divId){
 function collapser(divId){
     $("#" + divId).collapse()
 }
+
+// --- Database Image Url Parser
 
 function imgUrlParser(img_url, overlay_axis, inverted){
     //         0    1  2     3        4  5  6
@@ -79,10 +83,4 @@ function select_y_axis_label(d) {
         .filter(function(x) { console.log(x); return x == d.specieY + " - " + d.chromosomeY_number; });
 }
 
-/*
-d3.select(xAxis(xScale(d.specieX + " - " + d.chromosomeX_number)))
-.attr({'font-weight': 'bold'})
-d3.select(yAxis(yScale(d.specieY + " - " + d.chromosomeY_number)))
-.attr({'font-weight': 'bold'})
-*/
 var tmp_test, tmp_var;

@@ -136,6 +136,7 @@ def updateDBfromCSV(request):
             ### COMPARISON --
             # Image
             img_name = row[4]
+            csv_name = img_name.rsplit('.', 2)[0] + ".events.txt"
             print("##### IMAGE ##### " + img_name)
             check_img = Comparison.objects.filter(chromosome_x=chrX, chromosome_y=chrY).count()
             if check_img > 0:
@@ -145,7 +146,8 @@ def updateDBfromCSV(request):
             else:
                 current_score = row[7]
                 os.rename("images/"+img_name, "media/"+img_name)
-                comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score, img=img_name)
+                os.rename("images/"+csv_name, "media/"+csv_name)
+                comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score, img=img_name, csv=csv_name)
                 comp.save()
 
 
@@ -215,15 +217,16 @@ def createOverlayedImage(request):
     print(comparisons)
 
     cmp_data = []
+    base_max_len = 0
 
     for comparison in comparisons:
         if comparison.score <= float(threshold):
             if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
-                tmp_len = comparison.chromosome_y.length
+                tmp_len = comparison.chromosome_y.length; base_max_len = comparison.chromosome_x.length
             else:
-                tmp_len = comparison.chromosome_x.length
+                tmp_len = comparison.chromosome_x.length; base_max_len = comparison.chromosome_y.length
 
-            cmp_info = (comparison.img.url[1:], tmp_len)
+            cmp_info = (comparison.img.url[1:], tmp_len, comparison.csv)
             cmp_data.append(cmp_info)
 
 
@@ -241,6 +244,7 @@ def createOverlayedImage(request):
 
     urls = [f[0] for f in cmp_data]
     seq_lengths = [f[1] for f in cmp_data]
+    csvs = ['media/' + f[2] for f in cmp_data]
 
     # Check if URLS is EMPTY
     if(len(urls) == 0):
@@ -251,6 +255,7 @@ def createOverlayedImage(request):
     max_len = max(seq_lengths)# if max_len_chromosome == True else sum(seq_lengths)
     colors = []
     
+    ### ------------------ IMAGE METHOD
     # Create new image
     background = transparent_background(images_paths[0])
     background = background.crop((BACKGROUND_INIT_W, BACKGROUND_INIT_H, BACKGROUND_END_W, BACKGROUND_END_H))
@@ -275,13 +280,39 @@ def createOverlayedImage(request):
     background.convert("RGB").save(buffered, format = "PNG")
     img_str = base64.b64encode(buffered.getvalue())
     
+    ### ------------------ EVENTS METHOD
+    csv_data = []
+    max_len_x = 0
+    max_len_y = 0
+
+    for i, csv in enumerate(csvs):
+        with open(csv,'r') as f:
+            events = f.readlines()[2:-1]
+            for event in events:
+                # x1,y1,x2,y2,len,event
+                items = event[:-1].split(',')
+                csv_data.append({
+                    'x0':items[0],
+                    'y0':items[1],
+                    'x1':items[2],
+                    'y2':items[3],
+                    'len':items[4],
+                    'type':items[5],
+                    'cmp':i
+                })
+    print(csv_data)
+    if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
+        max_len_x = base_max_len; max_len_y = max_len
+    else:
+        max_len_x = max_len; max_len_y = base_max_len
+
     # Send Response
     response_data = {
         'urls': urls,
         'lengths': seq_lengths,
-        'color_r': R_color[:i],
-        'color_g': G_color[:i],
-        'color_b': B_color[:i],
+        'events': csv_data,
+        'max_x': max_len_x,
+        'max_y': max_len_y,
         'color': colors,
         'img': str(img_str)[2:],
         'overlay_axis': overlay_axis,

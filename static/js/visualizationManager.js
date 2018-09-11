@@ -33,7 +33,6 @@ function getFullComparisonOf(specieX, specieY){
         },
         success: function(content) {
             full_comparison = JSON.parse(content);
-            console.log(full_comparison);
             visualizeFullComparisonFromJSON(full_comparison)
         }
     });
@@ -66,23 +65,23 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     speciesX_numbers = sortObject(speciesX_numbers);
     speciesY_numbers = sortObject(speciesY_numbers);
 
-    //Calculate OverlayBox positions
+    //Calculate OverlayCell positions
+
     var curr_ind = 0;
     for(specie of Object.keys(speciesX_numbers)) {
+        curr_ind += speciesX_numbers[specie];
         text = specie + " - Overlay";
-        x_elements.splice(speciesX_numbers[specie] + curr_ind, 0, text);
-        speciesX_numbers[specie] = speciesX_numbers[specie]+1;
-        curr_ind = speciesX_numbers[specie];
+        x_elements.splice(curr_ind, 0, text);
+        speciesX_numbers[specie] = speciesX_numbers[specie]+1; curr_ind+=1;
     }
 
     curr_ind = 0;
     for(specie of Object.keys(speciesY_numbers)) {
+        curr_ind += speciesY_numbers[specie];
         text = specie + " - Overlay";
-        y_elements.splice(speciesY_numbers[specie] + curr_ind, 0, text);
-        speciesY_numbers[specie] = speciesY_numbers[specie]+1;
-        curr_ind = speciesX_numbers[specie];
+        y_elements.splice(curr_ind, 0, text);
+        speciesY_numbers[specie] = speciesY_numbers[specie]+1; curr_ind+=1;
     }
-    console.log("X_ELEMENTS :: " + x_elements.length + " || Y_ELEMENTS :: " + y_elements.length)
 
     // Add overlay to data
     for(tick_x of x_elements){
@@ -279,6 +278,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
             else if(d.score == -20) return "white";
             else return colorScale(d.score); 
         })
+        // Tooltip + Axis highlighting :: ON
         .on("mouseover", function(d) {
             if(d.score >= 0){	
                 tooltip_score.transition()		
@@ -304,7 +304,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                         .attr('font-weight', 'bold');
                 }
             }
-        })					
+        })
+        // Tooltip + Axis highlighting :: OFF	
         .on("mouseout", function(d) {		
             tooltip_score.transition()		
                 .duration(500)		
@@ -326,11 +327,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                 }
             }
         })
+        // On cell click behavior
         .on("click", function(d) {
             hider("comparisonInfo");
             
             if (d.score != -20){
                 var string = "";
+                var data_string = "<h3>" + d.specieX + " - "  + d.chromosomeX_number + " | vs | "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
                 
@@ -354,11 +357,20 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                         },
                         success: function(content){
                             response = JSON.parse(content);
+                            tmp_test = response;
+                            // Add comparison data
+                            $("#comparisonData").html(data_string);
 
-                            string = "<img style='height: 100%; width: 100%; object-fit: contain' src='data:image/jpeg;base64, " + response.img + "' />";
+                            // Add image -- IMAGE METHOD
+                            string +=  "<img style='height: 100%; width: 100%; object-fit: contain' src='data:image/jpeg;base64, " + response.img + "' />";
                             div.html(string);
+
+                            // Add image -- EVENTS METHOD
+                            //overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.overlay_axis, response.inverted, response.colors)
+
                             toggler("comparisonInfo");
                             
+                            // Legend
                             let chr_n, color;
                             let rows = [];
                             for(i in response.urls){
@@ -384,13 +396,18 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                         },
                         error: function(error){
                             response = error.responseJSON
-                            alert(response.message)
+                            showAlert("Error", response.message, "danger")
                             overlayOff();
                             spinnerOff();
                         }
                     });
                 }
                 else{
+                    // Add comparison data
+                    data_string += "<h3>Score: "  + d.score + "</h3>";
+                    $("#comparisonData").html(data_string);
+
+                    // Add image
                     var image_path = d.img;
                     string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
                     div.html(string)
@@ -399,7 +416,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         });
         tmp_test = ticks_x_axis;
 
-    //showAlert("Loaded", "Comparison loaded", "Success")
+    showAlert("Loaded", "Comparison loaded", "info")
 }
 
 function addComparisonToComparisonList(specieX, specieY){
@@ -455,4 +472,18 @@ function fitToScreen() {
 	svg.setAttribute("transform","translate("+transX+" "+transY+")scale("+scale+" "+scale+")")
 
 
+}
+
+function overlayComparisonEvents(events, max_x, max_y, lengths, overlay_axis, inverted, colors){
+/*
+    'lengths': seq_lengths,
+    'csv_data': csv_data,
+    'len_x': max_len_x,
+    'len_y': max_len_y,
+    'color': colors,
+    'img': str(img_str)[2:],
+    'overlay_axis': overlay_axis,
+    'inverted': str(inverted)
+*/
+    
 }

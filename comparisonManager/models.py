@@ -25,7 +25,8 @@ class Comparison(models.Model):
     chromosome_x = models.ForeignKey(Chromosome, on_delete=models.CASCADE, related_name='chromosome_specie_X')
     chromosome_y = models.ForeignKey(Chromosome, on_delete=models.CASCADE, related_name='chromosome_specie_Y')
     score = models.FloatField(null=False)
-    img = models.ImageField(max_length=500)
+    img = models.ImageField(max_length=500, null=False)
+    csv = models.CharField(max_length=500, null=False)
 
     def __str__(self):
         return u'%s vs %s | Score :: %s' % (self.chromosome_x, self.chromosome_y, str(self.score))
