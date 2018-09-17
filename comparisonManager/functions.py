@@ -255,6 +255,7 @@ def createOverlayedImage(request):
     max_len = max(seq_lengths)# if max_len_chromosome == True else sum(seq_lengths)
     colors = []
     
+    """
     ### ------------------ IMAGE METHOD
     # Create new image
     background = transparent_background(images_paths[0])
@@ -279,6 +280,7 @@ def createOverlayedImage(request):
     buffered = BytesIO()
     background.convert("RGB").save(buffered, format = "PNG")
     img_str = base64.b64encode(buffered.getvalue())
+    """
     
     ### ------------------ EVENTS METHOD
     csv_data = []
@@ -315,7 +317,7 @@ def createOverlayedImage(request):
         'max_x': max_len_x,
         'max_y': max_len_y,
         'color': colors,
-        'img': str(img_str)[2:],
+        #'img': str(img_str)[2:],
         'base_axis': base_axis
     }
     #response = HttpResponse(img_str, content_type="text/plain")

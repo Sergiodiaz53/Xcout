@@ -58,10 +58,10 @@ function imgUrlParser(img_url, base_axis){
     let items = img_url.split('/')[1].split('.');
 
     if(base_axis == 'X')
-        return items[5]
+        return [items[3].split('-')[1], items[5]]
         //return items[3].split('-')[1] + " - " + items[5]
     else
-        return items[2]
+        return [items[1], items[2]]
         //return items[1] + " - " + items[2]
 
 }
@@ -82,5 +82,9 @@ function select_y_axis_label(d) {
         .selectAll('text')
         .filter(function(x) { console.log(x); return x == d.specieY + " - " + d.chromosomeY_number; });
 }
+
+function scientificNotation(x, f) {
+    return Number.parseFloat(x).toExponential(f);
+  }
 
 var tmp_test, tmp_var;

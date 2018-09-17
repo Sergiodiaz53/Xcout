@@ -353,31 +353,6 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                             // Add comparison data -- HEADER
                             $("#comparisonData").html(data_string);
 
-                            /* Add image -- IMAGE METHOD
-                            //string +=  "<img style='height: 100%; width: 100%; object-fit: contain' src='data:image/jpeg;base64, " + response.img + "' />";
-                            //div.html(string);
-
-                            // Legend
-                            let chr_n, color;
-                            let rows = [];
-                            for(i in response.urls){
-                                chr_n = imgUrlParser(response.urls[i], response.overlay_axis, response.inverted)
-                                color = response.color[i-1]
-                                
-                                rows.push([color, chr_n]);
-                            }
-
-                            string = ""
-                            for(row in rows){
-                                if(row % 5 == 0)
-                                    string+="<tr\> <th scope='row'> </th> ";
-                                string += "<td bgcolor='" + rows[row][0] + "'><td>" + rows[row][1] + "</td>"
-                                if(row-4 % 5 == 0)
-                                    string+=" </tr>";
-                            }
-                            $("#collapseOverlayInfo").html(string)
-                            */
-
                             // Add image -- EVENTS METHOD
                             let chromosome_numbers = [];
                             let colors = [...new Set(response.events.map(item => item.color))];
@@ -488,6 +463,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             left: 55
         }
     var stroke_width = 2;
+    var axis_decimals = 2;
 
     // Clear Sidemenu
     var comparisonPreview = $("#comparisonPreview");
@@ -509,7 +485,10 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     //Set xAxis
     var xAxis = d3.svg.axis()
         .scale(xScale)
-        .orient("bottom");
+        .orient("bottom")
+        .tickFormat(function (d) {
+            return (d!=0) ? scientificNotation(d, axis_decimals) : 0;
+        });
 
     //Set yScale
     var yScale = d3.scale.linear()
@@ -519,7 +498,10 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     //Set yAxis
     var yAxis = d3.svg.axis()
         .scale(yScale)
-        .orient("left");
+        .orient("left")
+        .tickFormat(function (d) {
+            return (d!=0) ? scientificNotation(d, axis_decimals) : 0;
+        });
 
     // Create SVG
     svg = d3.select('#comparisonOverlay')
@@ -528,9 +510,9 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
         .attr("height", HEIGHT)
         .attr("class", 'comparisonOverlay');
     
-
+    var event_lines;
     if(base_axis = 'X'){
-        var event_lines = svg.selectAll('line')
+        event_lines = svg.selectAll('line')
             .data(events).enter()
             .append('g').append('line')
             .attr('y1', function(d) { return yScale(scaleEventParam(lengths[d.cmp], d.x1)); })
@@ -542,7 +524,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             .style('stroke-width', stroke_width)
             ;
     }else{
-        var event_lines = svg.selectAll('line')
+        event_lines = svg.selectAll('line')
             .data(events).enter()
             .append('g').append('line')
             .attr('y1', function(d) { return yScale(scaleEventParam(max_x,d.y1)); })
@@ -555,27 +537,27 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             ;
     }
 
-    svg.append("g")
+    var ticks_xAxis = svg.append("g")
         .attr('transform', function (d) {
             return "translate(" + MARGINS.left + ",0)";
         })
         .call(yAxis)
         .selectAll('text')
         .attr('font-weight', 'bold')
-        .style('font-size', '9px')
+        .style('font-size', '13px')
         .style('text-anchor', 'end')
         .attr('transform', function (d) {
             return "translate(-7,0)rotate(-45)";
         });
     
-    svg.append("g")
+    var ticks_yAxis = svg.append("g")
         .attr('transform', function (d) {
             return "translate(0," + (HEIGHT - MARGINS.bottom) + ")";
         })
         .call(xAxis)
         .selectAll('text')
         .attr('font-weight', 'bold')
-        .style('font-size', '9px')
+        .style('font-size', '13px')
         .style('text-anchor', 'end')
         .attr('transform', function (d) {
             return "rotate(-45)";//translate(0,5)
@@ -586,25 +568,58 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     for(chr_i in chromosome_numbers){
         if(chr_i % 5 == 0)
             string+="<tr\> <th scope='row'> </th> ";
-        string += "<td bgcolor='" + colors[chr_i] + "'><td>" + chromosome_numbers[chr_i] + "</td>"
+        string += "<td bgcolor='" + colors[chr_i] + "'><td>" + chromosome_numbers[chr_i][1] + "</td>"
         if(chr_i-4 % 5 == 0)
             string+=" </tr>";
     }
     $("#collapseOverlayInfo").html(string)
 
-    /*
-    legend = svg.append("g")
-        .attr("class","legend")
-        .attr("transform","translate(50,30)")
-        .style("font-size","12px")
-        .call(d3.legend)
     
-    setTimeout(function() { 
-        legend
-            .style("font-size","20px")
-            .attr("data-style-padding",10)
-            .call(d3.legend)
-        },1000)*/
+    var tooltip_event = d3.select("body").append("div")
+        .attr("class", "tooltip_event")
+        .style("opacity", 0);
+        
+    // Behaviour
+    event_lines
+        // Tooltip :: ON
+        .on("mouseover", function(d) {
+            let event_info = "From: " + chromosome_numbers[d.cmp][0] + " - " + chromosome_numbers[d.cmp][1];
+
+
+            if(base_axis = 'X'){
+                event_info += "</br>x1 : " + scaleEventParam(lengths[d.cmp], d.x1).toLocaleString()
+                event_info += "</br>y1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
+                event_info += "</br>x2 : " + scaleEventParam(lengths[d.cmp], d.x2).toLocaleString()
+                event_info += "</br>y2 : " + scaleEventParam(max_x,d.y2).toLocaleString();
+            }else{
+                event_info += "</br>x1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
+                event_info += "</br>y1 : " + scaleEventParam(lengths[d.cmp], d.x1).toLocaleString()
+                event_info += "</br>x2 : " + scaleEventParam(max_x,d.y2).toLocaleString()
+                event_info += "</br>y2 : " + scaleEventParam(lengths[d.cmp], d.x2).toLocaleString()
+            }
+
+            tooltip_event.transition()		
+                .duration(200)
+                .style("opacity", .9);
+                tooltip_event.html(event_info)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+
+            d3.select(this)
+                .style('stroke-width', stroke_width*2);
+        })
+        // Tooltip :: OFF	
+        .on("mouseout", function(d) {		
+            tooltip_event.transition()		
+                .duration(500)		
+                .style("opacity", 0);
+            
+            d3.select(this)
+                .style('stroke-width', stroke_width);
+        })
+        .on("click", function(d) {
+
+        });
 }
 
 function clearDivIdSVG(divId){
