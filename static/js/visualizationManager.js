@@ -44,6 +44,16 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     var speciesX_numbers = {};
     var speciesY_numbers = {};
 
+    // Clear Sidemenu
+    $(".heatmap").html('');
+    emptier('comparisonData');
+    hider('comparisonInfo');
+
+    //Create SVG
+    var svg = d3.select("svg > g");
+    if(!svg.empty()){
+        d3.select("svg").remove();
+    }
 
     //Get elements for X,Y and UpperLevelXYAxis
     var x_elements = d3.set(data.map(function( comparison ) {return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
@@ -192,11 +202,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .range(['red', 'green','green','white']) // or use hex values
         .domain([0,colorValueLow,colorValueHigh,1]);
 
-    //Create SVG
-    var svg = d3.select("svg > g");
-    if(!svg.empty()){
-        d3.select("svg").remove();
-    }
+    // Set cell size
 
     width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
     height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
@@ -324,7 +330,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
             
             if (d.score != -20){
                 var string = "";
-                var data_string = "<h3>" + d.specieX + " - "  + d.chromosomeX_number + " | vs | "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
+                var data_string = "<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " | vs | (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
                 
@@ -455,15 +461,19 @@ function fitToScreen() {
 function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chromosome_numbers, colors){
 
     var WIDTH = 455,
-        HEIGHT = 485,
-        MARGINS = {
-            top: 5,
+        HEIGHT = 495;
+    var MARGINS = {
+            top: 15,
             right: 15,
             bottom: 55,
             left: 55
         }
-    var stroke_width = 2;
-    var axis_decimals = 2;
+    var WIDTH = WIDTH - MARGINS.left - MARGINS.right,
+        HEIGHT = WIDTH - MARGINS.top - MARGINS.bottom;
+
+    var stroke_width = 2.5;
+    var axis_decimals = 0;
+    var grid_ticks = 6
 
     // Clear Sidemenu
     var comparisonPreview = $("#comparisonPreview");
@@ -481,35 +491,38 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     //Set xScale
     var xScale = d3.scale.linear()
         .domain([0,max_x])
-        .range([MARGINS.left, WIDTH-MARGINS.right]);
+        .range([0, WIDTH]);
     //Set xAxis
     var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient("bottom")
         .tickFormat(function (d) {
-            return (d!=0) ? scientificNotation(d, axis_decimals) : 0;
+            return (d!=0) ? pairbaseNotation(d, axis_decimals) : 0;
         });
 
     //Set yScale
     var yScale = d3.scale.linear()
         .domain([0,max_y])
-        .range([MARGINS.top, HEIGHT - MARGINS.bottom]);
+        .range([0, HEIGHT]);
 
     //Set yAxis
     var yAxis = d3.svg.axis()
         .scale(yScale)
         .orient("left")
         .tickFormat(function (d) {
-            return (d!=0) ? scientificNotation(d, axis_decimals) : 0;
+            return (d!=0) ? pairbaseNotation(d, axis_decimals) : 0;
         });
 
     // Create SVG
     svg = d3.select('#comparisonOverlay')
         .append("svg")
-        .attr("width", WIDTH)
-        .attr("height", HEIGHT)
-        .attr("class", 'comparisonOverlay');
-    
+        .attr("width", WIDTH + MARGINS.left + MARGINS.right)
+        .attr("height", HEIGHT + MARGINS.top + MARGINS.bottom)
+        .attr("class", 'comparisonOverlay')
+        .append('g')
+        .attr('transform', 'translate(' + MARGINS.left + ',' + MARGINS.top + ')');
+       
+    // Paint Events
     var event_lines;
     if(base_axis = 'X'){
         event_lines = svg.selectAll('line')
@@ -538,9 +551,9 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     }
 
     var ticks_xAxis = svg.append("g")
-        .attr('transform', function (d) {
+        /*.attr('transform', function (d) {
             return "translate(" + MARGINS.left + ",0)";
-        })
+        })*/
         .call(yAxis)
         .selectAll('text')
         .attr('font-weight', 'bold')
@@ -552,7 +565,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     
     var ticks_yAxis = svg.append("g")
         .attr('transform', function (d) {
-            return "translate(0," + (HEIGHT - MARGINS.bottom) + ")";
+            return "translate(0," + (HEIGHT) + ")";
         })
         .call(xAxis)
         .selectAll('text')
@@ -587,15 +600,15 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
 
 
             if(base_axis = 'X'){
+                event_info += "</br>x1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
+                event_info += "</br>y1 : " + scaleEventParam(lengths[d.cmp], d.x1).toLocaleString()
+                event_info += "</br>x2 : " + scaleEventParam(max_x,d.y2).toLocaleString();
+                event_info += "</br>y2 : " + scaleEventParam(lengths[d.cmp], d.x2).toLocaleString()
+            }else{
                 event_info += "</br>x1 : " + scaleEventParam(lengths[d.cmp], d.x1).toLocaleString()
                 event_info += "</br>y1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
                 event_info += "</br>x2 : " + scaleEventParam(lengths[d.cmp], d.x2).toLocaleString()
-                event_info += "</br>y2 : " + scaleEventParam(max_x,d.y2).toLocaleString();
-            }else{
-                event_info += "</br>x1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
-                event_info += "</br>y1 : " + scaleEventParam(lengths[d.cmp], d.x1).toLocaleString()
-                event_info += "</br>x2 : " + scaleEventParam(max_x,d.y2).toLocaleString()
-                event_info += "</br>y2 : " + scaleEventParam(lengths[d.cmp], d.x2).toLocaleString()
+                event_info += "</br>y2 : " + scaleEventParam(max_x,d.y2).toLocaleString()
             }
 
             tooltip_event.transition()		
@@ -617,18 +630,39 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             d3.select(this)
                 .style('stroke-width', stroke_width);
         })
-        .on("click", function(d) {
 
+    // Create Grid
+
+    // Add the X gridlines
+    svg.selectAll("line.horizontalGrid").data(yScale.ticks(grid_ticks)).enter()
+        .append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : WIDTH,
+            "y1" : function(d){ return yScale(d);},
+            "y2" : function(d){ return yScale(d);},
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "lightgrey",
+            "stroke-width" : "1px",
+            'stroke-opacity' : '0.6'
         });
-}
-
-function clearDivIdSVG(divId){
-    let svg = d3.select("#" + divId + " > svg");
-    if(!svg.empty()){
-        svg.remove();
-    }
-}
-
-function scaleEventParam(scaled_len, event_param){
-    return parseInt(event_param*scaled_len/1000)
+    
+    svg.selectAll("line.verticalGrid").data(xScale.ticks(grid_ticks)).enter()
+        .append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : function(d){ return xScale(d);},
+            "x2" : function(d){ return xScale(d);},
+            "y1" : 0,
+            "y2" : HEIGHT,
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "lightgrey",
+            "stroke-width" : "1px",
+            'stroke-opacity' : '0.6',
+        });
 }
