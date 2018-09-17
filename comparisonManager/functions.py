@@ -259,15 +259,15 @@ def createOverlayedImage(request):
     # Create new image
     background = transparent_background(images_paths[0])
     background = background.crop((BACKGROUND_INIT_W, BACKGROUND_INIT_H, BACKGROUND_END_W, BACKGROUND_END_H))
-    background_h = background.size[1]
 
     #rgb = create_rgb_colors(len(urls)-1)
     i=0
+    colors.append('#%02x%02x%02x' % (R_color[i], G_color[i], B_color[i]))
 
     for img_path in images_paths[1:]:
         current_img = transparent_background(img_path)
         current_img = current_img.crop((PLOT_INIT_PIXEL, PLOT_INIT_PIXEL, PLOT_MAX_PIXEL_W, PLOT_MAX_PIXEL_H))
-        current_img = resize_crop(current_img, max_len, seq_lengths[i], overlay_axis, inverted)
+        current_img = resize_crop(current_img, max_len, seq_lengths[i+1], overlay_axis, inverted)
         
         change_color_transparent_img(current_img, (R_color[i], G_color[i], B_color[i]))
         colors.append('#%02x%02x%02x' % (R_color[i], G_color[i], B_color[i]))
@@ -292,19 +292,20 @@ def createOverlayedImage(request):
                 # x1,y1,x2,y2,len,event
                 items = event[:-1].split(',')
                 csv_data.append({
-                    'x0':items[0],
-                    'y0':items[1],
-                    'x1':items[2],
+                    'x1':items[0],
+                    'y1':items[1],
+                    'x2':items[2],
                     'y2':items[3],
                     'len':items[4],
                     'type':items[5],
-                    'cmp':i
+                    'cmp':i,
+                    'color': '#%02x%02x%02x' % (R_color[i], G_color[i], B_color[i])
                 })
     print(csv_data)
     if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
-        max_len_x = base_max_len; max_len_y = max_len
+        max_len_x = base_max_len; max_len_y = max_len; base_axis = 'X'
     else:
-        max_len_x = max_len; max_len_y = base_max_len
+        max_len_x = max_len; max_len_y = base_max_len; base_axis = 'Y'
 
     # Send Response
     response_data = {
@@ -315,8 +316,7 @@ def createOverlayedImage(request):
         'max_y': max_len_y,
         'color': colors,
         'img': str(img_str)[2:],
-        'overlay_axis': overlay_axis,
-        'inverted': str(inverted)
+        'base_axis': base_axis
     }
     #response = HttpResponse(img_str, content_type="text/plain")
     response = JsonResponse(json.dumps(response_data), safe=False)

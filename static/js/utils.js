@@ -52,12 +52,12 @@ function collapser(divId){
 
 // --- Database Image Url Parser
 
-function imgUrlParser(img_url, overlay_axis, inverted){
+function imgUrlParser(img_url, base_axis){
     //         0    1  2     3        4  5  6
     //"media/HOMSA.Chr.1.fasta-MUSMU.Chr.1.fasta.mat.filt.png"
     let items = img_url.split('/')[1].split('.');
 
-    if((inverted == 'False' && overlay_axis == 'Y') || (inverted == 'True' && overlay_axis == 'X'))
+    if(base_axis == 'X')
         return items[5]
         //return items[3].split('-')[1] + " - " + items[5]
     else

@@ -39,7 +39,6 @@ function getFullComparisonOf(specieX, specieY){
 }
 
 function visualizeFullComparisonFromJSON(full_comparison_json) {
-
     var data = full_comparison_json;
 
     var speciesX_numbers = {};
@@ -86,12 +85,10 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     // Add overlay to data
     for(tick_x of x_elements){
         let items_x = tick_x.split(" - ");
-
         if(items_x[1] == "Overlay"){
             for(tick_y of y_elements){
                 let score, items_y = tick_y.split(" - ");
                 if(items_x[0]==items_y[0]) score = -20; else score = -10;
-
                 if(items_y[1] != "Overlay"){
                     data.push({
                         chromosomeX_number:items_x[1],
@@ -104,12 +101,10 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                 }
             }
         }
-
     }
 
     for(tick_y of y_elements){
         let items_y = tick_y.split(" - ");
-
         if(items_y[1] == "Overlay"){
             for(tick_x of x_elements){
                 let score, items_x = tick_x.split(" - ");
@@ -126,10 +121,10 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                 }
             }
         }
-
     }
 
     // --- Paint ---
+    // Clear Overlay (if exists)
 
     //Set xScale
     var xScale = d3.scale.ordinal()
@@ -196,10 +191,6 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     var colorScale = d3.scale.linear()
         .range(['red', 'green','green','white']) // or use hex values
         .domain([0,colorValueLow,colorValueHigh,1]);
-
-    var blueColor = d3.scale.linear()
-        .domain([-15, -5])  
-        .range(["blue", "blue"]);
 
     //Create SVG
     var svg = d3.select("svg > g");
@@ -358,25 +349,20 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                         success: function(content){
                             response = JSON.parse(content);
                             tmp_test = response;
-                            // Add comparison data
+
+                            // Add comparison data -- HEADER
                             $("#comparisonData").html(data_string);
 
-                            // Add image -- IMAGE METHOD
-                            string +=  "<img style='height: 100%; width: 100%; object-fit: contain' src='data:image/jpeg;base64, " + response.img + "' />";
-                            div.html(string);
+                            /* Add image -- IMAGE METHOD
+                            //string +=  "<img style='height: 100%; width: 100%; object-fit: contain' src='data:image/jpeg;base64, " + response.img + "' />";
+                            //div.html(string);
 
-                            // Add image -- EVENTS METHOD
-                            //overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.overlay_axis, response.inverted, response.colors)
-
-                            toggler("comparisonInfo");
-                            
                             // Legend
                             let chr_n, color;
                             let rows = [];
                             for(i in response.urls){
                                 chr_n = imgUrlParser(response.urls[i], response.overlay_axis, response.inverted)
-                                if (i == 0) color = "black";
-                                else color = response.color[i-1]
+                                color = response.color[i-1]
                                 
                                 rows.push([color, chr_n]);
                             }
@@ -390,6 +376,21 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                                     string+=" </tr>";
                             }
                             $("#collapseOverlayInfo").html(string)
+                            */
+
+                            // Add image -- EVENTS METHOD
+                            let chromosome_numbers = [];
+                            let colors = [...new Set(response.events.map(item => item.color))];
+
+                            for(url of response.urls){
+                                chromosome_numbers.push(imgUrlParser(url, response.base_axis));
+                            }
+
+                            overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors)
+
+                            
+                            toggler("comparisonInfo");
+                            
 
                             overlayOff();
                             spinnerOff();
@@ -401,8 +402,11 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                             spinnerOff();
                         }
                     });
+                    div.removeClass('comparisonPreview');
                 }
                 else{
+                    div.addClass('comparisonPreview');
+                    clearDivIdSVG("comparisonOverlay");
                     // Add comparison data
                     data_string += "<h3>Score: "  + d.score + "</h3>";
                     $("#comparisonData").html(data_string);
@@ -414,7 +418,6 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                 }
             }
         });
-        tmp_test = ticks_x_axis;
 
     showAlert("Loaded", "Comparison loaded", "info")
 }
@@ -474,16 +477,143 @@ function fitToScreen() {
 
 }
 
-function overlayComparisonEvents(events, max_x, max_y, lengths, overlay_axis, inverted, colors){
-/*
-    'lengths': seq_lengths,
-    'csv_data': csv_data,
-    'len_x': max_len_x,
-    'len_y': max_len_y,
-    'color': colors,
-    'img': str(img_str)[2:],
-    'overlay_axis': overlay_axis,
-    'inverted': str(inverted)
-*/
+function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chromosome_numbers, colors){
+
+    var WIDTH = 455,
+        HEIGHT = 485,
+        MARGINS = {
+            top: 5,
+            right: 15,
+            bottom: 55,
+            left: 55
+        }
+    var stroke_width = 2;
+
+    // Clear Sidemenu
+    var comparisonPreview = $("#comparisonPreview");
+    comparisonPreview.html('');
+    comparisonPreview.removeClass('comparisonPreview');
+
+    if(base_axis == 'Y') [max_x, max_y] =  [max_y, max_x];
+
+    // Clear SVG
+    var svg = d3.select("#comparisonOverlay > svg");
+    if(!svg.empty()){
+        svg.remove();
+    }
+
+    //Set xScale
+    var xScale = d3.scale.linear()
+        .domain([0,max_x])
+        .range([MARGINS.left, WIDTH-MARGINS.right]);
+    //Set xAxis
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom");
+
+    //Set yScale
+    var yScale = d3.scale.linear()
+        .domain([0,max_y])
+        .range([MARGINS.top, HEIGHT - MARGINS.bottom]);
+
+    //Set yAxis
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left");
+
+    // Create SVG
+    svg = d3.select('#comparisonOverlay')
+        .append("svg")
+        .attr("width", WIDTH)
+        .attr("height", HEIGHT)
+        .attr("class", 'comparisonOverlay');
     
+
+    if(base_axis = 'X'){
+        var event_lines = svg.selectAll('line')
+            .data(events).enter()
+            .append('g').append('line')
+            .attr('y1', function(d) { return yScale(scaleEventParam(lengths[d.cmp], d.x1)); })
+            .attr('x1', function(d) { return xScale(scaleEventParam(max_x,d.y1)); })
+            .attr('y2', function(d) { return yScale(scaleEventParam(lengths[d.cmp], d.x2)); })
+            .attr('x2', function(d) { return xScale(scaleEventParam(max_x,d.y2)); })
+            .attr('data-legend', function(d) { return chromosome_numbers[d.cmp] })
+            .style('stroke', function(d){ return d.color })
+            .style('stroke-width', stroke_width)
+            ;
+    }else{
+        var event_lines = svg.selectAll('line')
+            .data(events).enter()
+            .append('g').append('line')
+            .attr('y1', function(d) { return yScale(scaleEventParam(max_x,d.y1)); })
+            .attr('x1', function(d) { return xScale(scaleEventParam(lengths[d.cmp], d.x1)); })
+            .attr('y2', function(d) { return yScale(scaleEventParam(max_x,d.y2)); })
+            .attr('x2', function(d) { return xScale(scaleEventParam(lengths[d.cmp], d.x2)); })
+            .attr('data-legend', function(d) { return chromosome_numbers[d.cmp] })
+            .style('stroke', function(d){ return d.color })
+            .style('stroke-width', stroke_width)
+            ;
+    }
+
+    svg.append("g")
+        .attr('transform', function (d) {
+            return "translate(" + MARGINS.left + ",0)";
+        })
+        .call(yAxis)
+        .selectAll('text')
+        .attr('font-weight', 'bold')
+        .style('font-size', '9px')
+        .style('text-anchor', 'end')
+        .attr('transform', function (d) {
+            return "translate(-7,0)rotate(-45)";
+        });
+    
+    svg.append("g")
+        .attr('transform', function (d) {
+            return "translate(0," + (HEIGHT - MARGINS.bottom) + ")";
+        })
+        .call(xAxis)
+        .selectAll('text')
+        .attr('font-weight', 'bold')
+        .style('font-size', '9px')
+        .style('text-anchor', 'end')
+        .attr('transform', function (d) {
+            return "rotate(-45)";//translate(0,5)
+        });
+
+    // Legend
+    let string = ""
+    for(chr_i in chromosome_numbers){
+        if(chr_i % 5 == 0)
+            string+="<tr\> <th scope='row'> </th> ";
+        string += "<td bgcolor='" + colors[chr_i] + "'><td>" + chromosome_numbers[chr_i] + "</td>"
+        if(chr_i-4 % 5 == 0)
+            string+=" </tr>";
+    }
+    $("#collapseOverlayInfo").html(string)
+
+    /*
+    legend = svg.append("g")
+        .attr("class","legend")
+        .attr("transform","translate(50,30)")
+        .style("font-size","12px")
+        .call(d3.legend)
+    
+    setTimeout(function() { 
+        legend
+            .style("font-size","20px")
+            .attr("data-style-padding",10)
+            .call(d3.legend)
+        },1000)*/
+}
+
+function clearDivIdSVG(divId){
+    let svg = d3.select("#" + divId + " > svg");
+    if(!svg.empty()){
+        svg.remove();
+    }
+}
+
+function scaleEventParam(scaled_len, event_param){
+    return parseInt(event_param*scaled_len/1000)
 }
