@@ -1,5 +1,5 @@
 /**
- * Created by Sergio on 4/10/17.
+ * Created by Sergio and Plabolo on 4/10/17.
  */
 
 // Side Menu controller //
@@ -24,6 +24,15 @@ $("#addComparison").click(function(){
 
 });
 
+// Auto Threshold (Plabolize) button
+$("#autoThreshold").click(function(){
+    plabolize();
+    
+    function plabolize(){
+        getScoresThreshold()
+    }
+});
+
 //Slider cell size config
 $('#itemSize_slider').bootstrapSlider({
 	formatter: function(value) {
@@ -37,7 +46,7 @@ $('#itemSize_slider').bootstrapSlider({
 });
 
 //Slider color config
-$('#Color_slider').bootstrapSlider({
+$('#color_slider').bootstrapSlider({
 	formatter: function(value) {
 		return 'Red max: ' + value[0] + ' | Green max: ' + value[1];
 	},
@@ -72,7 +81,7 @@ $('#itemSize_slider').bootstrapSlider().on("slideStop", function(callback){
 
 
 //Slider color config
-$('#Color_slider').bootstrapSlider().on("slideStop", function(callback){
+$('#color_slider').bootstrapSlider().on("slideStop", function(callback){
     colorValueLow = callback.value[0]/100;
     colorValueHigh = callback.value[1]/100;
     $("#addComparison").click();

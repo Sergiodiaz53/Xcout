@@ -12,13 +12,15 @@ from django.core.files.images import ImageFile
 import csv
 
 # Image Overlay
-import base64
 from PIL import Image
 from os import listdir
 from os.path import isfile, join
-from io import BytesIO
 import re
 import random
+
+# Automatic Color Threshold
+from sklearn.cluster import KMeans
+import numpy as np
 
 @api_view(['GET'])
 @authentication_classes([])
@@ -158,22 +160,6 @@ def updateDBfromCSV(request):
     return HttpResponse('OK', content_type="text/plain")
 
 ### Image Overlay ###
-
-
-# Constants
-BACKGROUND_INIT_H = 50
-BACKGROUND_END_W = 1000
-
-PLOT_INIT_PIXEL = 60
-PLOT_MAX_PIXEL_W = 970
-PLOT_MAX_PIXEL_H = 925
-
-DIFF_H = PLOT_INIT_PIXEL-BACKGROUND_INIT_H
-
-R_color = [192, 41, 126, 241, 39, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68, 160, 80, 43, 185, 34, 96, 150, 98, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 57, 128, 126, 174, 196]
-G_color = [57, 128, 230, 196, 174, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 34, 179, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68]
-B_color = [43, 185, 34, 15, 96, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 15, 173, 133, 44, 192, 41, 230, 54, 23, 15, 173, 133, 44, 192, 41, 96, 15, 173, 133, 44, 192, 41, 230, 241, 142, 22, 62, 57, 128, 174]
-
 # Request
 @api_view(['GET'])
 @authentication_classes([])
@@ -324,8 +310,84 @@ def createOverlayedImage(request):
     response = JsonResponse(json.dumps(response_data), safe=False)
     return response
 
+### Automatic Color Threshold ###
+# Request
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
 
-# Helpers
+def automaticColorThreshold(request):
+    comparisons = request.GET.get('comparisons', '')
+    comparisons = json.loads(comparisons)
+
+    score_list = []
+
+    for comparison in comparisons:
+        inverted = False
+        specieX = comparison["specieX"]
+        specieY = comparison["specieY"]
+
+        db_comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieX, chromosome_y__specie__name = specieY)
+
+        if not db_comparisons:
+            inverted = True
+            db_comparisons = Comparison.objects.all().filter(chromosome_x__specie__name=specieY, chromosome_y__specie__name=specieX)
+
+        score_list.extend([10,comp['score']] for comp in db_comparisons.values('score'))
+
+    print(score_list)
+    K_CLUSTERS = 3
+    km = KMeans(n_clusters=K_CLUSTERS, max_iter=10).fit(score_list)
+    centers = sorted(score for i, score in km.cluster_centers_)
+
+    print('--- CENTERS ---')
+    print(centers)
+    red_threshold = centers[0]#(centers[0] + centers[1])/2
+    green_threshold = centers[1]#(centers[2] + centers[3])/2
+    suggested_thresholds = { 'red': red_threshold, 'green': green_threshold }
+
+    """
+    print('--- CLUSTERS ---')
+    clusters = []
+    for curr_k in range(K_CLUSTERS):
+        indexes = [i for i, x in enumerate(km.labels_) if x == curr_k]
+        clusters.append([score_list[i][1] for i in indexes])
+
+    for cluster in clusters:
+        print(cluster)
+
+    print('--- THRESHOLDS ---')
+    red_threshold = max(clusters[1])#(centers[0] + centers[1])/2
+    green_threshold = centers[2]#(centers[2] + centers[3])/2
+
+    print('--- LABELS ---')
+    labels = km.predict(score_list)
+    print(labels)
+    """
+
+    #return HttpResponse('OK')
+    return JsonResponse(json.dumps(suggested_thresholds), safe=False)
+
+
+
+###############
+### Helpers ###
+###############
+# Constants
+BACKGROUND_INIT_H = 50
+BACKGROUND_END_W = 1000
+
+PLOT_INIT_PIXEL = 60
+PLOT_MAX_PIXEL_W = 970
+PLOT_MAX_PIXEL_H = 925
+
+DIFF_H = PLOT_INIT_PIXEL-BACKGROUND_INIT_H
+
+R_color = [192, 41, 126, 241, 39, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68, 160, 80, 43, 185, 34, 96, 150, 98, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 57, 128, 126, 174, 196]
+G_color = [57, 128, 230, 196, 174, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 34, 179, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68]
+B_color = [43, 185, 34, 15, 96, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 15, 173, 133, 44, 192, 41, 230, 54, 23, 15, 173, 133, 44, 192, 41, 96, 15, 173, 133, 44, 192, 41, 230, 241, 142, 22, 62, 57, 128, 174]
+
+# Functions
 def transparent_background(img_path):
     img = Image.open(img_path)
     img = img.convert("RGBA")

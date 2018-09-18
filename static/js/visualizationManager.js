@@ -1,5 +1,5 @@
 /**
- * Created by Sergio on 2/10/17.
+ * Created by Sergio and Plabolo on 2/10/17.
  */
 
 var itemSize = 14,
@@ -12,8 +12,33 @@ var width = 800 - margin.right - margin.left,
 var colorValueLow = 0.25, colorValueHigh = 0.75;
 var overlay_threshold = 0.75
 
-function getFullComparisonOf(specieX, specieY){
+// Add Comparison to Comparison Table/List
+function addComparisonToComparisonList(specieX, specieY){
+    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
 
+    //If comparison doesn't exists, add it.
+    if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
+
+    $(".removeButton").click(function(){
+        $(this).closest("tr").remove();
+
+        var specieX = [],
+            specieY = [];
+
+        $('#comparisonList .specieX_name').each(function() {
+            specieX.push($(this).html())
+        });
+
+        $('#comparisonList .specieY_name').each(function() {
+            specieY.push($(this).html())
+        });
+
+        getFullComparisonOf(specieX, specieY)
+    });
+}
+
+// Get all Comparisons Info in Comparison Table
+function getFullComparisonOf(specieX, specieY){
     var full_comparison;
 
     comparisonJson = [];
@@ -38,6 +63,7 @@ function getFullComparisonOf(specieX, specieY){
     });
 }
 
+// Visualize all Comparison Info
 function visualizeFullComparisonFromJSON(full_comparison_json) {
     var data = full_comparison_json;
 
@@ -199,8 +225,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     //Set colorScale
     var colorScale = d3.scale.linear()
-        .range(['red', 'green','green','white']) // or use hex values
-        .domain([0,colorValueLow,colorValueHigh,1]);
+        // PLABOLO + SERGIURO + 3ST3B4NF0RM5T.CSw CERTIFIED
+        .range(['red', 'green','white']) // or use hex values
+        .domain([colorValueLow,colorValueHigh,1]);
 
     // Set cell size
 
@@ -403,61 +430,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     showAlert("Loaded", "Comparison loaded", "info")
 }
 
-function addComparisonToComparisonList(specieX, specieY){
-    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
-
-
-    //If comparison doesn't exists, add it.
-    if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
-
-    $(".removeButton").click(function(){
-        $(this).closest("tr").remove();
-
-        var specieX = [],
-            specieY = [];
-
-        $('#comparisonList .specieX_name').each(function() {
-            specieX.push($(this).html())
-        });
-
-        $('#comparisonList .specieY_name').each(function() {
-            specieY.push($(this).html())
-        });
-
-        getFullComparisonOf(specieX, specieY)
-    });
-}
-
-function getComparisonFromLocalFile(){
-
-
-}
-
-function fitToScreen() {
-    var svg = $(".heatmap > svg")[0];
-
-	var bb=svg.getBBox();
-	var bbx=bb.x
-	var bby=bb.y
-	var bbw=bb.width
-	var bbh=bb.height
-	//---center of graph---
-	var cx=bbx+.5*bbw
-	var cy=bby+.5*bbh
-    //---create scale: ratio of desired width vs current width--
-	var width=390 //---desired width (or height)
-	var scale=width/bbw //--if height use myHeight/bbh--
-	//---where to move it center of my pane---
-	var targetX=200
-	var targetY=200
-	//---move its center to target x,y ---
-	var transX=(-cx)*scale + targetX
-	var transY=(-cy)*scale + targetY
-	svg.setAttribute("transform","translate("+transX+" "+transY+")scale("+scale+" "+scale+")")
-
-
-}
-
+// Overlay ComparisonEvents
 function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chromosome_numbers, colors){
 
     var WIDTH = 455,
@@ -535,7 +508,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             .attr('data-legend', function(d) { return chromosome_numbers[d.cmp] })
             .style('stroke', function(d){ return d.color })
             .style('stroke-width', stroke_width)
-            ;
+            .style('z-index', 110);
     }else{
         event_lines = svg.selectAll('line')
             .data(events).enter()
@@ -547,7 +520,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             .attr('data-legend', function(d) { return chromosome_numbers[d.cmp] })
             .style('stroke', function(d){ return d.color })
             .style('stroke-width', stroke_width)
-            ;
+            .style('z-index', 110);
     }
 
     var ticks_xAxis = svg.append("g")
@@ -631,8 +604,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
                 .style('stroke-width', stroke_width);
         })
 
-    // Create Grid
-
+    // --- Create Grid
     // Add the X gridlines
     svg.selectAll("line.horizontalGrid").data(yScale.ticks(grid_ticks)).enter()
         .append("line")
@@ -650,6 +622,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             'stroke-opacity' : '0.6'
         });
     
+    // Add the Y gridlines
     svg.selectAll("line.verticalGrid").data(xScale.ticks(grid_ticks)).enter()
         .append("line")
         .attr(
@@ -665,4 +638,75 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             "stroke-width" : "1px",
             'stroke-opacity' : '0.6',
         });
+}
+
+// Automatic Threshold (Plabolize) to automatically understand EPW Scores
+function getScoresThreshold(){
+    var specieX = [],
+        specieY = [];
+
+    $('#comparisonList .specieX_name').each(function() {
+        specieX.push($(this).html())
+    });
+
+    $('#comparisonList .specieY_name').each(function() {
+        specieY.push($(this).html())
+    });
+
+    comparisonJson = [];
+    for (var i = 0; i<specieX.length; i++){
+        auxComparison  = {
+            specieX: specieX[i],
+            specieY: specieY[i]
+        }
+        addComparisonToComparisonList(specieX[i], specieY[i]);
+        comparisonJson.push(auxComparison);
+    }
+    
+    $.ajax({
+        type:"GET",
+        url:"/API/color_threshold",
+        data: {
+            'comparisons': JSON.stringify(comparisonJson)
+        },
+        success: function(content) {
+            thresholds = JSON.parse(content);
+            let color_slider = $("#color_slider").bootstrapSlider();
+            // ESTEBAN PEREZ W0HLFEIL
+            color_slider.bootstrapSlider('setValue', [thresholds.red*100,thresholds.green*100]);
+            colorValueLow = thresholds.red;
+            colorValueHigh = thresholds.green;
+            $("#addComparison").click();
+        }
+    });
+}
+
+
+function getComparisonFromLocalFile(){
+
+}
+
+function fitToScreen() {
+    var svg = $(".heatmap > svg")[0];
+
+	var bb=svg.getBBox();
+	var bbx=bb.x
+	var bby=bb.y
+	var bbw=bb.width
+	var bbh=bb.height
+	//---center of graph---
+	var cx=bbx+.5*bbw
+	var cy=bby+.5*bbh
+    //---create scale: ratio of desired width vs current width--
+	var width=390 //---desired width (or height)
+	var scale=width/bbw //--if height use myHeight/bbh--
+	//---where to move it center of my pane---
+	var targetX=200
+	var targetY=200
+	//---move its center to target x,y ---
+	var transX=(-cx)*scale + targetX
+	var transY=(-cy)*scale + targetY
+	svg.setAttribute("transform","translate("+transX+" "+transY+")scale("+scale+" "+scale+")")
+
+
 }
