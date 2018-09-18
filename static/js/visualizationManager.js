@@ -397,9 +397,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
                             overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors)
 
-                            
                             toggler("comparisonInfo");
-                            
+                            $("#collapseOverlay").collapse("show");
 
                             overlayOff();
                             spinnerOff();

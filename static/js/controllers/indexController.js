@@ -131,9 +131,10 @@ function newComparisonsButtonBehavior(){
 // Disable configuration button if species table is empty
 function checkSpeciesTable(){
     var rowCount = $('#comparisonList table tbody tr').length;
-    if(rowCount < 1)
+    if(rowCount < 1){
+        $("#collapseConfig").collapse("hide");
         $('#configButton').attr('disabled','disabled');
-    else
+    } else
         $('#configButton').removeAttr('disabled');
 }
 
