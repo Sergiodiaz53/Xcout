@@ -1,5 +1,5 @@
 # README 
-## Author: Sergio Díaz del Pino
+## Author: Sergio Díaz del Pino & Pablo Rodríguez Brazzarola
 ## Team: Bitlab Group
 ## Description: Interactive visualization based on heatmaps to preview a large amount of chromosome comparisons.
 
@@ -35,14 +35,8 @@ Requirements: Python 3 & Bower (Virtualenv is recommended)
 * `python manage.py migrate`
 * `python manage.py createsuperuser`
 
-- Load Database
-* ``
-* ``
-
 - Run Xcout (python manage.py runserver_plus)
 * `python manage.py runserver_plus`
-
-* ``
 
 ## Database config for Xcout: 
 

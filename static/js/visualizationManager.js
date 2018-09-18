@@ -34,6 +34,7 @@ function addComparisonToComparisonList(specieX, specieY){
         });
 
         getFullComparisonOf(specieX, specieY)
+        checkSpeciesTable();
     });
 }
 
@@ -662,7 +663,7 @@ function getScoresThreshold(){
         addComparisonToComparisonList(specieX[i], specieY[i]);
         comparisonJson.push(auxComparison);
     }
-    
+
     $.ajax({
         type:"GET",
         url:"/API/color_threshold",
@@ -676,16 +677,16 @@ function getScoresThreshold(){
             color_slider.bootstrapSlider('setValue', [thresholds.red*100,thresholds.green*100]);
             colorValueLow = thresholds.red;
             colorValueHigh = thresholds.green;
-            $("#addComparison").click();
         }
     });
 }
 
-
+// Get Comparison from Local
 function getComparisonFromLocalFile(){
 
 }
 
+// Fit heatmap canvas to screen
 function fitToScreen() {
     var svg = $(".heatmap > svg")[0];
 

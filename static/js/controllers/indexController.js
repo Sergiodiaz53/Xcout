@@ -21,13 +21,13 @@ $("#addComparison").click(function(){
     });
 
     getFullComparisonOf(specieX, specieY)
-
+    checkSpeciesTable();
 });
 
 // Auto Threshold (Plabolize) button
 $("#autoThreshold").click(function(){
     plabolize();
-    
+
     function plabolize(){
         getScoresThreshold()
     }
@@ -128,6 +128,16 @@ function newComparisonsButtonBehavior(){
     }
 }
 
+// Disable configuration button if species table is empty
+function checkSpeciesTable(){
+    var rowCount = $('#comparisonList table tbody tr').length;
+    if(rowCount < 1)
+        $('#configButton').attr('disabled','disabled');
+    else
+        $('#configButton').removeAttr('disabled');
+}
+
+// --- Document Init ---
 $(document).ready(function(){
     // Make species different as default
     try{
@@ -136,6 +146,8 @@ $(document).ready(function(){
         console.log("Cannot change index");
         newComparisonsButtonBehavior();
     }
+
+    checkSpeciesTable();
 });
 
 $('#specieX').on('change', function() {
