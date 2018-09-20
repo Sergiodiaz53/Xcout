@@ -34,7 +34,6 @@ function addComparisonToComparisonList(specieX, specieY){
         });
 
         getFullComparisonOf(specieX, specieY)
-        checkSpeciesTable();
     });
 }
 
@@ -62,6 +61,7 @@ function getFullComparisonOf(specieX, specieY){
             visualizeFullComparisonFromJSON(full_comparison)
         }
     });
+    checkSpeciesTable();
 }
 
 // Visualize all Comparison Info
@@ -120,41 +120,44 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     }
 
     // Add overlay to data
-    for(tick_x of x_elements){
-        let items_x = tick_x.split(" - ");
-        if(items_x[1] == "Overlay"){
-            for(tick_y of y_elements){
-                let score, items_y = tick_y.split(" - ");
-                if(items_x[0]==items_y[0]) score = -20; else score = -10;
-                if(items_y[1] != "Overlay"){
-                    data.push({
-                        chromosomeX_number:items_x[1],
-                        chromosomeY_number:items_y[1],
-                        img:"none",
-                        score:score,
-                        specieX:items_x[0],
-                        specieY:items_y[0]
-                    })
+    let specieX = [], specieY = [], score;
+
+    $('#comparisonList .specieX_name').each(function() { specieX.push($(this).html()) });
+    $('#comparisonList .specieY_name').each(function() { specieY.push($(this).html()) });
+
+    for(i in specieX){
+        let currX = specieX[i], currY = specieY[i], items_x, items_y;
+        
+        for(tick_x of x_elements){
+            items_x = tick_x.split(" - ");
+            if(items_x[0] == currX && items_x[1] == "Overlay"){
+                for(tick_y of y_elements){
+                    items_y = tick_y.split(" - ");
+                    if(items_y[0] == currY && items_x[0]==items_y[0]) score = -20; else score = -10;
+                    if(items_y[0] == currY && items_y[1] != "Overlay"){
+                        data.push({
+                            specieX:items_x[0], specieY:items_y[0], 
+                            chromosomeX_number:items_x[1], chromosomeY_number:items_y[1],
+                            img:"none", score:score
+                        })
+                    }
                 }
             }
         }
-    }
 
-    for(tick_y of y_elements){
-        let items_y = tick_y.split(" - ");
-        if(items_y[1] == "Overlay"){
-            for(tick_x of x_elements){
-                let score, items_x = tick_x.split(" - ");
-                if(items_x[0]==items_y[0]) score = -20; else score = -10;
-                if(items_x[1] != "Overlay"){
-                    data.push({
-                        chromosomeX_number:items_x[1],
-                        chromosomeY_number:items_y[1],
-                        img:"none",
-                        score:score,
-                        specieX:items_x[0],
-                        specieY:items_y[0]
-                    });
+        for(tick_y of y_elements){
+            items_y = tick_y.split(" - ");
+            if(items_y[0] == currY && items_y[1] == "Overlay"){
+                for(tick_x of x_elements){
+                    items_x = tick_x.split(" - ");
+                    if(items_x[0] == currX && items_x[0]==items_y[0]) score = -20; else score = -10;
+                    if(items_x[0] == currX && items_x[1] != "Overlay"){
+                        data.push({
+                            specieX:items_x[0], specieY:items_y[0], 
+                            chromosomeX_number:items_x[1], chromosomeY_number:items_y[1],
+                            img:"none", score:score
+                        })
+                    }
                 }
             }
         }
@@ -162,6 +165,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
 
     // --- Paint ---
     // Clear Overlay (if exists)
+    d3.select("body").append("div")
+        .attr("class", "tooltip_score")
+        .style("opacity", 0);
 
     //Set xScale
     var xScale = d3.scale.ordinal()
@@ -227,8 +233,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     //Set colorScale
     var colorScale = d3.scale.linear()
         // PLABOLO + SERGIURO + 3ST3B4NF0RM5T.CSw CERTIFIED
-        .range(['red', 'green','white']) // or use hex values
-        .domain([colorValueLow,colorValueHigh,1]);
+        .range(['red', 'red', 'green','white']) // or use hex values
+        .domain([0, colorValueLow, colorValueHigh, 1]);
 
     // Set cell size
 
@@ -285,7 +291,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
             return "translate(100,-100)";
         });
 
-    // Define the div for the tooltip
+    // Clear and Define the div for the tooltip
+    d3.selectAll('.tooltip_score').remove();
+
     var tooltip_score = d3.select("body").append("div")
         .attr("class", "tooltip_score")
         .style("opacity", 0);
@@ -312,6 +320,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                     tooltip_score.html(d.score) //) + "<br/>"  + d.close)
                     .style("left", (d3.event.pageX) + "px")
                     .style("top", (d3.event.pageY - 28) + "px");
+            
             }
 
             for(x_tick of ticks_x_axis[0]){
@@ -663,6 +672,7 @@ function getScoresThreshold(){
         comparisonJson.push(auxComparison);
     }
 
+    // Get scores
     $.ajax({
         type:"GET",
         url:"/API/color_threshold",
@@ -676,6 +686,20 @@ function getScoresThreshold(){
             color_slider.bootstrapSlider('setValue', [thresholds.red*100,thresholds.green*100]);
             colorValueLow = thresholds.red;
             colorValueHigh = thresholds.green;
+
+        }
+    });
+
+    // Repaint
+    $.ajax({
+        type:"GET",
+        url:"/API/comparison",
+        data: {
+            'comparisons': JSON.stringify(comparisonJson)
+        },
+        success: function(content) {
+            full_comparison = JSON.parse(content);
+            visualizeFullComparisonFromJSON(full_comparison)
         }
     });
 }

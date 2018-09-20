@@ -86,11 +86,13 @@
     }
 
     #colorRow .slider-selection {
-        background: green;
+        /*background: green;*/
+        background-image: linear-gradient(to right, red 0%, green 100%);
     }
 
     #colorRow .slider-track-high {
-        background: lightgrey;
+        /*background: lightgrey;*/
+        background-image: linear-gradient(to right, green 0%, lightgrey 100%);
     }
 
     #thresholdRow .slider-selection {
