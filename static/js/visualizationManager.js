@@ -11,6 +11,7 @@ var width = 800 - margin.right - margin.left,
 
 var colorValueLow = 0.25, colorValueHigh = 0.75;
 var overlay_threshold = 0.75
+var heatmap_svg;
 
 // Add Comparison to Comparison Table/List
 function addComparisonToComparisonList(specieX, specieY){
@@ -50,17 +51,8 @@ function getFullComparisonOf(specieX, specieY){
         addComparisonToComparisonList(specieX[i], specieY[i]);
         comparisonJson.push(auxComparison)
     }
-    $.ajax({
-        type:"GET",
-        url:"/API/comparison",
-        data: {
-            'comparisons': JSON.stringify(comparisonJson)
-        },
-        success: function(content) {
-            full_comparison = JSON.parse(content);
-            visualizeFullComparisonFromJSON(full_comparison)
-        }
-    });
+    
+    requestPaintComparisons(comparisonJson);
     checkSpeciesTable();
 }
 
@@ -162,8 +154,14 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
             }
         }
     }
-
+    // -------------
     // --- Paint ---
+    // -------------
+    
+    // Set cell size
+    width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
+    height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
+
     // Clear Overlay (if exists)
     d3.select("body").append("div")
         .attr("class", "tooltip_score")
@@ -236,20 +234,16 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .range(['red', 'red', 'green','white']) // or use hex values
         .domain([0, colorValueLow, colorValueHigh, 1]);
 
-    // Set cell size
-
-    width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
-    height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
-    
+    // --------------
+    // Draw SVG
     svg = d3.select('.heatmap')
         .append("svg")
         .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-        .append("g")                                                                                                                                                
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
+    heatmap_svg = d3.select('.heatmap > svg');
     // Draw axis
-
     var ticks_y_axis = svg.append("g")
         .attr("class", "y axis")
         .call(yAxis)
@@ -262,7 +256,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .call(upperLevelyAxis)
         .selectAll('text')
         .attr('font-weight', 'normal')
-        .style('font-size', '10px')
+        .style('font-size', '14px')
         .style('text-anchor', 'middle')
         .attr('transform', function (d) {
             return "translate(-140,100)rotate(-90)";
@@ -285,7 +279,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
         .attr("class", "x axis")
         .call(upperLevelxAxis)
         .selectAll('text')
-        .style('font-size', '10px')
+        .style('font-size', '12px')
         .attr('font-weight', 'normal')
         .attr('transform', function (d) {
             return "translate(100,-100)";
@@ -451,9 +445,9 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             left: 55
         }
     var WIDTH = WIDTH - MARGINS.left - MARGINS.right,
-        HEIGHT = WIDTH - MARGINS.top - MARGINS.bottom;
+        HEIGHT = HEIGHT - MARGINS.top - MARGINS.bottom;
 
-    var stroke_width = 2.5;
+    var stroke_width = 2;
     var axis_decimals = 0;
     var grid_ticks = 6
 
@@ -682,7 +676,7 @@ function getScoresThreshold(){
         success: function(content) {
             thresholds = JSON.parse(content);
             let color_slider = $("#color_slider").bootstrapSlider();
-            // ESTEBAN PEREZ W0HLFEIL
+            // ESTEBAN PEREZ W0HLFEIL ( *100)
             color_slider.bootstrapSlider('setValue', [thresholds.red*100,thresholds.green*100]);
             colorValueLow = thresholds.red;
             colorValueHigh = thresholds.green;
@@ -691,6 +685,50 @@ function getScoresThreshold(){
     });
 
     // Repaint
+    requestPaintComparisons(comparisonJson);
+}
+
+// Get Comparison from Local
+function getComparisonFromLocalFile(){
+
+}
+
+// Fit heatmap canvas to screen
+function fitToScreen() {
+    var svg = $(".heatmap > svg"),
+        heatmap = $(".heatmap");
+
+	var bb=svg[0].getBBox();
+	var bbx=bb.x
+	var bby=bb.y
+	var bbw=bb.width
+	var bbh=bb.height
+	//---center of graph---
+	var cx=bbx+.5*bbw
+	var cy=bby+.5*bbh
+    //---create scale: ratio of desired width/height vs current width/height--
+	var width_total = heatmap.width();
+    var height_total = heatmap.height();
+
+    var curr_width = svg.width();
+    var curr_height = svg.height();
+
+    var scaleX = width_total/curr_width; //--if height use myHeight/bbh--
+    var scaleY = height_total/curr_height;
+    let scale;
+    if(scaleX < scaleY) scale=scaleX; else scale=scaleY
+	//---where to move it center of my pane--- (cx)*scale + 
+	var targetX=500
+	var targetY=200
+	//---move its center to target x,y --- translate("+transX+" "+transY+")
+	var transX=cx*(scale-1)
+    var transY=cy*(scale-1)
+
+	svg[0].setAttribute("transform","translate("+transX+","+transY+")scale("+scale+","+scale+")")
+}
+
+// Paint Ajax Request
+function requestPaintComparisons(comparisonJson){
     $.ajax({
         type:"GET",
         url:"/API/comparison",
@@ -702,35 +740,4 @@ function getScoresThreshold(){
             visualizeFullComparisonFromJSON(full_comparison)
         }
     });
-}
-
-// Get Comparison from Local
-function getComparisonFromLocalFile(){
-
-}
-
-// Fit heatmap canvas to screen
-function fitToScreen() {
-    var svg = $(".heatmap > svg")[0];
-
-	var bb=svg.getBBox();
-	var bbx=bb.x
-	var bby=bb.y
-	var bbw=bb.width
-	var bbh=bb.height
-	//---center of graph---
-	var cx=bbx+.5*bbw
-	var cy=bby+.5*bbh
-    //---create scale: ratio of desired width vs current width--
-	var width=390 //---desired width (or height)
-	var scale=width/bbw //--if height use myHeight/bbh--
-	//---where to move it center of my pane---
-	var targetX=200
-	var targetY=200
-	//---move its center to target x,y ---
-	var transX=(-cx)*scale + targetX
-	var transY=(-cy)*scale + targetY
-	svg.setAttribute("transform","translate("+transX+" "+transY+")scale("+scale+" "+scale+")")
-
-
 }

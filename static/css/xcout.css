@@ -81,6 +81,19 @@
     
     /** Config Modal **/
 
+    .config_row {
+        margin:0 auto;
+    }
+
+    .config_slider {
+        float: center;
+        padding-right: 20px;
+    }
+
+    .config_button{
+        overflow: hidden;
+        width: 15%;
+    }
     #colorRow .slider-track-low {
         background: red;
     }
@@ -97,6 +110,19 @@
 
     #thresholdRow .slider-selection {
         background: lightblue;
+    }
+
+    /* HEATMAP*/
+
+    .heatmap {
+        float:left;
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+
+    .heatsvg {
+        position:absolute;
     }
 
     /* Tooltip */

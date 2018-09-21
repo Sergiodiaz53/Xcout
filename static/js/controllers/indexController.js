@@ -33,6 +33,11 @@ $("#autoThreshold").click(function(){
     }
 });
 
+// Fit to Screen (Plabolize) button
+$("#fitScreen").click(function(){
+    fitToScreen();
+});
+
 //Slider cell size config
 $('#itemSize_slider').bootstrapSlider({
 	formatter: function(value) {

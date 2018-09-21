@@ -19,110 +19,109 @@
             </div>
         </div>
         
-        <div class="col-sm-5 center-block">
-        <div class="affix sidemenu">
-        
-            <div id="comparisonData" class="form-inline text-center sidemenu_member">
-                
-            </div>
+        <div class="col-sm-4 center-block">
+            <div class="affix sidemenu">
             
-            <div id="comparisonOverlay" class="form-inline text-center sidemenu_member">
+                <div id="comparisonData" class="form-inline text-center sidemenu_member">
+                    
+                </div>
+                
+                <div id="comparisonOverlay" class="form-inline text-center sidemenu_member">
 
-            </div>
-
-            <div id="comparisonInfo" style="display: none" class="form-inline text-center sidemenu_member">
-                <div class="btn-group text-center" role="group" aria-label="Button tools menu">
-                    <button id="legendButton" type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseOverlay">Legend</button>
                 </div>
 
-                <div id="collapseOverlay" class="panel-collapse collapse">
-                    <table class="table"> 
-                    <thead>
-                        <!-- <tr> <th scope="col">Color</th> <th scope="col">Chromosome</th> </tr> -->
-                    </thead>
-                    <tbody id="collapseOverlayInfo">
-                        
-                    </tbody>
+                <div id="comparisonInfo" style="display: none" class="form-inline text-center sidemenu_member">
+                    <div class="btn-group text-center" role="group" aria-label="Button tools menu">
+                        <button id="legendButton" type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseOverlay">Legend</button>
+                    </div>
+
+                    <div id="collapseOverlay" class="panel-collapse collapse">
+                        <table class="table"> 
+                        <thead>
+                            <!-- <tr> <th scope="col">Color</th> <th scope="col">Chromosome</th> </tr> -->
+                        </thead>
+                        <tbody id="collapseOverlayInfo">
+                            
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="comparisonPreview" class="form-inline text-center sidemenu_member">
+
+                </div>
+
+
+                
+
+                <div class="form-inline text-center sidemenu_member">
+                    <div class="btn-group text-center" role="group" aria-label="Button tools menu">
+                        <button type="button" id="configButton" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseConfig">Configuration</button>
+                    </div>
+                </div>
+
+                <div id="collapseConfig" class="panel-collapse collapse">
+                    <div id="cellSizeRow" class="row config_row">
+                        <div class="form-inline text-center sidemenu_member">
+                            Cell size</br>
+                            <div class="form-group col-md-12 config_slider" id="itemSize_slider"> </div> 
+                            <button type="button" class="btn btn-secondary config_button" id="fitScreen">Fit</button> </br> 
+                        </div>
+                    </div>
+                    <div id="colorRow" class="row config_row">
+                        <div class="form-inline text-center sidemenu_member">
+                            Color thresholds</br>
+                            <div class="form-group col-md-12 config_slider" id="color_slider"> </div> 
+                            <button type="button" class="btn btn-warning config_button" id="autoThreshold">Auto</button> </br> 
+                        </div>
+                    </div>
+                    <div id="thresholdRow" class="row config_row">
+                        <div class="form-inline text-center sidemenu_member">
+                            Overlay threshold</br>
+                            <div class="form-group col-md-12 config_slider" id="threshold_slider"> </div> </br>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-inline text-center sidemenu_member">
+                    <div class="form-group">
+                        <select class="form-control input-sm" id="specieX">
+                        {% for chromosome in chromosomes %}
+                            <option value="{{ chromosome }}">{{ chromosome }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <select class="form-control input-sm" id="specieY">
+                        {% for chromosome in chromosomes %}
+                            <option value="{{ chromosome }}">{{ chromosome }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+
+                        <button type="button" class="btn btn-default" id="addComparison">+</button>
+                </div>
+
+
+                <div id="comparisonList">
+                    <table class="table table-striped">
+                        <tbody>
+                        <thead>
+                            <tr>
+                                <th class="col-md-4">Specie X</th>
+                                <th class="col-md-2"> </th>
+                                <th class="col-md-4">Specie Y</th>
+                                <th class="col-md-2"></th>
+                            </tr>
+                            </thead>
+                        </tbody>
                     </table>
                 </div>
             </div>
-            
-            <div id="comparisonPreview" class="form-inline text-center sidemenu_member">
-
-            </div>
-
-
-            
-
-            <div class="form-inline text-center sidemenu_member">
-                <div class="btn-group text-center" role="group" aria-label="Button tools menu">
-                    <button type="button" id="configButton" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseConfig">Configuration</button>
-                </div>
-            </div>
-
-            <div id="collapseConfig" class="panel-collapse collapse">
-                <div id="cellSizeRow" class="row">
-                    <div class="form-inline text-center sidemenu_member">
-                        Cell size </br> <div class="form-group col-md-12" id="itemSize_slider"> </div> </br>
-                    </div>
-                </div>
-                <div id="colorRow" class="row">
-                    <div class="form-inline text-center sidemenu_member">
-                        Color thresholds  </br> <div class="form-group col-md-12" id="color_slider"> </div> 
-                        <button type="button" class="btn btn-warning" id="autoThreshold">Auto</button>
-                        </br> 
-                    </div>
-                </div>
-                <div id="thresholdRow" class="row">
-                    <div class="form-inline text-center sidemenu_member">
-                        Overlay threshold  </br> <div class="form-group col-md-12" id="threshold_slider"> </div> </br>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-inline text-center sidemenu_member">
-                <div class="form-group">
-                    <select class="form-control input-sm" id="specieX">
-                    {% for chromosome in chromosomes %}
-                        <option value="{{ chromosome }}">{{ chromosome }}</option>
-                    {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <select class="form-control input-sm" id="specieY">
-                    {% for chromosome in chromosomes %}
-                        <option value="{{ chromosome }}">{{ chromosome }}</option>
-                    {% endfor %}
-                    </select>
-                </div>
-
-                    <button type="button" class="btn btn-default" id="addComparison">+</button>
-            </div>
-
-
-            <div id="comparisonList">
-                <table class="table table-striped">
-                    <tbody>
-                    <thead>
-                          <tr>
-                              <th class="col-md-4">Specie X</th>
-                              <th class="col-md-2"> </th>
-                              <th class="col-md-4">Specie Y</th>
-                              <th class="col-md-2"></th>
-                          </tr>
-
-                        </thead>
-                    </tbody>
-                </table>
-
-            </div>
-
         </div>
-        </div>
-
-        <div class="col-sm-7">
-            <div class="heatmap" style="float:left"></div>
+        <div class="col-sm-7" style='height: 100%;'>
+            <div class="heatmap"></div>
         </div>
 
 
