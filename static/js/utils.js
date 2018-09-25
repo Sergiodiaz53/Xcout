@@ -21,7 +21,8 @@ function sortObject(o) {
 }
 
 function naturalCompare(a, b) {
-    var ax = [], bx = [];
+    var ax = [], bx = []; 
+    if(a[0] == '[') a = 'ZZZZZZZZ' + a; if(b[0] == '[') b = 'ZZZZZZZZ' + b;
 
     a.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { ax.push([$1 || Infinity, $2 || ""]) });
     b.replace(/(\d+)|(\D+)/g, function(_, $1, $2) { bx.push([$1 || Infinity, $2 || ""]) });

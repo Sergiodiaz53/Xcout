@@ -40,28 +40,45 @@ function addComparisonToComparisonList(specieX, specieY){
 
 // Get all Comparisons Info in Comparison Table
 function getFullComparisonOf(specieX, specieY){
-    var full_comparison;
-
-    comparisonJson = [];
+    var comparisonJson = [];
     for (var i = 0; i<specieX.length; i++){
         auxComparison  = {
             specieX: specieX[i],
             specieY: specieY[i]
         }
-        addComparisonToComparisonList(specieX[i], specieY[i]);
-        comparisonJson.push(auxComparison)
+        
+        if(!localSpecieCheck(specieX[i])){
+            addComparisonToComparisonList(specieX[i], specieY[i]);
+            comparisonJson.push(auxComparison)
+        }
     }
-    
     requestPaintComparisons(comparisonJson);
-    checkSpeciesTable();
+    //checkSpeciesTable();
+}
+
+// Paint Ajax Request
+function requestPaintComparisons(comparisonJson){
+    $.ajax({
+        type:"GET",
+        url:"/API/comparison",
+        data: {
+            'comparisons': JSON.stringify(comparisonJson)
+        },
+        success: function(content) {
+            full_comparison = JSON.parse(content); SERVER_COMPARISON = full_comparison;
+            SERVER_LOADED = (full_comparison.length > 1) ? true : false;
+            visualizeFullComparisonFromJSON(full_comparison)
+        }
+    });
 }
 
 // Visualize all Comparison Info
-function visualizeFullComparisonFromJSON(full_comparison_json) {
-    var data = full_comparison_json;
+function visualizeFullComparisonFromJSON(full_comparison_json = [], local_comparison_json = []) {
+    if(LOCAL_LOADED && !(local_comparison_json.length > 0)) local_comparison_json = LOCAL_COMPARISON;
+    if(SERVER_LOADED && !(full_comparison_json.length > 0)) full_comparison_json = SERVER_COMPARISON;
+    console.log('Visualize!')
 
-    var speciesX_numbers = {};
-    var speciesY_numbers = {};
+    var data = full_comparison_json.concat(local_comparison_json);// console.log(data)
 
     // Clear Sidemenu
     $(".heatmap").html('');
@@ -77,6 +94,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     //Get elements for X,Y and UpperLevelXYAxis
     var x_elements = d3.set(data.map(function( comparison ) {return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
         y_elements = d3.set(data.map(function( comparison ) {return comparison.specieY + " - " + comparison.chromosomeY_number;  } )).values();
+    var speciesX_numbers = {}, speciesY_numbers = {};
 
     //Get number of chromosomes for specie
     for (var i = 0, j = x_elements.length; i < j; i++) {
@@ -90,11 +108,11 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
     //Sorting elements and axis
     x_elements.sort(naturalCompare);
     y_elements.sort(naturalCompare);
+
     speciesX_numbers = sortObject(speciesX_numbers);
     speciesY_numbers = sortObject(speciesY_numbers);
 
     //Calculate OverlayCell positions
-
     var curr_ind = 0;
     for(specie of Object.keys(speciesX_numbers)) {
         curr_ind += speciesX_numbers[specie];
@@ -364,56 +382,60 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                 var data_string = "<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " | vs | (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
-                
                 if(d.score == -10) {
                     let sp_x = d.specieX, sp_y = d.specieY
                     let chr_x = d.chromosomeX_number, chr_y = d.chromosomeY_number;
 
-                    $.ajax({
-                        type:"GET",
-                        url:"/API/overlay",
-                        data: {
-                            'specieX': sp_x,
-                            'specieY': sp_y,
-                            'chromosomeX': chr_x,
-                            'chromosomeY': chr_y,
-                            'threshold': overlay_threshold
-                        },
-                        beforeSend: function(){
-                            overlayOn();
-                            spinnerOn("Creating image...");
-                        },
-                        success: function(content){
-                            response = JSON.parse(content);
-                            tmp_test = response;
+                    if(localSpecieCheck(d.specieX)){
+                        // Overlay local
+                    } else {
+                        // Overlay server
+                        $.ajax({
+                            type:"GET",
+                            url:"/API/overlay",
+                            data: {
+                                'specieX': sp_x,
+                                'specieY': sp_y,
+                                'chromosomeX': chr_x,
+                                'chromosomeY': chr_y,
+                                'threshold': overlay_threshold
+                            },
+                            beforeSend: function(){
+                                overlayOn();
+                                spinnerOn("Creating image...");
+                            },
+                            success: function(content){
+                                response = JSON.parse(content);
+                                tmp_test = response;
 
-                            // Add comparison data -- HEADER
-                            $("#comparisonData").html(data_string);
+                                // Add comparison data -- HEADER
+                                $("#comparisonData").html(data_string);
 
-                            // Add image -- EVENTS METHOD
-                            let chromosome_numbers = [];
-                            let colors = [...new Set(response.events.map(item => item.color))];
+                                // Add image -- EVENTS METHOD
+                                let chromosome_numbers = [];
+                                let colors = [...new Set(response.events.map(item => item.color))];
 
-                            for(url of response.urls){
-                                chromosome_numbers.push(imgUrlParser(url, response.base_axis));
+                                for(url of response.urls){
+                                    chromosome_numbers.push(imgUrlParser(url, response.base_axis));
+                                }
+
+                                overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors)
+
+                                toggler("comparisonInfo");
+                                $("#collapseOverlay").collapse("show");
+
+                                overlayOff();
+                                spinnerOff();
+                            },
+                            error: function(error){
+                                response = error.responseJSON
+                                showAlert("Error", response.message, "danger")
+                                overlayOff();
+                                spinnerOff();
                             }
-
-                            overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors)
-
-                            toggler("comparisonInfo");
-                            $("#collapseOverlay").collapse("show");
-
-                            overlayOff();
-                            spinnerOff();
-                        },
-                        error: function(error){
-                            response = error.responseJSON
-                            showAlert("Error", response.message, "danger")
-                            overlayOff();
-                            spinnerOff();
-                        }
-                    });
-                    div.removeClass('comparisonPreview');
+                        });
+                        div.removeClass('comparisonPreview');
+                    }
                 }
                 else{
                     div.addClass('comparisonPreview');
@@ -423,9 +445,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json) {
                     $("#comparisonData").html(data_string);
 
                     // Add image
-                    var image_path = d.img;
-                    string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
-                    div.html(string)
+                    if(localSpecieCheck(d.specieX)){
+                        loadLocalImage(local_data.pngs.find(function(png){ return png.name == d.img }));
+                    } else{
+                        var image_path = d.img;
+                        string = "<img style='height: 100%; width: 100%; object-fit: contain' src=" + image_path + " + />"
+                        div.html(string);
+                    }
                 }
             }
         });
@@ -646,25 +672,21 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
 
 // Automatic Threshold (Plabolize) to automatically understand EPW Scores
 function getScoresThreshold(){
-    var specieX = [],
-        specieY = [];
+    var tmp = getLoadedSpecies(),
+        specieX = tmp.specieX,
+        specieY = tmp.specieY;
 
-    $('#comparisonList .specieX_name').each(function() {
-        specieX.push($(this).html())
-    });
-
-    $('#comparisonList .specieY_name').each(function() {
-        specieY.push($(this).html())
-    });
-
-    comparisonJson = [];
+    var comparisonJson = [];
     for (var i = 0; i<specieX.length; i++){
         auxComparison  = {
             specieX: specieX[i],
             specieY: specieY[i]
         }
-        addComparisonToComparisonList(specieX[i], specieY[i]);
-        comparisonJson.push(auxComparison);
+        
+        if(!localSpecieCheck(specieX[i])){
+            addComparisonToComparisonList(specieX[i], specieY[i]);
+            comparisonJson.push(auxComparison)
+        }
     }
 
     // Get scores
@@ -686,12 +708,8 @@ function getScoresThreshold(){
     });
 
     // Repaint
-    requestPaintComparisons(comparisonJson);
-}
-
-// Get Comparison from Local
-function getComparisonFromLocalFile(){
-
+    //requestPaintComparisons(comparisonJson);
+    visualizeFullComparisonFromJSON(full_comparison);
 }
 
 // Fit heatmap canvas to screen
@@ -726,19 +744,4 @@ function fitToScreen() {
     var transY=cy*(scale-1)
 
 	svg[0].setAttribute("transform","translate("+transX+","+transY+")scale("+scale+","+scale+")")
-}
-
-// Paint Ajax Request
-function requestPaintComparisons(comparisonJson){
-    $.ajax({
-        type:"GET",
-        url:"/API/comparison",
-        data: {
-            'comparisons': JSON.stringify(comparisonJson)
-        },
-        success: function(content) {
-            full_comparison = JSON.parse(content); tmp_test = full_comparison;
-            visualizeFullComparisonFromJSON(full_comparison)
-        }
-    });
 }
