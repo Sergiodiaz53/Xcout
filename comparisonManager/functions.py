@@ -335,37 +335,14 @@ def automaticColorThreshold(request):
 
         score_list.extend([10,comp['score']] for comp in db_comparisons.values('score'))
 
-    print(score_list)
     K_CLUSTERS = 3
     km = KMeans(n_clusters=K_CLUSTERS, max_iter=10).fit(score_list)
     centers = sorted(score for i, score in km.cluster_centers_)
 
-    print('--- CENTERS ---')
-    print(centers)
     red_threshold = centers[0]#(centers[0] + centers[1])/2
     green_threshold = centers[1]#(centers[2] + centers[3])/2
     suggested_thresholds = { 'red': red_threshold, 'green': green_threshold }
 
-    """
-    print('--- CLUSTERS ---')
-    clusters = []
-    for curr_k in range(K_CLUSTERS):
-        indexes = [i for i, x in enumerate(km.labels_) if x == curr_k]
-        clusters.append([score_list[i][1] for i in indexes])
-
-    for cluster in clusters:
-        print(cluster)
-
-    print('--- THRESHOLDS ---')
-    red_threshold = max(clusters[1])#(centers[0] + centers[1])/2
-    green_threshold = centers[2]#(centers[2] + centers[3])/2
-
-    print('--- LABELS ---')
-    labels = km.predict(score_list)
-    print(labels)
-    """
-
-    #return HttpResponse('OK')
     return JsonResponse(json.dumps(suggested_thresholds), safe=False)
 
 

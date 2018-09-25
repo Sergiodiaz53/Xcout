@@ -79,7 +79,32 @@
         opacity:0.8;
     }
     
-    /** Config Modal **/
+    #collapseOverlayInfo {
+        padding: 10px;
+        text-align: center;
+    }
+
+    #collapseOverlayInfo div div {
+        width: 10%;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 9px;
+        margin: 2px;
+        display:inline-block;
+    }
+
+    #collapseOverlayInfo div {
+        margin: 5px;
+        height: 35px;
+        display: block;
+    }
+
+    #legendButton {
+        margin-bottom: 8;
+        margin-top: 5;
+    }
+    
+    /** Config Collapse **/
 
     .config_row {
         margin:0 auto;
@@ -92,6 +117,7 @@
 
     .config_button{
         overflow: hidden;
+        margin-left: 15px;
         width: 15%;
     }
     #colorRow .slider-track-low {

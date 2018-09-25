@@ -555,13 +555,14 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     // Legend
     let string = ""
     for(chr_i in chromosome_numbers){
-        if(chr_i % 5 == 0)
-            string+="<tr\> <th scope='row'> </th> ";
-        string += "<td bgcolor='" + colors[chr_i] + "'><td>" + chromosome_numbers[chr_i][1] + "</td>"
-        if(chr_i-4 % 5 == 0)
-            string+=" </tr>";
+        console.log(chr_i)
+        if(chr_i % 4 == 0)
+            string+="<div> ";
+        string += "<div style='background-color: " + colors[chr_i] + ";'>&emsp;</div> <div>" + chromosome_numbers[chr_i][1] + "</div>"
+        if((chr_i-3) % 4 == 0)
+            string+="</div>";
     }
-    $("#collapseOverlayInfo").html(string)
+    $("#collapseOverlayInfo").html(string);
 
     
     var tooltip_event = d3.select("body").append("div")
@@ -736,7 +737,7 @@ function requestPaintComparisons(comparisonJson){
             'comparisons': JSON.stringify(comparisonJson)
         },
         success: function(content) {
-            full_comparison = JSON.parse(content);
+            full_comparison = JSON.parse(content); tmp_test = full_comparison;
             visualizeFullComparisonFromJSON(full_comparison)
         }
     });

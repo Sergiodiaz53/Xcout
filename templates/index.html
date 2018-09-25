@@ -36,14 +36,12 @@
                     </div>
 
                     <div id="collapseOverlay" class="panel-collapse collapse">
-                        <table class="table"> 
-                        <thead>
-                            <!-- <tr> <th scope="col">Color</th> <th scope="col">Chromosome</th> </tr> -->
-                        </thead>
-                        <tbody id="collapseOverlayInfo">
-                            
-                        </tbody>
-                        </table>
+                        <!-- <table class="table table-sm" style='table-layout: fixed'> 
+                            <tbody id="collapseOverlayInfo">
+                                
+                            </tbody>
+                        </table>   -->  
+                       <div id="collapseOverlayInfo" class='col-sm-12'></div>                  
                     </div>
                 </div>
                 
@@ -100,7 +98,12 @@
                         </select>
                     </div>
 
-                        <button type="button" class="btn btn-default" id="addComparison">+</button>
+                    <button type="button" class="btn btn-default" id="addComparison">+</button>
+                    
+                    <button type="button" class="btn btn-secondary" id="loadLocal" data-toggle="collapse" data-target="#collapseLocal">Local</button>
+                    <div id="collapseLocal" class="panel-collapse collapse" >
+                        <input type="file" id="file-input" webkitdirectory directory multiple>
+                    </div>
                 </div>
 
 

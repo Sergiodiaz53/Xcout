@@ -44,7 +44,7 @@ $('#itemSize_slider').bootstrapSlider({
 		return 'Current value: ' + value;
 	},
     min: 6,
-    max: 20,
+    max: 25,
     step: 1,
     value: itemSize,
     tooltip:"show",
