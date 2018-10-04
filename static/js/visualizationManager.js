@@ -10,7 +10,7 @@ var width = 800 - margin.right - margin.left,
     height = 800 - margin.top - margin.bottom;
 
 var colorValueLow = 0.25, colorValueHigh = 0.75;
-var overlay_threshold = 0.75
+var overlay_threshold = 0.75;
 var heatmap_svg;
 
 // Add Comparison to Comparison Table/List
@@ -34,7 +34,7 @@ function addComparisonToComparisonList(specieX, specieY){
             specieY.push($(this).html())
         });
 
-        getFullComparisonOf(specieX, specieY)
+        getFullComparisonOf(specieX, specieY);
     });
 }
 
@@ -53,7 +53,6 @@ function getFullComparisonOf(specieX, specieY){
         }
     }
     requestPaintComparisons(comparisonJson);
-    //checkSpeciesTable();
 }
 
 // Paint Ajax Request
@@ -383,11 +382,15 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
                 if(d.score == -10) {
+                    overlayOn();
+                    spinnerOn("Creating image...");
                     let sp_x = d.specieX, sp_y = d.specieY
                     let chr_x = d.chromosomeX_number, chr_y = d.chromosomeY_number;
 
                     if(localSpecieCheck(d.specieX)){
                         // Overlay local
+                        readLocalEvents(sp_x, sp_y, chr_x, chr_y, overlay_threshold, data_string);
+                        
                     } else {
                         // Overlay server
                         $.ajax({
@@ -400,10 +403,6 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                                 'chromosomeY': chr_y,
                                 'threshold': overlay_threshold
                             },
-                            beforeSend: function(){
-                                overlayOn();
-                                spinnerOn("Creating image...");
-                            },
                             success: function(content){
                                 response = JSON.parse(content);
                                 tmp_test = response;
@@ -415,27 +414,22 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                                 let chromosome_numbers = [];
                                 let colors = [...new Set(response.events.map(item => item.color))];
 
-                                for(url of response.urls){
-                                    chromosome_numbers.push(imgUrlParser(url, response.base_axis));
-                                }
+                                for(url of response.urls){ chromosome_numbers.push(imgUrlParser(url, response.base_axis)); }
 
                                 overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors)
 
                                 toggler("comparisonInfo");
                                 $("#collapseOverlay").collapse("show");
-
-                                overlayOff();
-                                spinnerOff();
                             },
                             error: function(error){
                                 response = error.responseJSON
                                 showAlert("Error", response.message, "danger")
-                                overlayOff();
-                                spinnerOff();
                             }
                         });
-                        div.removeClass('comparisonPreview');
                     }
+                    div.removeClass('comparisonPreview');
+                    overlayOff();
+                    spinnerOff();
                 }
                 else{
                     div.addClass('comparisonPreview');
@@ -456,7 +450,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
             }
         });
 
-    showAlert("Loaded", "Comparison loaded", "info")
+    checkSpeciesTable();
+    showAlert("Loaded", "Comparison loaded", "info");
 }
 
 // Overlay ComparisonEvents
@@ -474,7 +469,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
         HEIGHT = HEIGHT - MARGINS.top - MARGINS.bottom;
 
     var stroke_width = 2;
-    var axis_decimals = 0;
+    var axis_decimals = 2;
     var grid_ticks = 6
 
     // Clear Sidemenu
@@ -690,26 +685,30 @@ function getScoresThreshold(){
     }
 
     // Get scores
+    let local_scores = [];
+
+    for(local_cmp of LOCAL_COMPARISON){
+        local_scores.push(parseFloat(local_cmp.score));
+    }
     $.ajax({
-        type:"GET",
-        url:"/API/color_threshold",
+        type:"POST",
+        url:"/API/color_threshold/",
         data: {
-            'comparisons': JSON.stringify(comparisonJson)
+            'comparisons': JSON.stringify(comparisonJson),
+            'local_scores': JSON.stringify(local_scores)
         },
         success: function(content) {
-            thresholds = JSON.parse(content);
+            thresholds = JSON.parse(content); console.log(thresholds);
             let color_slider = $("#color_slider").bootstrapSlider();
             // ESTEBAN PEREZ W0HLFEIL ( *100)
             color_slider.bootstrapSlider('setValue', [thresholds.red*100,thresholds.green*100]);
             colorValueLow = thresholds.red;
             colorValueHigh = thresholds.green;
 
+            // Repaint
+            requestPaintComparisons(comparisonJson);
         }
     });
-
-    // Repaint
-    //requestPaintComparisons(comparisonJson);
-    visualizeFullComparisonFromJSON(full_comparison);
 }
 
 // Fit heatmap canvas to screen

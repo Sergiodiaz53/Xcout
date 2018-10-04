@@ -21,7 +21,6 @@ $("#addComparison").click(function(){
     });
 
     getFullComparisonOf(specieX, specieY)
-    checkSpeciesTable();
 });
 
 // Auto Threshold (Plabolize) button
@@ -79,17 +78,19 @@ $('#threshold_slider').bootstrapSlider({
 
 //Slider cell size config
 $('#itemSize_slider').bootstrapSlider().on("slideStop", function(callback){
-    itemSize = callback.value;
-    cellSize = itemSize - 1;
-    $("#addComparison").click();
+    itemSize = callback.value; cellSize = itemSize - 1;
+
+    let species = getLoadedSpecies();
+    getFullComparisonOf(species.specieX, species.specieY);
 });
 
 
 //Slider color config
 $('#color_slider').bootstrapSlider().on("slideStop", function(callback){
-    colorValueLow = callback.value[0]/100;
-    colorValueHigh = callback.value[1]/100;
-    $("#addComparison").click();
+    colorValueLow = callback.value[0]/100; colorValueHigh = callback.value[1]/100;
+
+    let species = getLoadedSpecies();
+    getFullComparisonOf(species.specieX, species.specieY);
 });
 
 //Slider threshold config

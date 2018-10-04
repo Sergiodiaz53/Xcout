@@ -2,6 +2,10 @@
  * Created by Sergio and Plabolo on 4/10/17.
  */
 
+R_color = [192, 41, 126, 241, 39, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68, 160, 80, 43, 185, 34, 96, 150, 98, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 57, 128, 126, 174, 196]
+G_color = [57, 128, 230, 196, 174, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 174, 196, 68, 160, 80, 43, 185, 34, 179, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 80, 43, 185, 34, 96, 15, 173, 133, 68]
+B_color = [43, 185, 34, 15, 96, 173, 133, 44, 192, 41, 230, 39, 241, 142, 22, 62, 57, 128, 126, 174, 196, 68, 160, 15, 173, 133, 44, 192, 41, 230, 54, 23, 15, 173, 133, 44, 192, 41, 96, 15, 173, 133, 44, 192, 41, 230, 241, 142, 22, 62, 57, 128, 174]
+
 function showAlert(title, content, type) {
     $("#alertContainer").bootstrapAlert({
         type: type, // Optional, , default: 'info',  values: 'success', 'info', 'warning' or 'danger'
@@ -66,7 +70,7 @@ function clearDivIdSVG(divId){
 function imgUrlParser(img_url, base_axis){
     //         0    1  2     3        4  5  6
     //"media/HOMSA.Chr.1.fasta-MUSMU.Chr.1.fasta.mat.filt.png"
-    let items = img_url.split('/')[1].split('.');
+    let items = img_url.split('/').pop().split('.');
 
     if(base_axis == 'X')
         return [items[3].split('-')[1], items[5]]
@@ -80,6 +84,21 @@ function imgUrlParser(img_url, base_axis){
 // Generate RGB
 function rgb(r,g,b){
     return ("rgb("+r+","+g+","+b+")")
+}
+
+// Convert one RGB value to Hex
+function rgbToHex(rgb) { 
+    var hex = Number(rgb).toString(16);
+    if (hex.length < 2)
+        hex = "0" + hex;
+    
+    return hex;
+};
+
+// Convert RGB values to Hex
+function fullColorHex(r,g,b){
+    let red = rgbToHex(r), green = rgbToHex(g), blue = rgbToHex(b);
+    return red+green+blue;
 }
 
 // Select label element from axis tick
@@ -110,11 +129,27 @@ function scientificNotation(x, f) {
 function pairbaseNotation(x, f) {
     let pb = Number.parseFloat(x).toExponential(f);
     let current_exp = 1000;
-    if(pb / current_exp < 1000) return (pb/current_exp).toFixed(f) + "Kbp"
+    if(pb / current_exp < 1000) return (pb/current_exp).toFixed(f).split('.')[0] + "Kbp"
     current_exp = current_exp * 1000
-    if (pb / current_exp < 1000) return (pb/current_exp).toFixed(f) + "Mbp"
+    if (pb / current_exp < 1000) return (pb/current_exp).toFixed(f).split('.')[0] + "Mbp"
     current_exp = current_exp * 1000
-    return (pb/current_exp).toFixed(frames) + "Gbp"
+    return (pb/current_exp).toFixed(f).split('.')[0] + "Gbp"
+}
+
+// Retrieve Species in Table Columns
+function getLoadedSpecies(){
+    var specieX = [],
+        specieY = [];
+
+    $('#comparisonList .specieX_name').each(function() {
+        specieX.push($(this).html())
+    });
+
+    $('#comparisonList .specieY_name').each(function() {
+        specieY.push($(this).html())
+    });
+
+    return {'specieX': specieX, 'specieY': specieY};
 }
 
 // --- DEBUG --- //

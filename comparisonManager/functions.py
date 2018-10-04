@@ -196,12 +196,9 @@ def createOverlayedImage(request):
     print("threshold :: " + threshold)
     print("overlay_axis :: " + overlay_axis)
     print("inverted :: " + str(inverted))
-    #print("max_len_chromosome :: " + str(max_len_chromosome))
     print("---- DEBUG -----")
 
     # Filter comparisons by threshold
-    print(comparisons)
-
     cmp_data = []
     base_max_len = 0
 
@@ -214,16 +211,6 @@ def createOverlayedImage(request):
 
             cmp_info = (comparison.img.url[1:], tmp_len, comparison.csv)
             cmp_data.append(cmp_info)
-
-
-    if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
-        BACKGROUND_INIT_W = 25
-        BACKGROUND_END_H = 1000
-    else:
-        BACKGROUND_INIT_W = 0
-        BACKGROUND_END_H = 965
-
-    DIFF_W = PLOT_INIT_PIXEL-BACKGROUND_INIT_W
 
     # Sort comparison data
     cmp_data = sorted_properly(cmp_data)
@@ -242,6 +229,16 @@ def createOverlayedImage(request):
     colors = []
     
     """
+
+    if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
+        BACKGROUND_INIT_W = 25
+        BACKGROUND_END_H = 1000
+    else:
+        BACKGROUND_INIT_W = 0
+        BACKGROUND_END_H = 965
+
+    DIFF_W = PLOT_INIT_PIXEL-BACKGROUND_INIT_W
+        
     ### ------------------ IMAGE METHOD
     # Create new image
     background = transparent_background(images_paths[0])
@@ -302,7 +299,7 @@ def createOverlayedImage(request):
         'events': csv_data,
         'max_x': max_len_x,
         'max_y': max_len_y,
-        'color': colors,
+        #'color': colors,
         #'img': str(img_str)[2:],
         'base_axis': base_axis
     }
@@ -312,13 +309,16 @@ def createOverlayedImage(request):
 
 ### Automatic Color Threshold ###
 # Request
-@api_view(['GET'])
+@api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
 
-def automaticColorThreshold(request):
-    comparisons = request.GET.get('comparisons', '')
+def automaticColorThreshold(request):       
+    comparisons = request.POST.get('comparisons', '')
+    local_scores = request.POST.get('local_scores', '')
+
     comparisons = json.loads(comparisons)
+    local_scores = json.loads(local_scores)
 
     score_list = []
 
@@ -334,6 +334,9 @@ def automaticColorThreshold(request):
             db_comparisons = Comparison.objects.all().filter(chromosome_x__specie__name=specieY, chromosome_y__specie__name=specieX)
 
         score_list.extend([10,comp['score']] for comp in db_comparisons.values('score'))
+
+    for l_score in local_scores:
+        score_list.append([10,l_score])
 
     K_CLUSTERS = 3
     km = KMeans(n_clusters=K_CLUSTERS, max_iter=10).fit(score_list)
