@@ -378,7 +378,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
             
             if (d.score != -20){
                 var string = "";
-                var data_string = "<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " | vs | (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
+                var data_string = "<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " </br> vs </br> (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
                 if(d.score == -10) {
