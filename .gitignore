@@ -15,6 +15,10 @@ static/bower_components/*
 images/
 comparisonManager/migrations/*
 
+COPYALL.sh
+EXECUTE.sh
+file_paths.txt
+
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio
 
