@@ -1,6 +1,7 @@
 /**
  * Created by Sergio and Plabolo on 2/10/17.
  */
+var FORCE_URL = "/xcout";
 
 var itemSize = 14,
     cellSize = itemSize - 1,
@@ -59,7 +60,7 @@ function getFullComparisonOf(specieX, specieY){
 function requestPaintComparisons(comparisonJson){
     $.ajax({
         type:"GET",
-        url:"/API/comparison",
+        url:FORCE_URL+"/API/comparison",
         data: {
             'comparisons': JSON.stringify(comparisonJson)
         },
@@ -395,7 +396,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                         // Overlay server
                         $.ajax({
                             type:"GET",
-                            url:"/API/overlay",
+                            url:FORCE_URL+"/API/overlay",
                             data: {
                                 'specieX': sp_x,
                                 'specieY': sp_y,
@@ -576,7 +577,6 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     // Legend
     let string = ""
     for(chr_i in chromosome_numbers){
-        console.log(chr_i)
         if(chr_i % 4 == 0)
             string+="<div> ";
         string += "<div style='background-color: " + colors[chr_i] + ";'>&emsp;</div> <div>" + chromosome_numbers[chr_i][1] + "</div>"
@@ -692,7 +692,7 @@ function getScoresThreshold(){
     }
     $.ajax({
         type:"POST",
-        url:"/API/color_threshold/",
+        url:FORCE_URL+"/API/color_threshold/",
         data: {
             'comparisons': JSON.stringify(comparisonJson),
             'local_scores': JSON.stringify(local_scores)
