@@ -1,6 +1,7 @@
 /**
  * Created by Sergio and Plabolo on 2/10/17.
  */
+var FORCE_URL = ""//"/xcout";
 
 var itemSize = 14,
     cellSize = itemSize - 1,
@@ -15,7 +16,7 @@ var heatmap_svg;
 
 // Add Comparison to Comparison Table/List
 function addComparisonToComparisonList(specieX, specieY){
-    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
+    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger removeButton'><bs-glyphicon icon='remove'></bs-glyphicon></bs-glyphicon></button></td>'";
 
     //If comparison doesn't exists, add it.
     if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
@@ -59,7 +60,7 @@ function getFullComparisonOf(specieX, specieY){
 function requestPaintComparisons(comparisonJson){
     $.ajax({
         type:"GET",
-        url:"/API/comparison",
+        url:FORCE_URL+"/API/comparison",
         data: {
             'comparisons': JSON.stringify(comparisonJson)
         },
@@ -333,7 +334,6 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                     .style("top", (d3.event.pageY - 28) + "px");
             
             }
-
             for(x_tick of ticks_x_axis[0]){
                 if(x_tick.innerHTML == d.specieX + " - " + d.chromosomeX_number){
                     tick_dom = d3.select(x_tick);
@@ -378,7 +378,21 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
             
             if (d.score != -20){
                 var string = "";
-                var data_string = "<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " </br> vs </br> (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
+                var data_string = '<button type="button" class="btn btn-warning btn-md pull-right" \
+                        onclick="clearSidemenuSelection()">\
+                        <bs-glyphicon icon="minus"></bs-glyphicon></button>\
+                    <table id="infoTable" class="table table-bordered table-hover"> \
+                        <tr> \
+                            <th scope="row">X Axis</th> \
+                            <td>' + d.specieX + ' - Chromosome: ' + d.chromosomeX_number + '</td> \
+                        </tr> \
+                        <tr> \
+                            <th scope="row">Y Axis</th> \
+                            <td>' + d.specieY + ' - Chromosome: ' + d.chromosomeY_number + '</td> \
+                        </tr> \
+                    ' 
+
+                    //"<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " </br> vs </br> (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
                 if(d.score == -10) {
@@ -395,7 +409,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                         // Overlay server
                         $.ajax({
                             type:"GET",
-                            url:"/API/overlay",
+                            url:FORCE_URL+"/API/overlay",
                             data: {
                                 'specieX': sp_x,
                                 'specieY': sp_y,
@@ -435,7 +449,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                     div.addClass('comparisonPreview');
                     clearDivIdSVG("comparisonOverlay");
                     // Add comparison data
-                    data_string += "<h3>Score: "  + d.score + "</h3>";
+                    data_string += '<tr> \
+                            <th scope="row">Score</th> \
+                            <td>' + d.score + '</td> \
+                        </tr> \
+                    </table> \
+                    '
+                    //"<h3>Score: "  + d.score + "</h3>";
                     $("#comparisonData").html(data_string);
 
                     // Add image
@@ -470,7 +490,6 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
 
     var stroke_width = 2;
     var axis_decimals = 2;
-    var grid_ticks = 6
 
     // Clear Sidemenu
     var comparisonPreview = $("#comparisonPreview");
@@ -576,7 +595,6 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
     // Legend
     let string = ""
     for(chr_i in chromosome_numbers){
-        console.log(chr_i)
         if(chr_i % 4 == 0)
             string+="<div> ";
         string += "<div style='background-color: " + colors[chr_i] + ";'>&emsp;</div> <div>" + chromosome_numbers[chr_i][1] + "</div>"
@@ -631,7 +649,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
 
     // --- Create Grid
     // Add the X gridlines
-    svg.selectAll("line.horizontalGrid").data(yScale.ticks(grid_ticks)).enter()
+    svg.selectAll("line.horizontalGrid").data(yScale.ticks(ticks_xAxis[0].length)).enter()
         .append("line")
         .attr(
         {
@@ -648,7 +666,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
         });
     
     // Add the Y gridlines
-    svg.selectAll("line.verticalGrid").data(xScale.ticks(grid_ticks)).enter()
+    svg.selectAll("line.verticalGrid").data(xScale.ticks(ticks_yAxis[0].length)).enter()
         .append("line")
         .attr(
         {
@@ -692,7 +710,7 @@ function getScoresThreshold(){
     }
     $.ajax({
         type:"POST",
-        url:"/API/color_threshold/",
+        url:FORCE_URL+"/API/color_threshold/",
         data: {
             'comparisons': JSON.stringify(comparisonJson),
             'local_scores': JSON.stringify(local_scores)

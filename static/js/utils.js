@@ -59,11 +59,19 @@ function emptier(divId){
     $("#" + divId).html('');
 }
 
+function clearFull(divId){
+    $("#" + divId).empty();
+}
+
 function clearDivIdSVG(divId){
     let svg = d3.select("#" + divId + " > svg");
     if(!svg.empty()){
         svg.remove();
     }
+}
+
+function clearSidemenuSelection(){
+    clearFull('comparisonData'); clearFull('comparisonPreview'); clearFull('comparisonOverlay');
 }
 
 // Database Image Url Parser

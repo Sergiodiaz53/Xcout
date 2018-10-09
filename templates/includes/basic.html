@@ -23,32 +23,33 @@
     <link rel="stylesheet" href="{% static "bower_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" %}">
     <link rel="stylesheet" href="{% static "css/xcout.css" %}">
 
+    <link rel="import" href="{% static "bower_components/bs-glyphicon/bs-glyphicon.html" %}">
+    
     <script type="text/javascript" src="{% static "bower_components/jquery/dist/jquery.min.js" %}"></script>
     <script type="text/javascript" src="{% static "bower_components/d3/d3.min.js" %}"></script>
     <script type="text/javascript" src="{% static "bower_components/bootstrap/dist/js/bootstrap.min.js" %}"></script>
     <script type="text/javascript" src="{% static "bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "bower_components/webcomponentsjs/webcomponents-lite.min.js" %}"></script>
 
 </head>
 
 <body role="document">
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="#">| ✖cout |</a>
-      </div>
-       <div class="navbar-collapse collapse">
-        <ul class="nav navbar-nav navbar-left">
-            <li><a href="#">Home</a></li>
-        </ul>
-        <ul class="nav navbar-nav navbar-right">
-            <li><a href="#about" style="margin-right: 15px">About</a></li>
-        </ul>
-      </div>
+        <div class="navbar-header">
+
+            <a class="navbar-brand" href="#">| XCout - Multiple comparative genomics visualization |</a>
+        </div>
+        <div class="navbar-items">
+            <ul class="nav navbar-nav navbar-left">
+                <li><a href="#">XCout</a></li>
+                <li><a href="#">Block Tracer</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right"style="margin-right: 15px">
+                <li><a href="#about">Help</a></li>
+                <li><a href="#about" >About</a></li>
+            </ul>
+        </div>
     </nav>
 
     <div id="alertContainer"class="container"></div>

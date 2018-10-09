@@ -20,7 +20,7 @@ $("#addComparison").click(function(){
         specieY.push($(this).html())
     });
 
-    getFullComparisonOf(specieX, specieY)
+    getFullComparisonOf(specieX, specieY);
 });
 
 // Auto Threshold (Plabolize) button
@@ -164,3 +164,11 @@ $('#specieX').on('change', function() {
 $('#specieY').on('change', function() {
     newComparisonsButtonBehavior();
 });
+
+$('').on('click', function() {
+
+})
+
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})

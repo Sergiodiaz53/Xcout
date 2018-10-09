@@ -21,65 +21,8 @@
         
         <div class="col-sm-4 center-block">
             <div class="affix sidemenu">
-            
-                <div id="comparisonData" class="form-inline text-center sidemenu_member">
-                    
-                </div>
-                
-                <div id="comparisonOverlay" class="form-inline text-center sidemenu_member">
 
-                </div>
-
-                <div id="comparisonInfo" style="display: none" class="form-inline text-center sidemenu_member">
-                    <div class="btn-group text-center" role="group" aria-label="Button tools menu">
-                        <button id="legendButton" type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseOverlay">Legend</button>
-                    </div>
-
-                    <div id="collapseOverlay" class="panel-collapse collapse">
-                        <!-- <table class="table table-sm" style='table-layout: fixed'> 
-                            <tbody id="collapseOverlayInfo">
-                                
-                            </tbody>
-                        </table>   -->  
-                       <div id="collapseOverlayInfo" class='col-sm-12'></div>                  
-                    </div>
-                </div>
-                
-                <div id="comparisonPreview" class="form-inline text-center sidemenu_member">
-
-                </div>
-
-
-                
-
-                <div class="form-inline text-center sidemenu_member">
-                    <div class="btn-group text-center" role="group" aria-label="Button tools menu">
-                        <button type="button" id="configButton" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseConfig">Configuration</button>
-                    </div>
-                </div>
-
-                <div id="collapseConfig" class="panel-collapse collapse">
-                    <div id="cellSizeRow" class="row config_row">
-                        <div class="form-inline text-center sidemenu_member">
-                            Cell size</br>
-                            <div class="form-group col-md-12 config_slider" id="itemSize_slider"> </div> 
-                            <button type="button" class="btn btn-secondary config_button" id="fitScreen">Fit</button> </br> 
-                        </div>
-                    </div>
-                    <div id="colorRow" class="row config_row">
-                        <div class="form-inline text-center sidemenu_member">
-                            Color thresholds</br>
-                            <div class="form-group col-md-12 config_slider" id="color_slider"> </div> 
-                            <button type="button" class="btn btn-warning config_button" id="autoThreshold">Auto</button> </br> 
-                        </div>
-                    </div>
-                    <div id="thresholdRow" class="row config_row">
-                        <div class="form-inline text-center sidemenu_member">
-                            Overlay threshold</br>
-                            <div class="form-group col-md-12 config_slider" id="threshold_slider"> </div> </br>
-                        </div>
-                    </div>
-                </div>
+                <!-- Species Table -->
 
                 <div class="form-inline text-center sidemenu_member">
                     <div class="form-group">
@@ -98,9 +41,9 @@
                         </select>
                     </div>
 
-                    <button type="button" class="btn btn-default" id="addComparison">+</button>
+                    <button type="button" class="btn btn-default" id="addComparison" data-toggle="tooltip" title="Load from Server" data-placement="bottom"><bs-glyphicon icon="plus"></bs-glyphicon></button>
                     
-                    <button type="button" class="btn btn-secondary" id="loadLocal" data-toggle="collapse" data-target="#collapseLocal">Local</button>
+                    <button type="button" class="btn btn-secondary" id="loadLocal" data-toggle="collapse" data-target="#collapseLocal"><bs-glyphicon icon="folder-open"></bs-glyphicon></button>
                     <div id="collapseLocal" class="panel-collapse collapse" >
                         <input type="file" id="file-input" webkitdirectory directory multiple>
                     </div>
@@ -121,6 +64,72 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Comparison Data -->
+            
+                <div id="comparisonData" class="form-inline text-center sidemenu_member">
+                    
+                </div>
+                
+                <!-- Overlay -->
+
+                <div id="comparisonOverlay" class="form-inline text-center sidemenu_member">
+
+                </div>
+
+                <!-- Preview -->
+
+                <div id="comparisonInfo" style="display: none" class="form-inline text-center sidemenu_member">
+                    <div class="btn-group text-center" role="group" aria-label="Button tools menu">
+                        <button id="legendButton" type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseOverlay">Legend</button>
+                    </div>
+
+                    <div id="collapseOverlay" class="panel-collapse collapse">
+                        <!-- <table class="table table-sm" style='table-layout: fixed'> 
+                            <tbody id="collapseOverlayInfo">
+                                
+                            </tbody>
+                        </table>   -->  
+                       <div id="collapseOverlayInfo" class='col-sm-12'></div>                  
+                    </div>
+                </div>
+                
+                <div id="comparisonPreview" class="form-inline text-center sidemenu_member">
+
+                </div>
+
+                <!-- Config -->
+
+                <div class="form-inline text-center sidemenu_member">
+                    <div class="btn-group text-center" role="group" aria-label="Button tools menu">
+                        <button type="button" id="configButton" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseConfig">Configuration <bs-glyphicon icon="cog"></bs-glyphicon></button>
+                    </div>
+                </div>
+
+                <div id="collapseConfig" class="panel-collapse collapse">
+                    <div id="cellSizeRow" class="row config_row">
+                        <div class="form-inline text-center sidemenu_member">
+                            Cell size</br>
+                            <div class="form-group col-md-12 config_slider" id="itemSize_slider"> </div> 
+                            <button type="button" class="btn btn-secondary config_button" id="fitScreen" data-toggle="tooltip" title="Fit to Screen" data-placement="top"><bs-glyphicon icon="resize-full"></bs-glyphicon></button> </br> 
+                        </div>
+                    </div>
+                    <div id="colorRow" class="row config_row">
+                        <div class="form-inline text-center sidemenu_member">
+                            Color thresholds</br>
+                            <div class="form-group col-md-12 config_slider" id="color_slider"> </div> 
+                            <button type="button" class="btn btn-warning config_button" id="autoThreshold" data-toggle="tooltip" title="Suggested Thresholds" data-placement="top"><bs-glyphicon icon="refresh"></bs-glyphicon></button> </br> 
+                        </div>
+                    </div>
+                    <div id="thresholdRow" class="row config_row">
+                        <div class="form-inline text-center sidemenu_member">
+                            Overlay threshold</br>
+                            <div class="form-group col-md-12 config_slider" id="threshold_slider"> </div>
+                            </br>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
         <div class="col-sm-7" style='height: 100%;'>

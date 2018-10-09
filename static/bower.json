@@ -22,6 +22,7 @@
     "bootstrap": "^3.3.7",
     "d3": "3",
     "jquery": "^3.2.1",
-    "seiyria-bootstrap-slider": "^10.2.0"
+    "seiyria-bootstrap-slider": "^10.2.0",
+    "bs-glyphicon": "bootstrap-glyphicon#^1.0.8"
   }
 }
