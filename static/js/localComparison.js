@@ -110,7 +110,6 @@ function readLocalEvents(specieX, specieY, chromosomeX, chromosomeY, overlay_thr
         return filterComparisonDatum(comp, specieX, specieY, chromosomeX, chromosomeY, overlay_axis, overlay_threshold)
     });
 
-    console.log(filtered_comparisons);
     for(curr_comp of filtered_comparisons){
         let curr_img = curr_comp.img.split('.'); curr_img.splice(-2);
         curr_img = curr_img.join('.');

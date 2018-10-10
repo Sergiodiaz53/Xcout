@@ -498,6 +498,9 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
 
     if(base_axis == 'Y') [max_x, max_y] =  [max_y, max_x];
 
+    /*let notationX = pairbaseNotation(max_x, axis_decimals)[1],
+        notationY = pairbaseNotation(max_y, axis_decimals)[1]; console.log([notationX, notationY])
+*/
     // Clear SVG
     var svg = d3.select("#comparisonOverlay > svg");
     if(!svg.empty()){
@@ -573,7 +576,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
         .call(yAxis)
         .selectAll('text')
         .attr('font-weight', 'bold')
-        .style('font-size', '13px')
+        .style('font-size', '12px')
         .style('text-anchor', 'end')
         .attr('transform', function (d) {
             return "translate(-7,0)rotate(-45)";
@@ -586,11 +589,27 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
         .call(xAxis)
         .selectAll('text')
         .attr('font-weight', 'bold')
-        .style('font-size', '13px')
+        .style('font-size', '12px')
         .style('text-anchor', 'end')
         .attr('transform', function (d) {
             return "rotate(-45)";//translate(0,5)
         });
+
+    // X axis label
+    svg.append('text')
+        .attr("transform", "translate(" + (WIDTH / 2) + " ," + (HEIGHT + 3*MARGINS.bottom/4) + ")")
+        .style("text-anchor", "middle")
+        .attr('font-weight', 'bold')
+        .style('font-size', '13px')
+        .text("Mbp");
+
+    // Y axis label
+    svg.append('text')
+        .attr("transform", "rotate(-90)translate(" + (0 - HEIGHT / 2) + " ," + (0 - 3*MARGINS.left/4) + ")")
+        .style("text-anchor", "middle")
+        .attr('font-weight', 'bold')
+        .style('font-size', '13px')
+        .text("Mbp");
 
     // Legend
     let string = ""

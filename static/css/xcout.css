@@ -31,6 +31,17 @@
         z-index:100;
     }
 
+    .nav-justified {
+        margin-left: 5%;
+        margin-bottom: 15px;
+        width: 90% !important;
+    }
+
+    .nav-justified > .active a {
+        font-weight: bold;
+        font-size: 1.5em;
+    }
+
 /* #######################  */
 
     /** SideMenu **/

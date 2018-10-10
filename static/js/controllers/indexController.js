@@ -23,10 +23,14 @@ $("#addComparison").click(function(){
     getFullComparisonOf(specieX, specieY);
 });
 
+// Load local button
+$("#loadLocal").click(function(){
+    collapser("collapseLocal"); //  data-toggle="collapse" data-target="#collapseLocal"
+});
+
 // Auto Threshold (Plabolize) button
 $("#autoThreshold").click(function(){
     plabolize();
-
     function plabolize(){
         getScoresThreshold()
     }
@@ -169,6 +173,15 @@ $('').on('click', function() {
 
 })
 
+// Show tooltips
 $(function () {
     $('[data-toggle="tooltip"]').tooltip()
 })
+
+// Functionalities navigation bar
+$('.nav.navbar-tabs > li').on('click', function(e) {
+    $('.nav.navbar-nav > li').removeClass('active');
+    $(this).addClass('active');
+
+    // Add canvas switch
+});  
