@@ -169,13 +169,11 @@ $('#specieY').on('change', function() {
     newComparisonsButtonBehavior();
 });
 
-$('').on('click', function() {
-
-})
-
 // Show tooltips
 $(function () {
-    $('[data-toggle="tooltip"]').tooltip()
+    $('[data-toggle="tooltip"]').tooltip({'hover': 'focus'})
+    $('#numberChromosomes').tooltip({'hover': 'focus', 'title': 'Number of Chromosomes to Overlay'})
+    $('#numberChromosomesCheck').tooltip({'hover': 'focus', 'title': 'Adjust threshold by number of Chromosomes to Overlay'})
 })
 
 // Functionalities navigation bar
@@ -184,4 +182,48 @@ $('.nav.navbar-tabs > li').on('click', function(e) {
     $(this).addClass('active');
 
     // Add canvas switch
-});  
+});
+
+// Overlay Top select
+var OVERLAY_NUMBER_FILTER = false, OVERLAY_NUMBER_MAX='0', ACTIVE_OVERLAY=false;
+var CURRENT_OVERLAY_INFORMATION = {
+    'sp_x': '',
+    'sp_y': '',
+    'chr_x': '',
+    'chr_y': '',
+    'data_string': '',
+}
+
+function numberChromosomesChecked(){
+    var inputCheckbox = document.getElementById('numberChromosomesCheck');
+    var inputText = document.getElementById('numberChromosomes');
+
+    if(inputCheckbox.checked){
+        inputText.disabled = false; inputText.focus();
+        $('#threshold_slider').bootstrapSlider('disable');
+    }
+    else{
+        inputText.disabled=true;
+        $('#threshold_slider').bootstrapSlider('enable');
+        OVERLAY_NUMBER_MAX='0'
+    }
+
+    if(ACTIVE_OVERLAY == true && OVERLAY_NUMBER_MAX!='0')
+        serverOverlayEvents(CURRENT_OVERLAY_INFORMATION.sp_x, CURRENT_OVERLAY_INFORMATION.sp_y, CURRENT_OVERLAY_INFORMATION.chr_x, CURRENT_OVERLAY_INFORMATION.chr_y, CURRENT_OVERLAY_INFORMATION.data_string);
+    
+}
+
+$('#numberChromosomes').bind("enterKey",function(e){
+    OVERLAY_NUMBER_MAX=$(this).val();
+    //let inputChecked = document.getElementById('numberChromosomesCheck').checked;
+
+    if(ACTIVE_OVERLAY == true && OVERLAY_NUMBER_MAX!="0"){
+        serverOverlayEvents(CURRENT_OVERLAY_INFORMATION.sp_x, CURRENT_OVERLAY_INFORMATION.sp_y, CURRENT_OVERLAY_INFORMATION.chr_x, CURRENT_OVERLAY_INFORMATION.chr_y, CURRENT_OVERLAY_INFORMATION.data_string);
+        console.log('REMAKE')
+    }
+});
+
+$('#numberChromosomes').keyup(function(e){
+    if(e.keyCode == 13)
+        $(this).trigger("enterKey");
+});

@@ -47,6 +47,10 @@ function toggler(divId) {
     $("#" + divId).toggle();
 }
 
+function shower(divId) {
+    $("#" + divId).show();
+}
+
 function hider(divId){
     $("#" + divId).hide()
 }
@@ -74,6 +78,11 @@ function clearSidemenuSelection(){
     clearFull('comparisonData'); clearFull('comparisonOverlay');
     clearFull('comparisonPreview'); hider("comparisonInfo");
     $("#comparisonPreview").removeClass('comparisonPreview');
+    clearOverlay();
+}
+
+function clearOverlay(){
+    ACTIVE_OVERLAY = false; CURRENT_OVERLAY = {}
 }
 
 // Database Image Url Parser
@@ -138,26 +147,9 @@ function scientificNotation(x, f) {
 // Number to pairbase notation
 function pairbaseNotation(x, f) {
     let pb = Number.parseFloat(x).toExponential(f);
-    return (pb/1000000).toFixed(f).split('.')[0]
-    /*
-    let current_exp = 1000;
-    if(pb / current_exp < 1000) return [(pb/current_exp).toFixed(f).split('.')[0], "Kbp"]
-    current_exp = current_exp * 1000
-    if (pb / current_exp < 1000) return [(pb/current_exp).toFixed(f).split('.')[0], "Mbp"]
-    current_exp = current_exp * 1000
-    return [(pb/current_exp).toFixed(f).split('.')[0], "Gbp"]
-    */
+    return (pb/1000000).toFixed(f).split('.')[0];
 }
 
-function fixedPairbaseNotation(x, f, size){
-    let pb = Number.parseFloat(x).toExponential(f);
-    let current_exp = 1000;
-    if(pb / current_exp < 1000) return [(pb/current_exp).toFixed(f).split('.')[0], "Kbp"]
-    current_exp = current_exp * 1000
-    if (pb / current_exp < 1000) return [(pb/current_exp).toFixed(f).split('.')[0], "Mbp"]
-    current_exp = current_exp * 1000
-    return [(pb/current_exp).toFixed(f).split('.')[0], "Gbp"]
-}
 // Retrieve Species in Table Columns
 function getLoadedSpecies(){
     var specieX = [],

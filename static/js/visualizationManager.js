@@ -1,7 +1,7 @@
 /**
  * Created by Sergio and Plabolo on 2/10/17.
  */
-var FORCE_URL = ""//"/xcout";
+var FORCE_URL = "";//"/xcout";
 
 var itemSize = 14,
     cellSize = itemSize - 1,
@@ -81,9 +81,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     var data = full_comparison_json.concat(local_comparison_json);// console.log(data)
 
     // Clear Sidemenu
-    $(".heatmap").html('');
     emptier('comparisonData');
     hider('comparisonInfo');
+    $(".heatmap").html('');
 
     //Create SVG
     var svg = d3.select("svg > g");
@@ -378,9 +378,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
             
             if (d.score != -20){
                 var string = "";
-                var data_string = '<button type="button" class="btn btn-warning btn-md pull-right" \
+                var data_string = '<div class="horizontal-line"></div><button type="button" class="btn btn-warning btn-md pull-right" \
                         onclick="clearSidemenuSelection()">\
-                        <bs-glyphicon icon="minus"></bs-glyphicon></button>\
+                        <bs-glyphicon icon="menu-down"></bs-glyphicon></button>\
                     <table id="infoTable" class="table table-bordered table-hover"> \
                         <tr> \
                             <th scope="row">X Axis</th> \
@@ -390,9 +390,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                             <th scope="row">Y Axis</th> \
                             <td>' + d.specieY + ' - Chromosome: ' + d.chromosomeY_number + '</td> \
                         </tr> \
-                    ' 
+                    '
 
-                    //"<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " </br> vs </br> (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
                 if(d.score == -10) {
@@ -407,39 +406,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                         
                     } else {
                         // Overlay server
-                        $.ajax({
-                            type:"GET",
-                            url:FORCE_URL+"/API/overlay",
-                            data: {
-                                'specieX': sp_x,
-                                'specieY': sp_y,
-                                'chromosomeX': chr_x,
-                                'chromosomeY': chr_y,
-                                'threshold': overlay_threshold
-                            },
-                            success: function(content){
-                                response = JSON.parse(content);
-                                tmp_test = response;
-
-                                // Add comparison data -- HEADER
-                                $("#comparisonData").html(data_string);
-
-                                // Add image -- EVENTS METHOD
-                                let chromosome_numbers = [];
-                                let colors = [...new Set(response.events.map(item => item.color))];
-
-                                for(url of response.urls){ chromosome_numbers.push(imgUrlParser(url, response.base_axis)); }
-
-                                overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors)
-
-                                toggler("comparisonInfo");
-                                $("#collapseOverlay").collapse("show");
-                            },
-                            error: function(error){
-                                response = error.responseJSON
-                                showAlert("Error", response.message, "danger")
-                            }
-                        });
+                        serverOverlayEvents(sp_x, sp_y, chr_x, chr_y, data_string);
                     }
                     div.removeClass('comparisonPreview');
                     overlayOff();
@@ -447,7 +414,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                 }
                 else{
                     div.addClass('comparisonPreview');
-                    clearDivIdSVG("comparisonOverlay");
+                    clearDivIdSVG("comparisonOverlay"); clearOverlay();
                     // Add comparison data
                     data_string += '<tr> \
                             <th scope="row">Score</th> \
@@ -473,23 +440,70 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     checkSpeciesTable();
     showAlert("Loaded", "Comparison loaded", "info");
 }
+// Ajax request about server events
+function serverOverlayEvents(sp_x, sp_y, chr_x, chr_y, data_string) {
+    CURRENT_OVERLAY_INFORMATION = {
+        'sp_x': sp_x,
+        'sp_y': sp_y,
+        'chr_x': chr_x,
+        'chr_y': chr_y,
+        'data_string': '',
+    }
+    $.ajax({
+        type: "GET",
+        url: FORCE_URL + "/API/overlay",
+        data: {
+            'specieX': sp_x,
+            'specieY': sp_y,
+            'chromosomeX': chr_x,
+            'chromosomeY': chr_y,
+            'threshold': overlay_threshold,
+            'overlay_max': OVERLAY_NUMBER_MAX
+        },
+        success: function (content) {
+            response = JSON.parse(content);
+            // Add comparison data -- HEADER
+            $("#comparisonData").html(data_string);
+            // Add image -- EVENTS METHOD
+            let chromosome_numbers = [];
+            let colors = [...new Set(response.events.map(item => item.color))];
+            for (url of response.urls) {
+                chromosome_numbers.push(imgUrlParser(url, response.base_axis));
+            }
+            CURRENT_OVERLAY = {
+                'events': response.events,
+                'max_x': response.max_x,
+                'max_y': response.max_y,
+                'lengths': response.lengths,
+                'base_axis': response.base_axis,
+                'chromosome_numbers': chromosome_numbers,
+                'colors': colors
+            };
+            overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors);
+            shower("comparisonInfo");
+            $("#collapseOverlay").collapse("show");
+        },
+        error: function (error) {
+            response = error.responseJSON;
+            showAlert("Error", response.message, "danger");
+        }
+    });
+}
 
-// Overlay ComparisonEvents
-function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chromosome_numbers, colors){
-
+function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chromosome_numbers, colors, filter=false){
     var WIDTH = 455,
-        HEIGHT = 495;
-    var MARGINS = {
+        HEIGHT = 495,
+        MARGINS = {
             top: 15,
             right: 15,
             bottom: 55,
             left: 55
-        }
+        };
     var WIDTH = WIDTH - MARGINS.left - MARGINS.right,
         HEIGHT = HEIGHT - MARGINS.top - MARGINS.bottom;
 
-    var stroke_width = 2;
-    var axis_decimals = 2;
+    var stroke_width = 2, axis_decimals = 2;
+    ACTIVE_OVERLAY = true;
 
     // Clear Sidemenu
     var comparisonPreview = $("#comparisonPreview");
@@ -498,9 +512,6 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
 
     if(base_axis == 'Y') [max_x, max_y] =  [max_y, max_x];
 
-    /*let notationX = pairbaseNotation(max_x, axis_decimals)[1],
-        notationY = pairbaseNotation(max_y, axis_decimals)[1]; console.log([notationX, notationY])
-*/
     // Clear SVG
     var svg = d3.select("#comparisonOverlay > svg");
     if(!svg.empty()){
@@ -612,16 +623,18 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
         .text("Mbp");
 
     // Legend
-    let string = ""
-    for(chr_i in chromosome_numbers){
-        if(chr_i % 4 == 0)
-            string+="<div> ";
-        string += "<div style='background-color: " + colors[chr_i] + ";'>&emsp;</div> <div>" + chromosome_numbers[chr_i][1] + "</div>"
-        if((chr_i-3) % 4 == 0)
-            string+="</div>";
+    if(!filter){
+        let string = ""
+        for(chr_i in chromosome_numbers){
+            if(chr_i % 4 == 0)
+                string+="<div>";
+            string += "<div onclick='remakeOverlayFiltered(" + chr_i + ")' class='legendChromosome" + chr_i +"' style='background-color: " + colors[chr_i] + ";'>&emsp;</div>"
+                + "<div onclick='remakeOverlayFiltered(" + chr_i + ")' class='legendChromosome" + chr_i +"'>" + chromosome_numbers[chr_i][1] + "</div>";
+            if((chr_i-3) % 4 == 0)
+                string+="</div>";
+        }
+        $("#collapseOverlayInfo").html(string);
     }
-    $("#collapseOverlayInfo").html(string);
-
     
     var tooltip_event = d3.select("body").append("div")
         .attr("class", "tooltip_event")
@@ -700,6 +713,37 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
             "stroke-width" : "1px",
             'stroke-opacity' : '0.6',
         });
+}
+
+// Repaint Overlay
+let CURRENT_OVERLAY = {}, FILTERED_CHROMOSOMES = [];
+function remakeOverlayFiltered(filterChromosomeIndex){
+    if(FILTERED_CHROMOSOMES.includes(filterChromosomeIndex)){
+        FILTERED_CHROMOSOMES.splice(FILTERED_CHROMOSOMES.indexOf(filterChromosomeIndex), 1);
+        $(".legendChromosome" + filterChromosomeIndex).removeClass('filtered-legend');
+    } else {
+        FILTERED_CHROMOSOMES.push(filterChromosomeIndex);
+        $(".legendChromosome" + filterChromosomeIndex).addClass('filtered-legend');
+    }
+    
+    let base_axis = CURRENT_OVERLAY.base_axis,
+        events = CURRENT_OVERLAY.events.filter(function(el){
+            return !FILTERED_CHROMOSOMES.includes(el.cmp)
+        }),
+        lengths = CURRENT_OVERLAY.lengths.filter(function(el, ind){
+            return !FILTERED_CHROMOSOMES.includes(ind)
+        }),
+        chromosome_numbers = CURRENT_OVERLAY.chromosome_numbers.filter(function(el, ind){
+            return !FILTERED_CHROMOSOMES.includes(ind)
+        }),
+        colors = CURRENT_OVERLAY.colors.filter(function(el, ind){
+            return !FILTERED_CHROMOSOMES.includes(ind)
+        }),
+        max_x = (base_axis=='X') ? CURRENT_OVERLAY.max_x : Math.max.apply(Math, lengths.map(function(o) { return o; })),
+        max_y = (base_axis=='Y') ? CURRENT_OVERLAY.max_y : Math.max.apply(Math, lengths.map(function(o) { return o; }));
+    
+    overlayComparisonEvents(events, max_x, max_y, CURRENT_OVERLAY.lengths, base_axis, CURRENT_OVERLAY.chromosome_numbers, CURRENT_OVERLAY.colors, true)
+        
 }
 
 // Automatic Threshold (Plabolize) to automatically understand EPW Scores

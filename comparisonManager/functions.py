@@ -152,6 +152,7 @@ def createOverlayedImage(request):
     chromosomeX = request.GET.get('chromosomeX', '')
     chromosomeY = request.GET.get('chromosomeY', '')
     threshold = request.GET.get('threshold', '')
+    overlay_max = request.GET.get('overlay_max', '')
     overlay_axis = 'X' if chromosomeX == 'Overlay' else 'Y'
     inverted = False
     #max_len_chromosome = False#True if request.GET.get('max_len_chromosome', '') == 'True' else False
@@ -173,8 +174,19 @@ def createOverlayedImage(request):
     cmp_data = []
     base_max_len = 0
 
-    for comparison in comparisons:
-        if comparison.score <= float(threshold):
+    if(overlay_max == '0'):
+        for comparison in comparisons:
+            if comparison.score <= float(threshold):
+                if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
+                    tmp_len = comparison.chromosome_y.length; base_max_len = comparison.chromosome_x.length
+                else:
+                    tmp_len = comparison.chromosome_x.length; base_max_len = comparison.chromosome_y.length
+
+                cmp_info = (comparison.img.url[1:], tmp_len, comparison.csv)
+                cmp_data.append(cmp_info)
+    else:
+        sorted_comparisons = sorted(comparisons, key=lambda x: x.score)
+        for comparison in sorted_comparisons[:int(overlay_max)]:
             if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
                 tmp_len = comparison.chromosome_y.length; base_max_len = comparison.chromosome_x.length
             else:
