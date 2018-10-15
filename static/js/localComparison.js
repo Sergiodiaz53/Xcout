@@ -101,11 +101,52 @@ function storeLocalComparison(lines){
     return {'comparisonJson': localComparisonJSON, 'localX': localSpeciesX, 'localY': localSpeciesY};
 }
 
+// ------
+
+// Add Comparison to Comparison Table/List
+function addLocalComparisonToComparisonList(specieX, specieY){
+    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
+
+    //If comparison doesn't exists, add it.
+    if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
+
+    $(".removeButton").click(function(){
+        $(this).closest("tr").remove();
+        let species = getLoadedSpecies();
+        let tmpComparison = [];
+
+        for(i in LOCAL_COMPARISON){
+            if(LOCAL_COMPARISON[i].specieX != specieX && LOCAL_COMPARISON[i].specieY != specieY)
+                tmpComparison.push(LOCAL_COMPARISON[i])
+        }
+
+        LOCAL_COMPARISON = tmpComparison.slice(0);
+        getFullComparisonOf(species.specieX, species.specieY);
+    });
+}
+
+function localSpecieCheck(specieName){
+    return (specieName.split(']').length > 1) ? true : false;
+}
+
+// --
+var SERVER_LOADED = false, SERVER_COMPARISON = []; 
+var LOCAL_LOADED = false, LOCAL_COMPARISON = [];
+
+// -- Overlay
+
 // Obtain Events info
 function readLocalEvents(specieX, specieY, chromosomeX, chromosomeY, overlay_threshold, data_string){
     // LOCAL COMPARISON MAX NUMBER BEHAVIOR
     let eventsFiles = [], overlay_axis = (chromosomeX == 'Overlay') ? 'X' : 'Y';
-    local_events = [], local_lengths = []; // Clear global
+    local_events = []; local_lengths = [];// Clear global
+    CURRENT_OVERLAY_INFORMATION = {
+        'sp_x': specieX,
+        'sp_y': specieY,
+        'chr_x': chromosomeX,
+        'chr_y': chromosomeY,
+        'data_string': data_string,
+    }; SOURCE_OVERLAY="LOCAL";
 
     let filtered_comparisons = LOCAL_COMPARISON.filter(function(comp){
         return filterComparisonDatum(comp, specieX, specieY, chromosomeX, chromosomeY, overlay_axis, overlay_threshold)
@@ -113,7 +154,7 @@ function readLocalEvents(specieX, specieY, chromosomeX, chromosomeY, overlay_thr
 
     if(OVERLAY_NUMBER_MAX!="0")
         filtered_comparisons = filtered_comparisons.sort(function(a,b){ 
-            return (a.score > b.score) ? -1 : 1
+            return (a.score < b.score) ? -1 : 1
         }).splice(0, OVERLAY_NUMBER_MAX);
 
     for(curr_comp of filtered_comparisons){
@@ -150,7 +191,8 @@ function readLocalEventsFile(eventsFiles, index, overlayAxis, filteredComparison
                 [...new Set(local_lengths.map(item => item.x))],
             urls = [...new Set(filteredComparisons.map(item => item.img))],
             chromosome_numbers = [...new Set(urls.map(url => imgUrlParser(url, base_axis)))],
-            colors = [...new Set(local_events.map(item => item.color))];
+            colors = Array.apply(null, {length: eventsFiles.length}).map(Number.call, Number).
+                map(index => "#" + fullColorHex(R_color[index], G_color[index], B_color[index]));
         
         CURRENT_OVERLAY = {
             'events': local_events, 
@@ -163,14 +205,13 @@ function readLocalEventsFile(eventsFiles, index, overlayAxis, filteredComparison
         };
         overlayComparisonEvents(local_events, max_x, max_y, lengths, base_axis, chromosome_numbers, colors)
         $("#comparisonData").html(dataString);
-        toggler("comparisonInfo");
+        shower("comparisonInfo");
         $("#collapseOverlay").collapse("show");
     }
     else{
         var currFile = eventsFiles[index];
 
         reader.onload = function(e) {
-            console.log("READING :: " + currFile.name);
             lines = this.result.split('\n');
             header = lines.shift(); lines.shift(); lines.pop(); lines.pop();
             let lengths = header.split(',');
@@ -206,44 +247,12 @@ function filterComparisonDatum(comparison, specieX, specieY, chromosomeNumberX, 
 
     if(overlayAxis == 'X')
         return (comparison.specieX == specieX) && (comparison.specieY == specieY) &&
-            (comparison.chromosomeY_number == chromosomeNumberY) && (comparison.score <= overlayThreshold)
+            (comparison.chromosomeY_number == chromosomeNumberY) && (comparison.score <= threshold_check)
     else
         return (comparison.specieX == specieX) && (comparison.specieY == specieY) &&
-            (comparison.chromosomeX_number == chromosomeNumberX) && (comparison.score <= overlayThreshold)
+            (comparison.chromosomeX_number == chromosomeNumberX) && (comparison.score <= threshold_check)
 }
 
 function filterEvent(event){
     return (event.x1 == '0' && event.y1 == '0' && event.x2 == '0' && event.y2 == '0')
 }
-
-// ------
-
-// Add Comparison to Comparison Table/List
-function addLocalComparisonToComparisonList(specieX, specieY){
-    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
-
-    //If comparison doesn't exists, add it.
-    if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
-
-    $(".removeButton").click(function(){
-        $(this).closest("tr").remove();
-        let species = getLoadedSpecies();
-        let tmpComparison = [];
-
-        for(i in LOCAL_COMPARISON){
-            if(LOCAL_COMPARISON[i].specieX != specieX && LOCAL_COMPARISON[i].specieY != specieY)
-                tmpComparison.push(LOCAL_COMPARISON[i])
-        }
-
-        LOCAL_COMPARISON = tmpComparison.slice(0);
-        getFullComparisonOf(species.specieX, species.specieY);
-    });
-}
-
-function localSpecieCheck(specieName){
-    return (specieName.split(']').length > 1) ? true : false;
-}
-
-// --
-var SERVER_LOADED = false, SERVER_COMPARISON = []; 
-var LOCAL_LOADED = false, LOCAL_COMPARISON = [];

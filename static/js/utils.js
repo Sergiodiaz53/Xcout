@@ -82,7 +82,7 @@ function clearSidemenuSelection(){
 }
 
 function clearOverlay(){
-    ACTIVE_OVERLAY = false; CURRENT_OVERLAY = {}
+    ACTIVE_OVERLAY = false; CURRENT_OVERLAY = {}; SOURCE_OVERLAY = ""
 }
 
 // Database Image Url Parser
@@ -119,7 +119,7 @@ function fullColorHex(r,g,b){
     let red = rgbToHex(r), green = rgbToHex(g), blue = rgbToHex(b);
     return red+green+blue;
 }
-
+/*
 // Select label element from axis tick
 function select_x_axis_label(d) {
     console.log(d3.select('.xaxis').selectAll('text'))
@@ -132,7 +132,7 @@ function select_y_axis_label(d) {
     return d3.select('.yaxis')
         .selectAll('text')
         .filter(function(x) { console.log(x); return x == d.specieY + " - " + d.chromosomeY_number; });
-}
+}*/
 
 // Scale Event parameter
 function scaleEventParam(scaled_len, event_param){
@@ -165,6 +165,26 @@ function getLoadedSpecies(){
 
     return {'specieX': specieX, 'specieY': specieY};
 }
+
+function hasDuplicates(array) {
+    return (new Set(array)).size !== array.length;
+}
+
+function getValuesOfDOMObjects(jQueryOrder) {
+    let ret = []
+    $(jQueryOrder).each(function() {ret.push(this.value)})
+    return ret;
+}
+
+/* Adds Element BEFORE NeighborElement */
+Element.prototype.appendBefore = function(element) {
+    element.parentNode.insertBefore(this, element);
+  }, false;
+  
+  /* Adds Element AFTER NeighborElement */
+  Element.prototype.appendAfter = function(element) {
+    element.parentNode.insertBefore(this, element.nextSibling);
+  }, false;
 
 // --- DEBUG --- //
 var tmp_test, tmp_var;

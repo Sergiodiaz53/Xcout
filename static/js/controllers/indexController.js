@@ -148,18 +148,6 @@ function checkSpeciesTable(){
         $('#configButton').removeAttr('disabled');
 }
 
-// --- Document Init ---
-$(document).ready(function(){
-    // Make species different as default
-    try{
-        document.getElementById('specieY').selectedIndex=1;
-    } catch(err){
-        console.log("Cannot change index");
-        newComparisonsButtonBehavior();
-    }
-
-    checkSpeciesTable();
-});
 
 $('#specieX').on('change', function() {
     newComparisonsButtonBehavior();
@@ -184,46 +172,15 @@ $('.nav.navbar-tabs > li').on('click', function(e) {
     // Add canvas switch
 });
 
-// Overlay Top select
-var OVERLAY_NUMBER_FILTER = false, OVERLAY_NUMBER_MAX='0', ACTIVE_OVERLAY=false;
-var CURRENT_OVERLAY_INFORMATION = {
-    'sp_x': '',
-    'sp_y': '',
-    'chr_x': '',
-    'chr_y': '',
-    'data_string': '',
-}
-
-function numberChromosomesChecked(){
-    var inputCheckbox = document.getElementById('numberChromosomesCheck');
-    var inputText = document.getElementById('numberChromosomes');
-
-    if(inputCheckbox.checked){
-        inputText.disabled = false; inputText.focus();
-        $('#threshold_slider').bootstrapSlider('disable');
-    }
-    else{
-        inputText.disabled=true;
-        $('#threshold_slider').bootstrapSlider('enable');
-        OVERLAY_NUMBER_MAX='0'
+// --- Document Init ---
+$(document).ready(function(){
+    // Make species different as default
+    try{
+        document.getElementById('specieY').selectedIndex=1;
+    } catch(err){
+        console.log("Cannot change index");
+        newComparisonsButtonBehavior();
     }
 
-    if(ACTIVE_OVERLAY == true && OVERLAY_NUMBER_MAX!='0')
-        serverOverlayEvents(CURRENT_OVERLAY_INFORMATION.sp_x, CURRENT_OVERLAY_INFORMATION.sp_y, CURRENT_OVERLAY_INFORMATION.chr_x, CURRENT_OVERLAY_INFORMATION.chr_y, CURRENT_OVERLAY_INFORMATION.data_string);
-    
-}
-
-$('#numberChromosomes').bind("enterKey",function(e){
-    OVERLAY_NUMBER_MAX=$(this).val();
-    //let inputChecked = document.getElementById('numberChromosomesCheck').checked;
-
-    if(ACTIVE_OVERLAY == true && OVERLAY_NUMBER_MAX!="0"){
-        serverOverlayEvents(CURRENT_OVERLAY_INFORMATION.sp_x, CURRENT_OVERLAY_INFORMATION.sp_y, CURRENT_OVERLAY_INFORMATION.chr_x, CURRENT_OVERLAY_INFORMATION.chr_y, CURRENT_OVERLAY_INFORMATION.data_string);
-        console.log('REMAKE')
-    }
-});
-
-$('#numberChromosomes').keyup(function(e){
-    if(e.keyCode == 13)
-        $(this).trigger("enterKey");
+    checkSpeciesTable();
 });
