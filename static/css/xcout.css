@@ -49,6 +49,7 @@
         display:inline-block;
         margin-bottom: 10px;
     }
+
 /* #######################  */
 
     /** SideMenu **/
@@ -160,6 +161,15 @@
     #thresholdRow .slider-selection {
         background: lightblue;
     }
+
+/* #######################  */
+
+    .blockTracerRow {
+        margin-top: 15px;
+        margin-bottom: 10x;
+    }
+
+/* #######################  */
 
     /* HEATMAP*/
 

@@ -176,15 +176,15 @@ function getValuesOfDOMObjects(jQueryOrder) {
     return ret;
 }
 
-/* Adds Element BEFORE NeighborElement */
-Element.prototype.appendBefore = function(element) {
-    element.parentNode.insertBefore(this, element);
-  }, false;
-  
-  /* Adds Element AFTER NeighborElement */
-  Element.prototype.appendAfter = function(element) {
-    element.parentNode.insertBefore(this, element.nextSibling);
-  }, false;
+function getValuesOfDOMObjectsByParentKeyID(jQueryOrder){
+    let ret = {};
+    $(jQueryOrder).each(function(){
+        let parent_id = $(this).parent().attr('id');
+        ret[parent_id] = ret[parent_id] || [];
+        ret[parent_id].push(this.value);
+    });
+    return ret;
+}
 
 // --- DEBUG --- //
 var tmp_test, tmp_var;

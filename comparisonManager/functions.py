@@ -1,13 +1,11 @@
 from comparisonManager.models import *
 from django.http import JsonResponse
+from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes, permission_classes
-from django.http import HttpResponse
 import json
 import os
 
-from .models import *
-from django.http import HttpResponse
 from django.core.files.images import ImageFile
 import csv
 
@@ -61,6 +59,23 @@ def generateJSONComparisonFromSpecies(request):
 
     return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
 
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def generateJSONChromosomesFromSpecie(request):
+    specie = request.GET.get('specie', '')
+    jsonChromosomeList = []
+
+    chromosomes = Chromosome.objects.all().filter(specie__name = specie)
+    jsonChromosomeList = [chromosome.number for chromosome in chromosomes]
+    
+    return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
 def updateDBfromCSV(request):
     with open("images/test.csv") as f:
         reader = csv.reader(f, delimiter=',')
