@@ -132,6 +132,9 @@ function exportToBlockTracer(spX, chrX, spY, chrY){
     }
 }
 
+function extractBlockTracerRowSpecie(rowElement){
+    return rowElement.children[0].children[0].value;
+}
 
 function extractBlockTracerRowsData(){
     let blockTracerRows = document.getElementsByClassName('blockTracerRow');
@@ -146,10 +149,6 @@ function extractBlockTracerRowsData(){
     return [blockTracerSpecies, blockTracerChromosomes]
 }
 
-function extractBlockTracerRowSpecie(rowElement){
-    return rowElement.children[0].children[0].value;
-}
-
 // ---------------------------
 /* --- BlockTracer Main --- */
 // ---------------------------
@@ -160,10 +159,10 @@ function executeBlockTracer(){
     console.log(data)
     $.ajax({
         type:"POST",
-        url:FORCE_URL+"/blocktracer/trace",
+        url:FORCE_URL+"/blocktracer/trace/",
         data: {
-            'species': data[0],
-            'chromosomes' : data[1]
+            'species': JSON.stringify(data[0]),
+            'chromosomes' : JSON.stringify(data[1])
         },
         success: function(content) {
             results = JSON.parse(content); console.log(results)
