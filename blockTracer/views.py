@@ -69,16 +69,15 @@ def trace(request):
     print("################")
 
     # Execute BlockTracer
-    outputs = 'file_ID\ttraced_block\toriginal_block\n'
+    outputs = [];#'file_ID\ttraced_block\toriginal_block\n'
 
     for comparison_list in l_comparison_list:
         files = ['media/' + comparison.csv for comparison in comparison_list]
-
         current_blocks = obtain_blocks(files[0], 0, get_comparison_name(files[0]))
-        recursive_overlap_checking(files, 1, current_blocks, current_blocks, outputs, '', 2)
+        blocks_traced = recursive_overlap_checking(files, 1, current_blocks, current_blocks, '', 1)
+        outputs.append(blocks_traced)
 
-    print(outputs)
-    print(OUTPUT_TEST)
+    #print(outputs)
     jsonResponseList = [outputs]
     
     return JsonResponse(json.dumps(jsonResponseList), safe=False)
@@ -137,7 +136,6 @@ def obtain_blocks(file, index, name):
         event.append(name)
         event = unscale(event)
         events.append(event)
-    print(events)
     return events
 
 def compare_blocks(base_block, new_blocks_list):
@@ -162,44 +160,18 @@ def compare_blocks(base_block, new_blocks_list):
             original_blocks.append(original_block)
     return blocks, original_blocks
 
-OUTPUT_TEST = ""
-def recursive_overlap_checking(files, index, current_blocks, current_original_blocks, output_file, traced_block_info, min_depth):
-    global OUTPUT_TEST
+def recursive_overlap_checking(files, index, current_blocks, current_original_blocks, traced_block_info, min_depth):
+    ret = ""
     if index >= min_depth:
         for i in range(len(current_blocks)):
-            print("test1")
-            new_string = str(traced_block_info)
-            new_string += str(index-1) + '\t' + str(scale(current_blocks[i])[:-1]) + '\t' + str(scale(current_original_blocks[i])[:-1]) + '\n\n'
-            print(new_string)
-            OUTPUT_TEST += new_string
+            ret += str(traced_block_info)
+            ret += (str(index-1) + '\t' + str(scale(current_blocks[i])[:-1]) + '\t' + str(scale(current_original_blocks[i])[:-1]) + '\n\n')
     if index < len(files):
-        print("test2")
         new_name = get_comparison_name(files[index])
         new_comparison_blocks = obtain_blocks(files[index], index, new_name)
-        #if no blocks have been found, stop all posible combinations
         for i in range(len(current_blocks)):
             new_blocks, new_original_blocks = compare_blocks(current_blocks[i], new_comparison_blocks)
             if new_blocks != []:
-                recursive_overlap_checking(files, index + 1, new_blocks, new_original_blocks, output_file, traced_block_info + str(index-1) + '\t' + str(scale(current_blocks[i])[:-1]) + '\t' + str(scale(current_original_blocks[i])[:-1]) + '\n', min_depth)
-    
-
-"""
-import argparse
-parser = argparse.ArgumentParser(description='Process chromeister csv in order to find coincidences.')
-parser.add_argument('input_filename', type = str, nargs = 1, help = 'Input filename containing paths to matrix files')
-parser.add_argument('output_filename', type = str, nargs = 1, help = 'Output filename')
-parser.add_argument('--min_depth', default = -1, type = int, nargs = 1, help = 'Blocks minimum depth. Default value is the number of filenames in the input file.')
-args = parser.parse_args()
-
-input_filename = args.input_filename[0]
-output = args.output_filename[0]
-min_depth = args.min_depth[0]
-
-files = [line.rstrip('\n') for line in open(input_filename)]
-output_file = open(output, 'a')
-output_file.write('file_ID\ttraced_block\toriginal_block\n')
-if min_depth == -1:
-    min_depth = len(files)
-current_blocks = obtain_blocks(files[0], 0, get_comparison_name(files[0]))
-recursive_overlap_checking(files, 1, current_blocks, current_blocks, output_file, '', min_depth)
-"""
+                return recursive_overlap_checking(files, index + 1, new_blocks, new_original_blocks, traced_block_info + str(index-1) + '\t' + str(scale(current_blocks[i])[:-1]) + '\t' + str(scale(current_original_blocks[i])[:-1]) + '\n', min_depth)
+    else:
+        return ret

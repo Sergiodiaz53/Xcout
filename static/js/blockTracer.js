@@ -180,6 +180,7 @@ $(document).ready(function(){
     addNewblockTracerRow(BLOCKTRACER_ID, false);
     blockTracerSelectedSpecieBehavior("blocktracer0");
     blockTracerSelectedSpecieBehavior("blocktracer1");
+    document.getElementById('blocktracer1').selectedIndex=1;
 });
 
 // --- Document Changes ---
