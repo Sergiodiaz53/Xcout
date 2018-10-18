@@ -42,31 +42,19 @@ def trace(request):
 
         inverted_steps.append(inverted)
         events_steps.append(current_step)
-
-    # Debug
-    #events_steps.append(['GORGO1-A','GORGO1-B', 'GORGO1-C']) # ,'GORGO2-A','GORGO2-B', 'GORGO2-C'
-    for step in events_steps:
-        print("---")
-        print(step)
-        print("LENGTH :: " + str(len(step)))
-    print("################")
         
-    # Generate list of file lists (Combine) --- WORKS FOR 3 BUT NOT FOR 2
+    # Generate list of file lists (Combine)
+    print(events_steps)
+    print(inverted)
     l_comparison_list = [[events] for events in events_steps[0]]
-
-    """
-    for comparison_list in l_comparison_list:
-        print("--- INIT ")
-        print(comparison_list)
-        print("COMPARISONS LENGHT :: " + str(len(comparison_list)))
-    print("#########!!!!########")
-    """
 
     for i, current_step in enumerate(events_steps[1:]):
         tmp_list = []
         inverted = (inverted_steps[i] and inverted_steps[i-1])
+        print(inverted)
         for current_event in current_step:
             for comparison_list in l_comparison_list:
+                print(comparison_list[-1])
                 evaluation = (not inverted and comparison_list[-1].chromosome_y == current_event.chromosome_x) \
                     or (inverted and comparison_list[-1].chromosome_x == current_event.chromosome_y)
                 print(evaluation)
@@ -76,78 +64,22 @@ def trace(request):
 
         l_comparison_list = tmp_list
     
-    for comparison_list in l_comparison_list:
-        print("--- END ")
-        print(comparison_list)
-        print("COMPARISONS LENGHT :: " + str(len(comparison_list)))
     print("################")
     print("N Combination :: " + str(len(l_comparison_list)))
-        
-    
-    """
-    for i, curr_step in enumerate(events_steps[:-1]):
-        tmp_list = []
-        next_step = events_steps[i+1]
+    print("################")
 
-        curr_step_len = len(curr_step)
-        next_step_len = len(next_step)
-        print("###")
-        print(curr_step_len)
-        print(next_step_len)
+    # Execute BlockTracer
+    outputs = 'file_ID\ttraced_block\toriginal_block\n'
 
-        #if not l_file_lists:
-        step_len_ratio = next_step_len//curr_step_len
+    for comparison_list in l_comparison_list:
+        files = ['media/' + comparison.csv for comparison in comparison_list]
 
-        for curr_i, curr_file in enumerate(curr_step):
-            next_index = curr_i*step_len_ratio
-            for curr_index in range(0,step_len_ratio):
-                tmp_list.append( [curr_file, next_step[next_index+curr_index]] )
+        current_blocks = obtain_blocks(files[0], 0, get_comparison_name(files[0]))
+        recursive_overlap_checking(files, 1, current_blocks, current_blocks, outputs, '', 2)
 
-        l_file_lists = copy.deepcopy(tmp_list)
-
-    for files in l_file_lists:
-        print("---")
-        print(files)
-        print("LENGTH :: " + str(len(files)))
-    """
-
-    """
-    if not l_file_lists:
-        l_file_lists = list(product(curr_file, events_steps[i+1][index]))
-    else:
-        l_file_lists = list(product(l_file_lists, events_steps[i+1][index]))
-    """
-    """
-    length_chromosomes = [len(chromos) for chromos in chromosomes[1:]]
-    n_combinations = np.prod(length_chromosomes)
-    l_file_lists = []
-    for l_files_index in range(0,n_combinations):
-        current_file_list = []
-        index_plus = 0
-        for len_chromo in length_chromosomes:
-            suffix = l_files_index+(index_plus+len_chromo//n_combinations)
-            current_csv = events_steps[suffix]
-            print(current_csv)
-            current_file_list.extend(current_csv)
-            index_plus += len_chromo
-
-        l_file_lists.append(current_file_list)
-
-    print(length_chromosomes)
-    print(n_combinations)
-    print("-----------")
-    print(l_file_lists)
-
-    l_file_lists = deque(events_steps[-1])
-    steps_length = len(events_steps)
-    for index, step in (reversed(events_steps[:-1])):
-        previous_len = len(events_steps[steps_length-index])
-        current_len = len(step)
-        repeat_n = previous_len
-        for index in range(0,previous_len):
-            for range(0,)
-    """
-    jsonResponseList = []
+    print(outputs)
+    print(OUTPUT_TEST)
+    jsonResponseList = [outputs]
     
     return JsonResponse(json.dumps(jsonResponseList), safe=False)
 
@@ -155,9 +87,6 @@ def trace(request):
 ### BlockTracer ###
 ###################
 import copy
-from itertools import product
-import numpy as np
-
 
 def check_inversion(event):
     if int(event[0]) > int(event[2]):
@@ -208,6 +137,7 @@ def obtain_blocks(file, index, name):
         event.append(name)
         event = unscale(event)
         events.append(event)
+    print(events)
     return events
 
 def compare_blocks(base_block, new_blocks_list):
@@ -232,12 +162,18 @@ def compare_blocks(base_block, new_blocks_list):
             original_blocks.append(original_block)
     return blocks, original_blocks
 
+OUTPUT_TEST = ""
 def recursive_overlap_checking(files, index, current_blocks, current_original_blocks, output_file, traced_block_info, min_depth):
+    global OUTPUT_TEST
     if index >= min_depth:
         for i in range(len(current_blocks)):
-            output_file.write(traced_block_info)
-            output_file.write(str(index-1) + '\t' + str(scale(current_blocks[i])[:-1]) + '\t' + str(scale(current_original_blocks[i])[:-1]) + '\n\n')
+            print("test1")
+            new_string = str(traced_block_info)
+            new_string += str(index-1) + '\t' + str(scale(current_blocks[i])[:-1]) + '\t' + str(scale(current_original_blocks[i])[:-1]) + '\n\n'
+            print(new_string)
+            OUTPUT_TEST += new_string
     if index < len(files):
+        print("test2")
         new_name = get_comparison_name(files[index])
         new_comparison_blocks = obtain_blocks(files[index], index, new_name)
         #if no blocks have been found, stop all posible combinations
