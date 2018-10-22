@@ -184,7 +184,7 @@ def createOverlayedImage(request):
             comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieY, chromosome_y__specie__name = specieX, chromosome_y__number = chromosomeX)
         else:
             comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieY, chromosome_y__specie__name = specieX, chromosome_x__number = chromosomeY)
-
+    print(inverted)
     # Filter comparisons by threshold
     cmp_data = []
     base_max_len = 0

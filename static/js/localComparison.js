@@ -121,6 +121,7 @@ function addLocalComparisonToComparisonList(specieX, specieY){
         }
 
         LOCAL_COMPARISON = tmpComparison.slice(0);
+        clearSidemenuSelection
         getFullComparisonOf(species.specieX, species.specieY);
     });
 }

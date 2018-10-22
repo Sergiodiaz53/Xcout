@@ -164,11 +164,25 @@
 
 /* #######################  */
 
+    /* BLOCKTRACER */
+
     .blockTracerRow {
         margin-top: 15px;
         margin-bottom: 10x;
     }
 
+    .blocktracer {
+        float:left;
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+
+    .blocktracersvg {
+        position:absolute;
+    }
+
+    
 /* #######################  */
 
     /* HEATMAP*/

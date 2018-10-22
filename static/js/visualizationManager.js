@@ -34,7 +34,8 @@ function addComparisonToComparisonList(specieX, specieY){
         $('#comparisonList .specieY_name').each(function() {
             specieY.push($(this).html())
         });
-
+        
+        clearSidemenuSelection();
         getFullComparisonOf(specieX, specieY);
     });
 }
