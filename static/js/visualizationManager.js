@@ -87,10 +87,8 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     $(".heatmap").html('');
 
     //Create SVG
-    var svg = d3.select("svg > g");
-    if(!svg.empty()){
-        d3.select("svg").remove();
-    }
+    var svg = d3.select(".heatmap > svg > g");
+    if(!svg.empty()){ d3.select("svg").remove(); }
 
     //Get elements for X,Y and UpperLevelXYAxis
     var x_elements = d3.set(data.map(function( comparison ) {return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
@@ -181,7 +179,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
     height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
 
-    // Clear Overlay (if exists)
+    // Clear Tooltip (if exists)
     d3.select("body").append("div")
         .attr("class", "tooltip_score")
         .style("opacity", 0);

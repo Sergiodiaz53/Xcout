@@ -87,9 +87,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
 
     // Clear SVG
     var svg = d3.select("#comparisonOverlay > svg");
-    if(!svg.empty()){
-        svg.remove();
-    }
+    if(!svg.empty()){ svg.remove(); }
 
     //Set xScale
     var xScale = d3.scale.linear()

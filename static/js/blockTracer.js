@@ -156,31 +156,166 @@ function extractBlockTracerRowsData(){
 function executeBlockTracer(){
     console.log("BlockTrace!");
     let data = extractBlockTracerRowsData();
-    console.log(data)
+    let species = data[0], chromosomes=data[1]; console.log(data)
     $.ajax({
         type:"POST",
         url:FORCE_URL+"/blocktracer/trace/",
         data: {
-            'species': JSON.stringify(data[0]),
-            'chromosomes' : JSON.stringify(data[1])
+            'species': JSON.stringify(species),
+            'chromosomes' : JSON.stringify(chromosomes)
         },
         success: function(content) {
-            results = JSON.parse(content); console.log(results)
-
+            results = JSON.parse(content); console.log(results);
             // PAINT
+            paintBlockTracer(species, chromosomes, results.events, results.lengths);
         }
     });
 }
 
+// ---------------------------
+/* --- BlockTracer Draw --- */
+// ---------------------------
+
+function getSumOfDictValuesFromDict(array_list){
+    let sums = {}
+    Object.entries(array_list).map(function(key_val){ sums[key_val[0]] = Object.values(key_val[1]).reduce( (a, b) => a + b) });
+    return sums;
+}
+
+function getMaxOfDictValuesFromDict(array_list){
+    let objects = []
+    Object.values(array_list).map(function(array){ Object.values(array).map( o => objects.push(o) ) })
+    return Math.max.apply(Math, Object.values( objects.map(function(o) { return o; }) ))
+}
+
+var INTERSPECIE_SPACE = 200;
+var INTERCHROMOSOME_SPACE = 50;
+var CHROMOSOME_BASELINE_HEIGHT = 10;
+
+function paintBlockTracer(species, chromosomes, events, lengths){
+    var MAX_SPECIES_LENGTHS = getSumOfDictValuesFromDict(lengths);
+    var MAX_CHROMOSOME_LENGTH = getMaxOfDictValuesFromDict(lengths);
+    var CHROMOSOMES_PER_SPECIE = Object.values(chromosomes).map( o => o.length);
+    var MAX_CHROMOSOME_PER_SPECIES = Math.max.apply(Math, Object.values( CHROMOSOMES_PER_SPECIE.map(function(o) { return o; }) ));
+    var MAX_FULL_LENGTH = getMaxOfDictValuesFromDict({1: MAX_SPECIES_LENGTHS});
+    var MINIMUM_CHROMOSOME_PIXELS = 300;
+    // DEBUG :: 
+    console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(MAX_CHROMOSOME_LENGTH); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
+    
+    var WIDTH = (MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS
+        HEIGHT = (species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : species.length*MINIMUM_CHROMOSOME_PIXELS,
+        MARGINS = {
+            top: 50,
+            right: 30,
+            bottom: 30,
+            left: 50
+        };
+
+    var WIDTH = WIDTH - MARGINS.left - MARGINS.right,
+        HEIGHT = HEIGHT - MARGINS.top - MARGINS.bottom;
+
+    // Clear SVG
+    var svg = d3.select(".blocktracer > svg");
+    if(!svg.empty()){ svg.remove(); }
+
+    // --------
+    //Set xScale
+    /*
+    var xAxes = {}, xScales = {}
+    // For each Number of Chromosomes per specie, create a new axis
+    for(indexSpecie in species){
+        let specie = species[indexSpecie]
+            numberChromosomes = CHROMOSOMES_PER_SPECIE[indexSpecie],
+            currentInterchromosomeSpace = (numberChromosomes-1)*0;
+
+
+        var xScale= d3.scale.linear()
+            .domain([0, MAX_FULL_LENGTH])
+            .range([0, WIDTH - currentInterchromosomeSpace]);
+
+        var xAxis = d3.svg.axis()
+            .scale(xScale)
+            .orient("bottom");
+
+        xScales[specie] = xScale; xAxes[specie] = xAxis;
+    }
+    */
+    var xScale= d3.scale.linear()
+        .domain([0, MAX_FULL_LENGTH])
+        .range([0, WIDTH - (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES) ]);
+
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom");
+
+    //Set yScale
+    var yScale = d3.scale.ordinal()
+        .domain(species)
+        .rangeBands([0, HEIGHT]);
+
+    //Set yAxis
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+        .tickFormat(function (d) {
+            return d;
+        });
+
+    // DEBUG :: 
+    console.log("--- DEBUG2 ---"); console.log(xAxis); console.log(xScale); console.log(yAxis); console.log(yScale); 
+    // --------
+    // Draw SVG
+    svg = d3.select('.blocktracer')
+        .append("svg")
+        .attr("width", WIDTH + MARGINS.left + MARGINS.right)
+        .attr("height", HEIGHT + MARGINS.top + MARGINS.bottom)
+        .attr("class", 'blocktracer-svg')
+        .append('g')
+        .attr('transform', 'translate(' + MARGINS.left + ',' + MARGINS.top + ')');
+
+    // Draw chromosome lines
+    var chromosomeBaseData = generateChromosomeBaselineData(species, chromosomes, lengths);
+
+    var chromosomeBaseLines = svg.selectAll('rect')
+        .data(chromosomeBaseData)
+        .enter().append('g').append('rect')
+        .attr('class', 'chromosomeBaseline')
+        .attr('x', function(d) { console.log(xScale(d.x1)); return  xScale(d.x1)+ INTERCHROMOSOME_SPACE*d.index; })/*s[d.specie]*/
+        .attr('y', function(d) { return yScale(d.specie); })
+        .attr('width', function(d) { console.log(xScale(d.x2)); return xScale(d.x2); })/*s[d.specie]*/
+        .attr('height', CHROMOSOME_BASELINE_HEIGHT);
+    
+    // DEBUG :: 
+    console.log("--- DEBUG3 ---"); console.log(chromosomeBaseData); console.log(chromosomeBaseLines);
+    // ---
+    // Draw event blocks
+}
+
+function generateChromosomeBaselineData(species, chromosomes, lengths){
+    let ret = [];
+    for(specieIndex in species){
+        let specie = species[specieIndex],
+            chromos = chromosomes[specieIndex],
+            added_space = 0;
+        
+        for(chrIndex in chromos){
+            let chr = chromos[chrIndex]
+            curr_len = lengths[specie][chr]
+            ret.push({'specie': specie, 'x1': added_space, 'x2': curr_len, 'index': parseInt(chrIndex)});
+            added_space += curr_len
+        }
+    }
+    return ret;
+}
 
 // ---------------------------
 
 // --- Document Init ---
 $(document).ready(function(){
     addNewblockTracerRow(BLOCKTRACER_ID, false);
+    document.getElementById('blocktracer1').selectedIndex=1;
     blockTracerSelectedSpecieBehavior("blocktracer0");
     blockTracerSelectedSpecieBehavior("blocktracer1");
-    document.getElementById('blocktracer1').selectedIndex=1;
 });
 
 // --- Document Changes ---

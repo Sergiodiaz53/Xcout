@@ -219,10 +219,8 @@ def clear_duplicate_events(events):
     for event in events:
         if event not in clean_l:
             clean_l.append(event)
-        
+
     return clean_l
-
-
 """
 
 M Listas de Ficheros de Comparaciones
