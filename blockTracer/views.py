@@ -55,7 +55,7 @@ def trace(request):
         
     # Generate list of file lists (Combine)
     #print(events_steps)
-    #print(inverted)
+    print(inverted)
     l_comparison_list = [[events] for events in events_steps[0]]
     inverted_list = []
     for i, current_step in enumerate(events_steps[1:]):
@@ -89,7 +89,7 @@ def trace(request):
         outputs.extend(blocks_traced)
 
     #print(outputs)
-    jsonResponseDict = {'events': clear_duplicate_events(outputs),
+    jsonResponseDict = {'events': clear_repeated_events(clear_duplicate_events(outputs)),
         'lengths' : lengths_dict}
     
     return JsonResponse(json.dumps(jsonResponseDict ), safe=False)
@@ -152,7 +152,7 @@ def obtain_blocks(file, index, name):
 
 def extract_block_info(block):
     inv = True if 'inv' in block[5] else False
-    return {'x1': block[0], 'y1': block[1], 'x2': block[2], 'x3': block[3], 'inverted': inv}
+    return {'x1': block[0], 'y1': block[1], 'x2': block[2], 'y2': block[3], 'inverted': inv}
 
 def compare_blocks(base_block, new_blocks_list):
     blocks = []
@@ -195,6 +195,7 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
 
             # Append Current BlockTraced to BlocksTraced (result)
             blocks_traced.append(current_block_traced)
+    
     if index < len(files):
         # Search for new blocks in next comparisons
         new_name = get_comparison_name(files[index])
@@ -209,7 +210,17 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
                 # Create new 'traced_block_infos'
                 new_traced_block_info = copy.deepcopy(traced_block_infos)
                 new_traced_block_info.append(current_block)
-                blocks_traced.extend(recursive_overlap_checking(files, index+1, new_blocks, new_original_blocks, comparisons, new_traced_block_info))
+
+                # Remove previous block
+                try:
+                    r_index = blocks_traced.index(new_traced_block_info)
+                    del blocks_traced[r_index]
+                except:
+                    pass
+                # Add new blocks
+                new_blocks = recursive_overlap_checking(files, index+1, new_blocks, new_original_blocks, comparisons, new_traced_block_info)
+                blocks_traced.extend(new_blocks)
+
         return blocks_traced
     else:
         return blocks_traced
@@ -221,6 +232,41 @@ def clear_duplicate_events(events):
             clean_l.append(event)
 
     return clean_l
+
+def clear_repeated_events(events):
+    clean_l = []
+
+    for block_traced in events:
+        b_keep = True
+        for block_traced_2 in events:
+            if block_traced != block_traced_2:
+                b_contained = check_contained_blocktraced(block_traced, block_traced_2)
+                if b_contained is True:
+                    b_keep = False
+                    break
+        if b_keep is True:
+            clean_l.append(block_traced)
+
+    return clean_l
+
+def check_contained_blocktraced(block1, block2):
+    infos_1 = [info for info in block1]
+    infos_2 = [info for info in block2]
+    index = len(infos_1)-1
+
+    if index > len(infos_2)-1:
+        return False
+
+    info_1 = infos_1[index]
+    info_2 = infos_2[index]
+    ret = True if info_1 == info_2 else False
+
+    return ret
+
+def stripe_block_traced(event, key='overlap'):
+    ret = event[-1][key].values()
+    return set(ret)
+
 """
 
 M Listas de Ficheros de Comparaciones

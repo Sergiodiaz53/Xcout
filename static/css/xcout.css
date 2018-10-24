@@ -178,9 +178,10 @@
         position: relative;
     }
 
-    .blocktracersvg {
-        position:absolute;
-    }
+    /*.blocktracer-svg {
+        height:100%;
+        width:100%;
+    }*/
 
     
 /* #######################  */

@@ -188,22 +188,24 @@ function getMaxOfDictValuesFromDict(array_list){
     return Math.max.apply(Math, Object.values( objects.map(function(o) { return o; }) ))
 }
 
-var INTERSPECIE_SPACE = 200;
+var INTERSPECIE_SPACE = 250;
 var INTERCHROMOSOME_SPACE = 50;
-var CHROMOSOME_BASELINE_HEIGHT = 10;
+var CHROMOSOME_BASELINE_HEIGHT = 5;
+var BLOCK_BASE_HEIGHT = 30
 
 function paintBlockTracer(species, chromosomes, events, lengths){
-    var MAX_SPECIES_LENGTHS = getSumOfDictValuesFromDict(lengths);
-    var MAX_CHROMOSOME_LENGTH = getMaxOfDictValuesFromDict(lengths);
-    var CHROMOSOMES_PER_SPECIE = Object.values(chromosomes).map( o => o.length);
-    var MAX_CHROMOSOME_PER_SPECIES = Math.max.apply(Math, Object.values( CHROMOSOMES_PER_SPECIE.map(function(o) { return o; }) ));
-    var MAX_FULL_LENGTH = getMaxOfDictValuesFromDict({1: MAX_SPECIES_LENGTHS});
-    var MINIMUM_CHROMOSOME_PIXELS = 300;
+    var MAX_SPECIES_LENGTHS = getSumOfDictValuesFromDict(lengths),
+        MAX_CHROMOSOME_LENGTH = getMaxOfDictValuesFromDict(lengths),
+        CHROMOSOMES_PER_SPECIE = Object.values(chromosomes).map( o => o.length),
+        MAX_CHROMOSOME_PER_SPECIES = Math.max.apply(Math, Object.values( CHROMOSOMES_PER_SPECIE.map(function(o) { return o; }) )),
+        MAX_FULL_LENGTH = getMaxOfDictValuesFromDict({1: MAX_SPECIES_LENGTHS}),
+        MINIMUM_CHROMOSOME_PIXELS = 600;
+        
     // DEBUG :: 
     console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(MAX_CHROMOSOME_LENGTH); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
     
-    var WIDTH = (MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS
-        HEIGHT = (species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : species.length*MINIMUM_CHROMOSOME_PIXELS,
+    var WIDTH = MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS // (MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 :
+        HEIGHT = (species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : species.length*INTERSPECIE_SPACE,
         MARGINS = {
             top: 50,
             right: 30,
@@ -220,30 +222,11 @@ function paintBlockTracer(species, chromosomes, events, lengths){
 
     // --------
     //Set xScale
-    /*
-    var xAxes = {}, xScales = {}
-    // For each Number of Chromosomes per specie, create a new axis
-    for(indexSpecie in species){
-        let specie = species[indexSpecie]
-            numberChromosomes = CHROMOSOMES_PER_SPECIE[indexSpecie],
-            currentInterchromosomeSpace = (numberChromosomes-1)*0;
-
-
-        var xScale= d3.scale.linear()
-            .domain([0, MAX_FULL_LENGTH])
-            .range([0, WIDTH - currentInterchromosomeSpace]);
-
-        var xAxis = d3.svg.axis()
-            .scale(xScale)
-            .orient("bottom");
-
-        xScales[specie] = xScale; xAxes[specie] = xAxis;
-    }
-    */
     var xScale= d3.scale.linear()
         .domain([0, MAX_FULL_LENGTH])
         .range([0, WIDTH - (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES) ]);
 
+    //Set xAxis
     var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient("bottom");
@@ -261,51 +244,121 @@ function paintBlockTracer(species, chromosomes, events, lengths){
             return d;
         });
 
-    // DEBUG :: 
+    // DEBUG ::
     console.log("--- DEBUG2 ---"); console.log(xAxis); console.log(xScale); console.log(yAxis); console.log(yScale); 
     // --------
     // Draw SVG
     svg = d3.select('.blocktracer')
         .append("svg")
-        .attr("width", WIDTH + MARGINS.left + MARGINS.right)
-        .attr("height", HEIGHT + MARGINS.top + MARGINS.bottom)
+        .attr("width", WIDTH + MARGINS.left + MARGINS.right + (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES))
+        .attr("height", HEIGHT + MARGINS.top + MARGINS.bottom + species.length*INTERSPECIE_SPACE)
         .attr("class", 'blocktracer-svg')
         .append('g')
         .attr('transform', 'translate(' + MARGINS.left + ',' + MARGINS.top + ')');
 
+    // Setup data
+    var preparedData = prepareBlockTracerData(species, chromosomes, lengths, events);
+    // DEBUG :: 
+    console.log("--- DEBUG3 ---"); console.log(preparedData);
+    // ---
     // Draw chromosome lines
-    var chromosomeBaseData = generateChromosomeBaselineData(species, chromosomes, lengths);
-
-    var chromosomeBaseLines = svg.selectAll('rect')
-        .data(chromosomeBaseData)
+    var chromosomeBaseLines = svg.selectAll('rect').filter(".chromosomeBaseline")
+        .data(preparedData.baselineData)
         .enter().append('g').append('rect')
         .attr('class', 'chromosomeBaseline')
-        .attr('x', function(d) { console.log(xScale(d.x1)); return  xScale(d.x1)+ INTERCHROMOSOME_SPACE*d.index; })/*s[d.specie]*/
+        .attr('x', function(d) { return  xScale(d.x1)+ INTERCHROMOSOME_SPACE*d.index; })/*s[d.specie]*/
         .attr('y', function(d) { return yScale(d.specie); })
-        .attr('width', function(d) { console.log(xScale(d.x2)); return xScale(d.x2); })/*s[d.specie]*/
+        .attr('width', function(d) { return xScale(d.x2); })/*s[d.specie]*/
         .attr('height', CHROMOSOME_BASELINE_HEIGHT);
     
     // DEBUG :: 
-    console.log("--- DEBUG3 ---"); console.log(chromosomeBaseData); console.log(chromosomeBaseLines);
+    console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
     // ---
+
     // Draw event blocks
+    var tracedBlocks = svg.selectAll('rect').filter(".tracedBlock")
+        .data(preparedData.eventData)
+        .enter().append('g').append('rect')
+        .attr('class', function(d) { return 'tracedBlock block'+d.block_id} )
+        .attr('x', function(d) { return  xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*d.chromoIndex; })/*s[d.specie] */ 
+        .attr('y', function(d) { return yScale(d.specie) + d.y_gap; })
+        .attr('width', function(d) { return xScale(d.len); })/*s[d.specie]*/
+        .attr('height', BLOCK_BASE_HEIGHT)
+        .attr('fill', function(d) { return preparedData.colors[d.block_id] });
+    
+    // DEBUG :: 
+    console.log("--- DEBUG5 ---"); console.log(tracedBlocks);
 }
 
-function generateChromosomeBaselineData(species, chromosomes, lengths){
-    let ret = [];
+function prepareBlockTracerData(species, chromosomes, lengths, events){
+    let baselineData = [], eventData = [], colors = [];
     for(specieIndex in species){
         let specie = species[specieIndex],
             chromos = chromosomes[specieIndex],
             added_space = 0;
-        
+        console.log(specie)
         for(chrIndex in chromos){
             let chr = chromos[chrIndex]
             curr_len = lengths[specie][chr]
-            ret.push({'specie': specie, 'x1': added_space, 'x2': curr_len, 'index': parseInt(chrIndex)});
+            console.log(chr)
+            baselineData.push({'specie': specie, 'x1': added_space, 'x2': curr_len, 'index': parseInt(chrIndex)});
             added_space += curr_len
         }
     }
-    return ret;
+
+    for(eventIndex in events){
+        event = events[eventIndex]
+        //console.log("## BLOCKTRACED");console.log(event);
+        for(block_info of event){
+            //console.log("### BLOCKINFO"); console.log(block_info);
+            let specieXIndex = species.indexOf(block_info.info.spX),
+                chrXIndex =  chromosomes[specieXIndex].indexOf(block_info.info.chrX),
+                specieYIndex = species.indexOf(block_info.info.spY),
+                chrYIndex =  chromosomes[specieYIndex].indexOf(block_info.info.chrY),
+                prependX = (chrXIndex > 0) ? Object.values(lengths[block_info.info.spX]).slice(0, chrXIndex).reduce( function(a,b) { return a+b } ) : 0,
+                prependY = (chrYIndex > 0) ? Object.values(lengths[block_info.info.spY]).slice(0, chrYIndex).reduce( function(a,b) { return a+b } ) : 0,
+                x1 = parseInt(block_info.overlap.y1),
+                x2 = parseInt(block_info.overlap.y2),
+                y1 = parseInt(block_info.overlap.x1),
+                y2 = parseInt(block_info.overlap.x2),
+                chrX_y_gap = -BLOCK_BASE_HEIGHT,
+                chrY_y_gap = -BLOCK_BASE_HEIGHT;
+
+            
+            if(block_info.overlap.inverted == true){ chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT }
+            if(x2 < x1){ [x1, x2] = [x2, x1] }
+            if(y2 < y1){ [y1, y2] = [y2, y1] }
+
+            eventData.push({
+                'block_id': eventIndex,
+                'specie': block_info.info.spX,
+                'chromosome': block_info.info.chrX,
+                'x1': x1,
+                'x2': x2,
+                'len': x2-x1,
+                'specieIndex': specieXIndex,
+                'chromoIndex': chrXIndex,
+                'prepend': prependX,
+                'y_gap': chrX_y_gap
+            })
+
+            eventData.push({
+                'block_id': eventIndex,
+                'specie': block_info.info.spY,
+                'chromosome': block_info.info.chrY,
+                'x1': y1,
+                'x2': y2,
+                'len': y2-y1,
+                'specieIndex': specieYIndex,
+                'chromoIndex': chrYIndex,
+                'prepend': prependY,
+                'y_gap': chrY_y_gap
+            })
+        }
+        colors.push("#" + fullColorHex(R_color[eventIndex], G_color[eventIndex], B_color[eventIndex]));
+    }
+
+    return {'baselineData': baselineData, 'eventData': eventData, 'colors': colors};
 }
 
 // ---------------------------
@@ -327,3 +380,24 @@ $(document).on('change', '.blockTracerSpecie', function() {
 $(document).on('changed.bs.select', 'select.selectpicker', function() {
     blockTracerButtonBehavior();
 });
+
+/*
+    var xAxes = {}, xScales = {}
+    // For each Number of Chromosomes per specie, create a new axis
+    for(indexSpecie in species){
+        let specie = species[indexSpecie]
+            numberChromosomes = CHROMOSOMES_PER_SPECIE[indexSpecie],
+            currentInterchromosomeSpace = (numberChromosomes-1)*0;
+
+
+        var xScale= d3.scale.linear()
+            .domain([0, MAX_FULL_LENGTH])
+            .range([0, WIDTH - currentInterchromosomeSpace]);
+
+        var xAxis = d3.svg.axis()
+            .scale(xScale)
+            .orient("bottom");
+
+        xScales[specie] = xScale; xAxes[specie] = xAxis;
+    }
+    */
