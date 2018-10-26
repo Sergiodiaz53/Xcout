@@ -81,37 +81,41 @@ def trace(request):
 
     # Execute BlockTracer
     outputs = [];#'file_ID\ttraced_block\toriginal_block\n'
-
     for comparison_list in l_comparison_list:
         files = ['media/' + comparison.csv for comparison in comparison_list]
         first_overlapped_blocks = obtain_blocks(files[0], 0, get_comparison_name(files[0]))
         blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list)
         outputs.extend(blocks_traced)
 
+    print("\n... OUTPUTS ...")
+    for bt in clear_repeated_events(clear_duplicate_events(outputs)):
+        for bi in bt:
+            print(bi)
     #print(outputs)
+
     jsonResponseDict = {'events': clear_repeated_events(clear_duplicate_events(outputs)),
         'lengths' : lengths_dict}
     
     return JsonResponse(json.dumps(jsonResponseDict ), safe=False)
-
+    
 ###################
 ### BlockTracer ###
 ###################
 import copy
 
 def check_inversion(event):
-    if int(event[0]) > int(event[2]):
+    if event[0] > event[2]:
         event[0], event[2] = event[2], event[0]
     return event
 
 def overlapped(block_a, block_b):
-    return int(block_a[1]) <= int(block_b[2]) and int(block_b[0]) <= int(block_a[3])
+    return block_a[1] <= block_b[2] and block_b[0] <= block_a[3]
 
 def overlap_coefficient(block_a, block_b):
-    x1 = int(block_a[0])
-    x2 = int(block_a[2])                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-    y1 = int(block_b[1])
-    y2 = int(block_b[3])
+    x1 = block_a[0]
+    x2 = block_a[2]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+    y1 = block_b[1]
+    y2 = block_b[3]
     if (min(x2, y2) < max (x1, y1)):
         return 0 #not overlaped
     return 100 * (min(x2, y2) - max(x1, y1)) / min(x2-x1, y2-y1)
@@ -123,15 +127,15 @@ def get_comparison_name(path):
 def scale(block):
     new_block = copy.deepcopy(block)
     for i in range(4):
-        length_index = 6 if i % 2 == 1 or i == 4 else 7
-        new_block[i] = str(int(int(block[i]) / block[length_index] * 1000))
+        length_index = -2 if i % 2 == 1 or i == 4 else -1
+        new_block[i] = int(block[i] / block[length_index] * 1000)
     return new_block
 
 def unscale(block):
     new_block = copy.deepcopy(block)                                                                                                                                                                                                                                            
     for i in range(4):
-        length_index = 6 if i % 2 == 1 or i == 4 else 7
-        new_block[i] = str(int(int(block[i]) * block[length_index] / 1000))
+        length_index = -2 if i % 2 == 1 or i == 4 else -1
+        new_block[i] = int(block[i] * block[length_index] / 1000)
     return new_block
 
 def obtain_blocks(file, index, name):
@@ -142,11 +146,13 @@ def obtain_blocks(file, index, name):
     event_list = file_events[2:-1]
     for line in event_list:
         event = line.split(",")
+        event[:4] = [int(coord) for coord in event[:4]]
         event = check_inversion(event)
+        event.append(name)
         event.append(length_x)
         event.append(length_y)
-        event.append(name)
         event = unscale(event)
+        print("\n --- AFTER UNSCALE --- "); print(event)
         events.append(event)
     return events
 
@@ -157,23 +163,26 @@ def extract_block_info(block):
 def compare_blocks(base_block, new_blocks_list):
     blocks = []
     original_blocks = []
+    #print("");print(":: xXx_BASE_xXx ::"); print(base_block)
     for block in new_blocks_list:
         original_block = copy.deepcopy(block)
         if overlap_coefficient(base_block, block) > 80:
             # Take only the overlapped part
-            if int(base_block[1]) > int(block[0]):
-                block[1] = str(int(block[1]) + ((int(base_block[1]) - int(block[0]))*block[7]//block[6]))
+            if base_block[1] > block[0]:
+                block[1] = block[1] + ((base_block[1] - block[0])*block[-1]//block[-2])
                 block[0] = base_block[1]
-            if int(base_block[3]) < int(block[2]):
-                block[3] = str(int(block[3]) - ((int(block[2]) - int(base_block[3]))*block[7]//block[6]))
+            if base_block[3] < block[2]:
+                block[3] = block[3] - ((block[2] - base_block[3])*block[-1]//block[-2])
                 block[2] = base_block[3]
             # Blocks that are inversions of inverted transposition need y coordinates to be swapped
             if 'inv' in block[5]:
                 block[1], block[3] = block[3], block[1]
                 original_block[1], original_block[3] = original_block[3], original_block[1]
-            block[4] = abs(int(block[1]) - int(block[3]))
+            block[4] = abs(block[1] - block[3])
             blocks.append(block)
             original_blocks.append(original_block)
+    
+    #print("xXx_COÑO_xXx"); print(original_blocks)
     return blocks, original_blocks
 
 def recursive_overlap_checking(files, index, current_overlapped_blocks, current_original_blocks, comparisons, traced_block_infos = [], prev_blocks_traced = [], min_depth = 1):
@@ -185,8 +194,8 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
     if index >= min_depth:
         # Search for new blocks of at least the minimum depths
         for i in range(len(current_overlapped_blocks)):
-            overlapped_block = extract_block_info(current_overlapped_blocks[i][:-1])
-            original_block = extract_block_info(current_original_blocks[i][:-1])
+            overlapped_block = extract_block_info(current_overlapped_blocks[i])
+            original_block = extract_block_info(current_original_blocks[i])
             current_block = {'info': comparison_info, 'overlap': overlapped_block, 'original': original_block}
 
             # Append BlockInfo to Current BlockTraced
@@ -218,8 +227,10 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
                 except:
                     pass
                 # Add new blocks
-                new_blocks = recursive_overlap_checking(files, index+1, new_blocks, new_original_blocks, comparisons, new_traced_block_info)
-                blocks_traced.extend(new_blocks)
+                print("")#;print(":: DEBUG - TEST1 ::"); print(new_blocks)
+                new_blockstraced = recursive_overlap_checking(files, index+1, new_blocks, new_original_blocks, comparisons, new_traced_block_info)
+                print(":: DEBUG - TEST2 ::"); print(new_blockstraced)
+                blocks_traced.extend(new_blockstraced)
 
         return blocks_traced
     else:

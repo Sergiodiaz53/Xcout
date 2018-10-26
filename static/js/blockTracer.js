@@ -275,32 +275,71 @@ function paintBlockTracer(species, chromosomes, events, lengths){
     console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
     // ---
 
-    // Draw event blocks
-    var tracedBlocks = svg.selectAll('rect').filter(".tracedBlock")
+    // Setup BlockInfo groups
+    var tracedBlocks = svg.selectAll('.blockInfo')
         .data(preparedData.eventData)
-        .enter().append('g').append('rect')
+        .enter().append('g').classed('.blockInfo', true)
+
+        // Draw blocks
+        tracedBlocks.append('rect')
         .attr('class', function(d) { return 'tracedBlock block'+d.block_id} )
         .attr('x', function(d) { return  xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*d.chromoIndex; })/*s[d.specie] */ 
         .attr('y', function(d) { return yScale(d.specie) + d.y_gap; })
-        .attr('width', function(d) { return xScale(d.len); })/*s[d.specie]*/
+        .attr('width', function(d) { return xScale(Math.abs(d.len)); })/*s[d.specie]*/
         .attr('height', BLOCK_BASE_HEIGHT)
-        .attr('fill', function(d) { return preparedData.colors[d.block_id] });
+        .attr('fill', function(d) { return preparedData.colors[d.block_id] })
+        .on("click", function(d) {
+            if(d3.select(this).classed("clicked")){
+                svg.selectAll("rect")
+                    .style("opacity", 1)
+                    .style("z-index", 10)
+                    .classed("clicked", false);
+            } else {
+                d3.select(this).classed("clicked");
+                var block_id = d.block_id;
+                svg.selectAll("rect").filter(".tracedBlock")
+                    .style("opacity", function (d2) {
+                        return d2.block_id == block_id ? 1 : 0.3;
+                    })
+                    /*.style("z-index", function (d2) {
+                        return d2.block_id == block_id ? 10 : 1
+                    })*/
+                    .classed("clicked", function () {
+                        if (d3.select(this).style("opacity") == 1) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    })
+            }
+        });
     
-    // DEBUG :: 
-    console.log("--- DEBUG5 ---"); console.log(tracedBlocks);
+    // DEBUG :: console.log("--- DEBUG5 ---"); console.log(tracedBlocks);
+    /*
+    // Draw block connection lines
+    var blockLines = svg.selectAll('.linegroup')
+        .data(preparedData.lines)
+        .enter().append('g').classed('linegroup');
+
+        blockLines.append('line')
+        .attr('y1', function(d) { return yScale(scaleEventParam(lengths[d.cmp], d.x1)); })
+        .attr('x1', function(d) { return xScale(scaleEventParam(max_x,d.y1)); })
+        .attr('y2', function(d) { return yScale(scaleEventParam(lengths[d.cmp], d.x2)); })
+        .attr('x2', function(d) { return xScale(scaleEventParam(max_x,d.y2)); })
+        .attr('data-legend', function(d) { return chromosome_numbers[d.cmp] })
+        .style('stroke', function(d){ return d.color })
+        .style('stroke-width', stroke_width)*/
 }
 
 function prepareBlockTracerData(species, chromosomes, lengths, events){
-    let baselineData = [], eventData = [], colors = [];
+    let baselineData = [], eventData = [], colors = [], lines = [];
     for(specieIndex in species){
         let specie = species[specieIndex],
             chromos = chromosomes[specieIndex],
             added_space = 0;
-        console.log(specie)
         for(chrIndex in chromos){
             let chr = chromos[chrIndex]
             curr_len = lengths[specie][chr]
-            console.log(chr)
             baselineData.push({'specie': specie, 'x1': added_space, 'x2': curr_len, 'index': parseInt(chrIndex)});
             added_space += curr_len
         }
@@ -317,24 +356,23 @@ function prepareBlockTracerData(species, chromosomes, lengths, events){
                 chrYIndex =  chromosomes[specieYIndex].indexOf(block_info.info.chrY),
                 prependX = (chrXIndex > 0) ? Object.values(lengths[block_info.info.spX]).slice(0, chrXIndex).reduce( function(a,b) { return a+b } ) : 0,
                 prependY = (chrYIndex > 0) ? Object.values(lengths[block_info.info.spY]).slice(0, chrYIndex).reduce( function(a,b) { return a+b } ) : 0,
-                x1 = parseInt(block_info.overlap.y1),
-                x2 = parseInt(block_info.overlap.y2),
-                y1 = parseInt(block_info.overlap.x1),
-                y2 = parseInt(block_info.overlap.x2),
+                x1 = block_info.overlap.y1,
+                x2 = block_info.overlap.y2,
+                y1 = block_info.overlap.x1,
+                y2 = block_info.overlap.x2,
                 chrX_y_gap = -BLOCK_BASE_HEIGHT,
                 chrY_y_gap = -BLOCK_BASE_HEIGHT;
 
-            
-            if(block_info.overlap.inverted == true){ chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT }
-            if(x2 < x1){ [x1, x2] = [x2, x1] }
-            if(y2 < y1){ [y1, y2] = [y2, y1] }
-
+            if(block_info.overlap.inverted == true){ chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
+            //if(x2 < x1){ [x1, x2] = [x2, x1] ; console.log(event)}
+            //if(y2 < y1){ [y1, y2] = [y2, y1]  ; console.log(event)}
+            if(eventIndex == 2) console.log(block_info)
             eventData.push({
                 'block_id': eventIndex,
                 'specie': block_info.info.spX,
                 'chromosome': block_info.info.chrX,
-                'x1': x1,
-                'x2': x2,
+                'x1': Math.min(x1,x2),
+                'x2': Math.max(x1,x2),
                 'len': x2-x1,
                 'specieIndex': specieXIndex,
                 'chromoIndex': chrXIndex,
@@ -346,19 +384,20 @@ function prepareBlockTracerData(species, chromosomes, lengths, events){
                 'block_id': eventIndex,
                 'specie': block_info.info.spY,
                 'chromosome': block_info.info.chrY,
-                'x1': y1,
-                'x2': y2,
+                'x1': Math.min(y1, y2),
+                'x2': Math.max(y1, y2),
                 'len': y2-y1,
                 'specieIndex': specieYIndex,
                 'chromoIndex': chrYIndex,
                 'prepend': prependY,
                 'y_gap': chrY_y_gap
             })
+
         }
         colors.push("#" + fullColorHex(R_color[eventIndex], G_color[eventIndex], B_color[eventIndex]));
     }
 
-    return {'baselineData': baselineData, 'eventData': eventData, 'colors': colors};
+    return {'baselineData': baselineData, 'eventData': eventData, 'colors': colors, 'lines': lines};
 }
 
 // ---------------------------
