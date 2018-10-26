@@ -202,7 +202,7 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         MINIMUM_CHROMOSOME_PIXELS = 600;
         
     // DEBUG :: 
-    console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(MAX_CHROMOSOME_LENGTH); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
+    //console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(MAX_CHROMOSOME_LENGTH); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
     
     var WIDTH = MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS // (MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 :
         HEIGHT = (species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : species.length*INTERSPECIE_SPACE,
@@ -245,7 +245,7 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         });
 
     // DEBUG ::
-    console.log("--- DEBUG2 ---"); console.log(xAxis); console.log(xScale); console.log(yAxis); console.log(yScale); 
+    //console.log("--- DEBUG2 ---"); console.log(xAxis); console.log(xScale); console.log(yAxis); console.log(yScale); 
     // --------
     // Draw SVG
     svg = d3.select('.blocktracer')
@@ -259,7 +259,7 @@ function paintBlockTracer(species, chromosomes, events, lengths){
     // Setup data
     var preparedData = prepareBlockTracerData(species, chromosomes, lengths, events);
     // DEBUG :: 
-    console.log("--- DEBUG3 ---"); console.log(preparedData);
+    //console.log("--- DEBUG3 ---"); console.log(preparedData);
     // ---
     // Draw chromosome lines
     var chromosomeBaseLines = svg.selectAll('rect').filter(".chromosomeBaseline")
@@ -272,7 +272,7 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         .attr('height', CHROMOSOME_BASELINE_HEIGHT);
     
     // DEBUG :: 
-    console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
+    //console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
     // ---
 
     // Setup BlockInfo groups
@@ -301,9 +301,9 @@ function paintBlockTracer(species, chromosomes, events, lengths){
                     .style("opacity", function (d2) {
                         return d2.block_id == block_id ? 1 : 0.3;
                     })
-                    /*.style("z-index", function (d2) {
+                    .style("z-index", function (d2) {
                         return d2.block_id == block_id ? 10 : 1
-                    })*/
+                    })
                     .classed("clicked", function () {
                         if (d3.select(this).style("opacity") == 1) {
                             return true;
@@ -347,9 +347,9 @@ function prepareBlockTracerData(species, chromosomes, lengths, events){
 
     for(eventIndex in events){
         event = events[eventIndex]
-        //console.log("## BLOCKTRACED");console.log(event);
-        for(block_info of event){
-            //console.log("### BLOCKINFO"); console.log(block_info);
+        for(blockInfoIndex in event){
+            let block_info = event[blockInfoIndex]
+
             let specieXIndex = species.indexOf(block_info.info.spX),
                 chrXIndex =  chromosomes[specieXIndex].indexOf(block_info.info.chrX),
                 specieYIndex = species.indexOf(block_info.info.spY),
@@ -363,9 +363,22 @@ function prepareBlockTracerData(species, chromosomes, lengths, events){
                 chrX_y_gap = -BLOCK_BASE_HEIGHT,
                 chrY_y_gap = -BLOCK_BASE_HEIGHT;
 
-            if(block_info.overlap.inverted == true){ chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
-            //if(x2 < x1){ [x1, x2] = [x2, x1] ; console.log(event)}
-            //if(y2 < y1){ [y1, y2] = [y2, y1]  ; console.log(event)}
+            let currentCond = (block_info.overlap.inverted == true),
+                prevCond = (blockInfoIndex > 0) ? (event[blockInfoIndex-1].overlap.inverted == true) : false;
+
+            if(prevCond){
+                if(currentCond){
+                    chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT;
+                } else {
+                    chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT;
+                    chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT;
+                }
+            }else {
+                if(currentCond){
+                    chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT;
+                }
+            }
+
             if(eventIndex == 2) console.log(block_info)
             eventData.push({
                 'block_id': eventIndex,
