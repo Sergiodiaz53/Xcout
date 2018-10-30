@@ -125,7 +125,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
        
     // Paint Events
     var event_lines;
-    if(base_axis = 'X'){
+    if(base_axis = 'Y'){
         event_lines = svg.selectAll('line')
             .data(events).enter()
             .append('g').append('line')
@@ -216,7 +216,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
         // Tooltip :: ON
         .on("mouseover", function(d) {
             let event_info = "From: " + chromosome_numbers[d.cmp][0] + " - " + chromosome_numbers[d.cmp][1];
-
+            console.log(d)
 
             if(base_axis = 'X'){
                 event_info += "</br>x1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
@@ -241,7 +241,7 @@ function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chrom
                 .style('stroke-width', stroke_width*2);
         })
         // Tooltip :: OFF	
-        .on("mouseout", function(d) {		
+        .on("mouseout", function(d) {
             tooltip_event.transition()		
                 .duration(500)		
                 .style("opacity", 0);

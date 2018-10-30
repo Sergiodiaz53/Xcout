@@ -89,10 +89,10 @@ def trace(request):
         blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list)
         outputs.extend(blocks_traced)
 
-    # print("\n... OUTPUTS ...")
-    # for bt in clear_repeated_events(clear_duplicate_events(outputs)):
-    #     for bi in bt:
-    #         print(bi)
+    print("\n... OUTPUTS ...")
+    for bt in clear_repeated_events(clear_duplicate_events(outputs)):
+        for bi in bt:
+            print(bi)
 
     jsonResponseDict = {'events': clear_repeated_events(clear_duplicate_events(outputs)),
         'lengths' : lengths_dict}
@@ -109,20 +109,6 @@ def check_inversion(event):
     if event[1] > event[3]:
         event[1], event[3] = event[3], event[1]
     return event
-
-def overlapped(block_a, block_b):
-    return block_a[1] <= block_b[2] and block_b[0] <= block_a[3]
-
-def overlap_coefficient(block_a, block_b):
-    x1 = block_a[0]
-    x2 = block_a[2]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-    y1 = block_b[1]
-    y2 = block_b[3]
-    if y2 < y1:
-        y1, y2 = y2, y1
-    if (min(x2, y2) <= max (x1, y1)):
-        return 0 #not overlaped
-    return 100 * (min(x2, y2) - max(x1, y1)) / min(x2-x1, y2-y1)
 
 def get_comparison_name(path):
     path = path.split('/')
@@ -167,26 +153,57 @@ def extract_block_info(block):
     inv = True if 'inv' in block[5] else False
     return {'x1': block[1], 'y1': block[0], 'x2': block[3], 'y2': block[2], 'inverted': inv}
 
+def overlapped(block_a, block_b):
+    return block_a[1] <= block_b[2] and block_b[0] <= block_a[3]
+
+def overlap_coefficient(block_a, block_b):
+    x1 = block_a[0]
+    x2 = block_a[2]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+    y1 = block_b[1]
+    y2 = block_b[3]
+    # print("TEST COEFF");print(str(x1) + ", " + str(x2) + ", " + str(y1) + ", " + str(y2))
+    if y2 < y1:
+        y1, y2 = y2, y1
+    if (min(x2, y2) <= max (x1, y1)):
+        return 0 #not overlaped
+    return 100 * (min(x2, y2) - max(x1, y1)) / min(x2-x1, y2-y1)
+
 def compare_blocks(base_block, new_blocks_list):
     blocks = []
     original_blocks = []
-    for current_block in new_blocks_list:
-        new_block = current_block#check_inversion(current_block)
-        original_block = copy.deepcopy(new_block)
+    for new_block in new_blocks_list:
+        print("------")
+        # Take only the overlapped part of the block if overlap
         if overlap_coefficient(base_block, new_block) > 95:
+            original_block = copy.deepcopy(new_block)
             cut_block = copy.deepcopy(new_block)
-            # Take only the overlapped part
+            scale_index = 0; factor = 1
+            if 'inv' in cut_block[5]:
+                scale_index = scale_index+2
+                factor = -1*factor
+            print(scale_index)
+            # Left Edge
+            lb1 = new_block[3]-new_block[1]; lb2 = new_block[2]-new_block[0]
             if base_block[0] > new_block[1]:
-                cut_block[0] = new_block[0] + int( (base_block[0] - new_block[1]) * new_block[-2]/new_block[-1] )
+                print("### IF 1")
+                d1 = base_block[0] - new_block[1]
+                scaling = int( d1 * lb2/lb1 )
+                print(scaling)
+                cut_block[0+scale_index] = new_block[0+scale_index] + factor*scaling
                 cut_block[1] = base_block[0]
+            # Right Edge
             if base_block[2] < new_block[3]:
-                cut_block[2] = new_block[2] - int( (new_block[3] - base_block[2]) * new_block[-2]/new_block[-1] )
+                print("### IF 2")
+                d2 = new_block[3] - base_block[2]
+                scaling = int( d2 * lb2/lb1 )
+                print(scaling)
+                cut_block[2-scale_index] = new_block[2-scale_index] - factor*scaling
                 cut_block[3] = base_block[2]
             # Blocks that are inversions of inverted transposition need y coordinates to be swapped
-            # if 'inv' in block[5]:
-            #     block[1], block[3] = block[3], block[1]
-            #     original_block[1], original_block[3] = original_block[3], original_block[1]
-            cut_block[4] = abs(cut_block[1] - cut_block[3])
+            # if cut_block[2] < cut_block[0]:
+            #     cut_block[0], cut_block[2] = cut_block[2], cut_block[0]
+            print("::BASE::"); print(base_block); print("::NEW::"); print(new_block); print("::CUT::"); print(cut_block)
+            #cut_block[4] = abs(cut_block[1] - cut_block[3])
             blocks.append(cut_block)
             original_blocks.append(original_block)
     
