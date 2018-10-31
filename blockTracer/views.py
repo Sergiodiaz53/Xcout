@@ -25,6 +25,9 @@ def test(request):
 def trace(request):
     species = json.loads(request.POST.get('species', ''))
     chromosomes = json.loads(request.POST.get('chromosomes', ''))
+    empty_check = request.POST.get('emptyCheck', '')
+
+    non_emtpy_species_chromo = set()
 
     # Retrieve Chromosomes Lengths
     lengths_dict = {}
@@ -56,8 +59,6 @@ def trace(request):
         events_steps.append(current_step)
         
     # Generate list of file lists (Combine)
-    #print(events_steps)
-    print(inverted)
     l_comparison_list = [[events] for events in events_steps[0]]
     inverted_list = []
     for i, current_step in enumerate(events_steps[1:]):
@@ -89,13 +90,16 @@ def trace(request):
         blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list)
         outputs.extend(blocks_traced)
 
-    print("\n... OUTPUTS ...")
-    for bt in clear_repeated_events(clear_duplicate_events(outputs)):
-        for bi in bt:
-            print(bi)
+    outputs = clear_repeated_events(clear_duplicate_events(outputs))
 
-    jsonResponseDict = {'events': clear_repeated_events(clear_duplicate_events(outputs)),
-        'lengths' : lengths_dict}
+    print("\n... OUTPUTS ...")
+    for bt in outputs:
+        for bi in bt:
+            curr_info = bi['info']
+            non_emtpy_species_chromo.add(curr_info['spX'] + " - " + curr_info['chrX']); non_emtpy_species_chromo.add(curr_info['spY'] + " - " + curr_info['chrY'])
+
+    jsonResponseDict = {'events': outputs,
+        'lengths' : lengths_dict, 'non_empty': list(non_emtpy_species_chromo)}
     
     return JsonResponse(json.dumps(jsonResponseDict ), safe=False)
     
@@ -172,7 +176,6 @@ def compare_blocks(base_block, new_blocks_list):
     blocks = []
     original_blocks = []
     for new_block in new_blocks_list:
-        print("------")
         # Take only the overlapped part of the block if overlap
         if overlap_coefficient(base_block, new_block) > 95:
             original_block = copy.deepcopy(new_block)
@@ -181,29 +184,19 @@ def compare_blocks(base_block, new_blocks_list):
             if 'inv' in cut_block[5]:
                 scale_index = scale_index+2
                 factor = -1*factor
-            print(scale_index)
             # Left Edge
             lb1 = new_block[3]-new_block[1]; lb2 = new_block[2]-new_block[0]
             if base_block[0] > new_block[1]:
-                print("### IF 1")
                 d1 = base_block[0] - new_block[1]
                 scaling = int( d1 * lb2/lb1 )
-                print(scaling)
                 cut_block[0+scale_index] = new_block[0+scale_index] + factor*scaling
                 cut_block[1] = base_block[0]
             # Right Edge
             if base_block[2] < new_block[3]:
-                print("### IF 2")
                 d2 = new_block[3] - base_block[2]
                 scaling = int( d2 * lb2/lb1 )
-                print(scaling)
                 cut_block[2-scale_index] = new_block[2-scale_index] - factor*scaling
                 cut_block[3] = base_block[2]
-            # Blocks that are inversions of inverted transposition need y coordinates to be swapped
-            # if cut_block[2] < cut_block[0]:
-            #     cut_block[0], cut_block[2] = cut_block[2], cut_block[0]
-            print("::BASE::"); print(base_block); print("::NEW::"); print(new_block); print("::CUT::"); print(cut_block)
-            #cut_block[4] = abs(cut_block[1] - cut_block[3])
             blocks.append(cut_block)
             original_blocks.append(original_block)
     

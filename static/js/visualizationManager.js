@@ -114,17 +114,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     //Calculate OverlayCell positions
     var curr_ind = 0;
     for(specie of Object.keys(speciesX_numbers)) {
-        curr_ind += speciesX_numbers[specie];
-        text = specie + " - Overlay";
-        x_elements.splice(curr_ind, 0, text);
+        curr_ind += speciesX_numbers[specie]; text = specie + " - Overlay"; x_elements.splice(curr_ind, 0, text);
         speciesX_numbers[specie] = speciesX_numbers[specie]+1; curr_ind+=1;
     }
 
     curr_ind = 0;
     for(specie of Object.keys(speciesY_numbers)) {
-        curr_ind += speciesY_numbers[specie];
-        text = specie + " - Overlay";
-        y_elements.splice(curr_ind, 0, text);
+        curr_ind += speciesY_numbers[specie]; text = specie + " - Overlay"; y_elements.splice(curr_ind, 0, text);
         speciesY_numbers[specie] = speciesY_numbers[specie]+1; curr_ind+=1;
     }
 
@@ -138,35 +134,19 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
         let currX = specieX[i], currY = specieY[i], items_x, items_y;
         
         for(tick_x of x_elements){
-            items_x = tick_x.split(" - ");
-            if(items_x[0] == currX && items_x[1] == "Overlay"){
-                for(tick_y of y_elements){
-                    items_y = tick_y.split(" - ");
+            items_x = tick_x.split(" - "); if(items_x[0] == currX && items_x[1] == "Overlay"){
+                for(tick_y of y_elements){ items_y = tick_y.split(" - ");
                     if(items_y[0] == currY && items_x[0]==items_y[0]) score = -20; else score = -10;
-                    if(items_y[0] == currY && items_y[1] != "Overlay"){
-                        data.push({
-                            specieX:items_x[0], specieY:items_y[0], 
-                            chromosomeX_number:items_x[1], chromosomeY_number:items_y[1],
-                            img:"none", score:score
-                        })
-                    }
+                    if(items_y[0] == currY && items_y[1] != "Overlay") data.push({ specieX:items_x[0], specieY:items_y[0], chromosomeX_number:items_x[1], chromosomeY_number:items_y[1], img:"none", score:score })
                 }
             }
         }
 
         for(tick_y of y_elements){
-            items_y = tick_y.split(" - ");
-            if(items_y[0] == currY && items_y[1] == "Overlay"){
-                for(tick_x of x_elements){
-                    items_x = tick_x.split(" - ");
+            items_y = tick_y.split(" - "); if(items_y[0] == currY && items_y[1] == "Overlay"){
+                for(tick_x of x_elements){ items_x = tick_x.split(" - ");
                     if(items_x[0] == currX && items_x[0]==items_y[0]) score = -20; else score = -10;
-                    if(items_x[0] == currX && items_x[1] != "Overlay"){
-                        data.push({
-                            specieX:items_x[0], specieY:items_y[0], 
-                            chromosomeX_number:items_x[1], chromosomeY_number:items_y[1],
-                            img:"none", score:score
-                        })
-                    }
+                    if(items_x[0] == currX && items_x[1] != "Overlay") data.push({ specieX:items_x[0], specieY:items_y[0],  chromosomeX_number:items_x[1], chromosomeY_number:items_y[1], img:"none", score:score })
                 }
             }
         }
