@@ -153,10 +153,20 @@ function extractBlockTracerRowsData(){
 /* --- BlockTracer Main --- */
 // ---------------------------
 
+var BLOCK_TRACER_PARAMS = {'species': [], 'chromosomes': [], 'results': {}}
 function executeBlockTracer(){
     console.log("BlockTrace!");
     let data = extractBlockTracerRowsData();
     let species = data[0], chromosomes=data[1], emptyCheck = document.getElementById('emptyChromosomesCheck').checked; console.log(data)
+    /*
+    if(BLOCK_TRACER_PARAMS.species.toString() == species.toString() && BLOCK_TRACER_PARAMS.chromosomes.toString() == chromosomes.toString()){
+        let currSpecies = $.extend(true, [], BLOCK_TRACER_PARAMS.species), currChromosomes = $.extend(true, [], BLOCK_TRACER_PARAMS.chromosomes),
+            currResults = $.extend(true, {}, BLOCK_TRACER_PARAMS.results);
+        if(emptyCheck) emptyChromosomesCheck(BLOCK_TRACER_PARAMS.chromosomes, BLOCK_TRACER_PARAMS.species);
+
+        // PAINT
+        paintBlockTracer(currSpecies, currChromosomes, currResults.events, currResults.lengths, $("#verticalBT").hasClass('active'));
+    }*//
     $.ajax({
         type:"POST",
         url:FORCE_URL+"/blocktracer/trace/",
@@ -166,54 +176,52 @@ function executeBlockTracer(){
         },
         success: function(content) {
             results = JSON.parse(content); console.log(results);
-            if(emptyCheck){
-                let tmp_chromosomes = $.extend(true, [], chromosomes);
-                for(resultsExists of results.non_empty){
-                    let items = resultsExists.split(' - '), spIndex = species.indexOf(items[0]), chrIndex = chromosomes.indexOf(items[1])
+            BLOCK_TRACER_PARAMS = {'species': $.extend(true, [], species), 'chromosomes':  $.extend(true, [], chromosomes), 'results':  $.extend(true, {}, results)}
 
-                    // Create temp chromosomes with non empty chromosomes
-                }
-            }
+            if(emptyCheck) emptyChromosomesCheck(species, chromosomes, results.lengths);
             // PAINT
-            paintBlockTracer(species, chromosomes, results.events, results.lengths);
+            paintBlockTracer(species, chromosomes, results.events, results.lengths, $("#verticalBT").hasClass('active'));
         }
     });
+}
+
+function emptyChromosomesCheck(species, chromosomes, lengths) {
+    let non_empty_list = [];
+
+    for (resultsExists of results.non_empty) { let items = resultsExists.split(' - '); non_empty_list.push([items[0], items[1]]); }
+
+    non_empty_items = non_empty_list.sort(function (a, b) {
+        if (a[0] == b[0]) return chromosomes[species.indexOf(a[0])].indexOf(a[1]) - chromosomes[species.indexOf(b[0])].indexOf(b[1]);
+        return species.indexOf(a[0]) - species.indexOf(b[0]);
+    });
+
+    for (spIndex in species) {
+        let curr_specie = species[spIndex], curr_chromosomes = chromosomes[spIndex], new_chromosomes = [], curr_lengths = lengths[curr_specie], new_lengths = {};
+        for (non_empty of non_empty_list) {
+            if (non_empty[0] == curr_specie && curr_chromosomes.indexOf(non_empty[1]) != -1) {
+                new_chromosomes.push(non_empty[1]);
+                new_lengths[non_empty[1]] = curr_lengths[non_empty[1]];
+            }
+        }
+
+        chromosomes[spIndex] = new_chromosomes; lengths[curr_specie] = new_lengths;
+    }
 }
 
 // ---------------------------
 /* --- BlockTracer Draw --- */
 // ---------------------------
 
-function getArrayOfSumsFromDict(array_dict){
-    let ret = {};
-    Object.entries(array_dict).map(function(key_val){
-        let tmp_list = [0], values = Object.values(key_val[1]);
-        for(i in values){
-            if(i !=0 ) tmp_list.push(Object.values(key_val[1]).slice(0, i).reduce( function(a,b) { return a+b } ));
-        }
-        ret[key_val[0]] = tmp_list;
-    });
-    return ret;
-}
-
-function getSumOfDictValuesFromDict(array_dict){
-    let sums = {}
-    Object.entries(array_dict).map(function(key_val){ sums[key_val[0]] = Object.values(key_val[1]).reduce( (a, b) => a + b) });
-    return sums;
-}
-
-function getMaxOfDictValuesFromDict(array_dict){
-    let objects = []
-    Object.values(array_dict).map(function(array){ Object.values(array).map( o => objects.push(o) ) })
-    return Math.max.apply(Math, Object.values( objects.map(function(o) { return o; }) ))
-}
-
 var INTERSPECIE_SPACE = 300;
-var INTERCHROMOSOME_SPACE = 70;
+var INTERCHROMOSOME_SPACE = 100;
 var CHROMOSOME_BASELINE_HEIGHT = 5;
-var BLOCK_BASE_HEIGHT = 30
+var BLOCK_BASE_HEIGHT = 30;
+var BASELINE_EDGES_WIDTH = 5;
+var CHROMO_LABEL_OFFSET = -50;
+var SPECIES_LABEL_OFFSET_X = -60;
+var SPECIES_LABEL_OFFSET_Y = 40;
 
-function paintBlockTracer(species, chromosomes, events, lengths){
+function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     var MAX_SPECIES_LENGTHS = getSumOfDictValuesFromDict(lengths),
         //MAX_CHROMOSOME_LENGTH = getMaxOfDictValuesFromDict(lengths),
         LENGTH_PREPENDS = getArrayOfSumsFromDict(lengths),
@@ -222,8 +230,7 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         MAX_FULL_LENGTH = getMaxOfDictValuesFromDict({1: MAX_SPECIES_LENGTHS}),
         MINIMUM_CHROMOSOME_PIXELS = 800;
         
-    // DEBUG :: 
-    //console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(LENGTH_PREPENDS); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
+    // DEBUG :: console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(LENGTH_PREPENDS); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
     
     var WIDTH = MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS, // (MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 :
         HEIGHT = (species.length-1)*INTERSPECIE_SPACE+100, //(species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : 
@@ -231,7 +238,7 @@ function paintBlockTracer(species, chromosomes, events, lengths){
             top: 50,
             right: 30,
             bottom: 30,
-            left: 50
+            left: 100
         };
 
     var WIDTH = WIDTH - MARGINS.left - MARGINS.right,
@@ -244,42 +251,36 @@ function paintBlockTracer(species, chromosomes, events, lengths){
     // -------- 
     // Scales
     //Set ColorScale
-    var colorScale = d3.scale.category10();
+    var colorScale = d3.scale.category10(),
+        widthDomain = [0, MAX_FULL_LENGTH], widthRange = [0, WIDTH - (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES)],
+        heightDomain = species, heightRange = [25, HEIGHT];
 
-    //Set xScale
-    var xScale= d3.scale.linear()
-        .domain([0, MAX_FULL_LENGTH])
-        .range([0, WIDTH - (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES) ]);
-
-    //Set xAxis
-    var xAxis = d3.svg.axis()
-        .scale(xScale)
-        .orient("bottom");
-
-    //Set yScale
+    //Set Scales
+    var xScale = d3.scale.linear()
+        .domain(widthDomain)
+        .range(widthRange);
     var yScale = d3.scale.ordinal()
-        .domain(species)
-        .rangeBands([25, HEIGHT]);
+        .domain(heightDomain)
+        .rangeBands(heightRange);
 
-    //Set yAxis
+    //Set Axes
+    var xAxis = d3.svg.axis()
+        .scale((!inverted) ? xScale : yScale)
     var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient("left")
-        .tickFormat(function (d) {
-            return d;
-        });
+        .scale((!inverted) ? yScale : xScale)
 
-    // DEBUG ::
-    console.log("--- DEBUG2 ---"); console.log(colorScale); console.log(xAxis); console.log(xScale); console.log(yAxis); console.log(yScale); 
+    // DEBUG :: console.log("--- DEBUG2 ---"); console.log(colorScale); console.log(xAxis);console.log(yAxis); //console.log(xScale); console.log(yScale);
     // --------
     // Draw SVG
+    let svgWidth = WIDTH + MARGINS.left + MARGINS.right + (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES), svgHeight = HEIGHT + MARGINS.top + MARGINS.bottom,
+        svgTransform;
     svg = d3.select('.blocktracer')
         .append("svg")
-        .attr("width", WIDTH + MARGINS.left + MARGINS.right + (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES))
-        .attr("height", HEIGHT + MARGINS.top + MARGINS.bottom)
+        .attr(getPositionAttribute('width', inverted), svgWidth)
+        .attr(getPositionAttribute('height', inverted), svgHeight)
         .attr("class", 'blocktracer-svg')
         .append('g')
-        .attr('transform', 'translate(' + MARGINS.left + ',' + MARGINS.top + ')');
+        .attr('transform', (!inverted) ? 'translate(' + MARGINS.left + ',' + MARGINS.top + ')' : 'translate(' + MARGINS.top + ',' + MARGINS.left + ')');
 
     // Setup data
     var preparedData = prepareBlockTracerData(species, chromosomes, lengths, events, LENGTH_PREPENDS);
@@ -287,18 +288,36 @@ function paintBlockTracer(species, chromosomes, events, lengths){
     console.log("--- DEBUG3 ---"); console.log(preparedData);
     // ---
     // Draw chromosome lines
-    var chromosomeBaseLines = svg.selectAll('rect').filter(".chromosomeBaseline")
+    var chromosomeBaseLines = svg.selectAll('chromoBase')
         .data(preparedData.baselineData)
-        .enter().append('g').append('rect')
+        .enter().append('g').classed('chromoBase', true)
+        
+        chromosomeBaseLines.append('rect')
         .attr('class', 'chromosomeBaseline')
-        .attr('x', function(d) { return  xScale(d.x1) + INTERCHROMOSOME_SPACE*d.index; })/*s[d.specie]*/
-        .attr('y', function(d) { return yScale(d.specie); })
-        .attr('width', function(d) { return xScale(d.x2); })/*s[d.specie]*/
-        .attr('height', CHROMOSOME_BASELINE_HEIGHT);
+        .attr(getPositionAttribute('x', inverted), function(d) { return  xScale(d.x1) + INTERCHROMOSOME_SPACE*d.index; })/*s[d.specie]*/
+        .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie); })
+        .attr(getPositionAttribute('width', inverted), function(d) { return xScale(d.x2); })/*s[d.specie]*/
+        .attr(getPositionAttribute('height', inverted), CHROMOSOME_BASELINE_HEIGHT);
+    
+        // 3'-5'
+        chromosomeBaseLines.append('rect')
+        .attr('class', 'chromosomeBaseline')
+        .attr(getPositionAttribute('x', inverted), function(d) { return  xScale(d.x1) + INTERCHROMOSOME_SPACE*d.index - BASELINE_EDGES_WIDTH; })/*s[d.specie]*/
+        .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie) - CHROMOSOME_BASELINE_HEIGHT; })
+        .attr(getPositionAttribute('width', inverted), function(d) { return BASELINE_EDGES_WIDTH; })/*s[d.specie]*/
+        .attr(getPositionAttribute('height', inverted), CHROMOSOME_BASELINE_HEIGHT*2);
+
+        // 5'-3'
+        chromosomeBaseLines.append('rect')
+        .attr('class', 'chromosomeBaseline')
+        .attr(getPositionAttribute('x', inverted), function(d) { return  xScale(d.x2)+xScale(d.x1) + INTERCHROMOSOME_SPACE*d.index; })/*s[d.specie]*/
+        .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie); })
+        .attr(getPositionAttribute('width', inverted), function(d) { return BASELINE_EDGES_WIDTH; })/*s[d.specie]*/
+        .attr(getPositionAttribute('height', inverted), CHROMOSOME_BASELINE_HEIGHT*2);
     
     // DEBUG :: 
     //console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
-    // ---
+    // --------
 
     // Setup BlockInfo groups
     var tracedBlocks = svg.selectAll('blockInfo')
@@ -308,10 +327,10 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         // Draw blocks
         tracedBlocks.append('rect')
         .attr('class', function(d) { return 'tracedBlock block'+d.block_id} )
-        .attr('x', function(d) { return  xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })/*s[d.specie] */ 
-        .attr('y', function(d) { return yScale(d.specie) + d.y_gap; })
-        .attr('width', function(d) { return xScale(d.x2)-xScale(d.x1); })/*s[d.specie]*/
-        .attr('height', BLOCK_BASE_HEIGHT)
+        .attr(getPositionAttribute('x', inverted), function(d) { return  xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })/*s[d.specie] */ 
+        .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie) + d.y_gap; })
+        .attr(getPositionAttribute('width', inverted), function(d) { return xScale(d.x2)-xScale(d.x1); })/*s[d.specie]*/
+        .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT)
         .attr('fill', function(d) { return preparedData.colors[d.block_id] })
         .on("click", function(d) {
             hideConnectionLines();
@@ -341,6 +360,7 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         });
     
     // DEBUG :: console.log("--- DEBUG5 ---"); console.log(tracedBlocks);
+    // --------
     // Draw blocks and connection lines
     // Lower blocks
     var STROKE_WIDTH = 6, LINE_BLOCK_DIFF = 10;
@@ -350,10 +370,10 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         .enter().append('g').classed('bottomLine', true)
         .append('line')
         .attr("class", function(d) { return "horizontalBlock linesBlock linesBlockInfo" + d.block_id })
-        .attr('x1', function(d) { return xScale(d.x1 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
-        .attr('x2', function(d) { return xScale(d.x2 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
-        .attr('y1', function(d) { return yScale(d.specie)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
-        .attr('y2', function(d) { return yScale(d.specie)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('x1',inverted), function(d) { return xScale(d.x1 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
+        .attr(getPositionAttribute('x2',inverted), function(d) { return xScale(d.x2 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
+        .attr(getPositionAttribute('y1',inverted), function(d) { return yScale(d.specie)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF - STROKE_WIDTH/2; })
+        .attr(getPositionAttribute('y2',inverted), function(d) { return yScale(d.specie)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF - STROKE_WIDTH/2; })
         .style("opacity", 0)
         .style('stroke', function(d){ return preparedData.colors[d.block_id] })
         .style('stroke-width', STROKE_WIDTH);
@@ -365,10 +385,10 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         .enter().append('g').classed('upperLine', true)
         .append('line')
         .attr("class", function(d) { return "horizontalBlock linesBlock linesBlockInfo" + d.block_id })
-        .attr('x1', function(d) { return xScale(d.x1 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
-        .attr('x2', function(d) { return xScale(d.x2 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
-        .attr('y1', function(d) { return yScale(d.specie)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
-        .attr('y2', function(d) { return yScale(d.specie)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('x1',inverted), function(d) { return xScale(d.x1 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
+        .attr(getPositionAttribute('x2',inverted), function(d) { return xScale(d.x2 + d.prepend) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })
+        .attr(getPositionAttribute('y1',inverted), function(d) { return yScale(d.specie)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF + STROKE_WIDTH/2; })
+        .attr(getPositionAttribute('y2',inverted), function(d) { return yScale(d.specie)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF + STROKE_WIDTH/2; })
         .style("opacity", 0)
         .style('stroke', function(d){ return preparedData.colors[d.block_id] })
         .style('stroke-width', STROKE_WIDTH);
@@ -377,24 +397,24 @@ function paintBlockTracer(species, chromosomes, events, lengths){
     // Connection lines
     var connectionLines = svg.selectAll('connectLine')
         .data(preparedData.connectionLines)
-        .enter().append('g').classed('connectionLines', true);
+        .enter().append('g').classed('connectionLine', true);
 
         connectionLines.append('line')
         .attr("class", function(d) { return "pairedLine linesBlock linesBlockInfo" + d.block_id })
-        .attr('x1', function(d) { return xScale(d.x1 + d.prependX) + INTERCHROMOSOME_SPACE*(d.chromoXIndex); })
-        .attr('x2', function(d) { return xScale(d.y1 + d.prependY) + INTERCHROMOSOME_SPACE*(d.chromoYIndex); })
-        .attr('y1', function(d) { return yScale(d.specieX)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
-        .attr('y2', function(d) { return yScale(d.specieY)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('x1', inverted), function(d) { return xScale(d.x1 + d.prependX) + INTERCHROMOSOME_SPACE*(d.chromoXIndex); })
+        .attr(getPositionAttribute('x2', inverted), function(d) { return xScale(d.y1 + d.prependY) + INTERCHROMOSOME_SPACE*(d.chromoYIndex); })
+        .attr(getPositionAttribute('y1', inverted), function(d) { return yScale(d.specieX)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('y2', inverted), function(d) { return yScale(d.specieY)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
         .style("opacity", 0)
         .style('stroke', function(d){ return preparedData.colors[d.block_id] })
         .style('stroke-width', 1);
 
         connectionLines.append('line')
         .attr("class", function(d) { return "pairedLine linesBlock linesBlockInfo" + d.block_id })
-        .attr('x1', function(d) { return xScale(d.x2 + d.prependX) + INTERCHROMOSOME_SPACE*(d.chromoXIndex); })
-        .attr('x2', function(d) { return xScale(d.y2 + d.prependY) + INTERCHROMOSOME_SPACE*(d.chromoYIndex); })
-        .attr('y1', function(d) { return yScale(d.specieX)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
-        .attr('y2', function(d) { return yScale(d.specieY)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('x1', inverted), function(d) { return xScale(d.x2 + d.prependX) + INTERCHROMOSOME_SPACE*(d.chromoXIndex); })
+        .attr(getPositionAttribute('x2', inverted), function(d) { return xScale(d.y2 + d.prependY) + INTERCHROMOSOME_SPACE*(d.chromoYIndex); })
+        .attr(getPositionAttribute('y1', inverted), function(d) { return yScale(d.specieX)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('y2', inverted), function(d) { return yScale(d.specieY)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
         .style("opacity", 0)
         .style('stroke', function(d){ return preparedData.colors[d.block_id] })
         .style('stroke-width', 1);
@@ -404,18 +424,54 @@ function paintBlockTracer(species, chromosomes, events, lengths){
         .enter().append('g').classed('singleConnectLine', true)
         .append('line')
         .attr("class", function(d) { return "singleLineBlock singleLineBlockInfo" + d.block_id })
-        .attr('x1', function(d) { return xScale(d.x1 + d.prependX) + INTERCHROMOSOME_SPACE*(d.chromoXIndex); })
-        .attr('x2', function(d) { return xScale(d.y1 + d.prependY) + INTERCHROMOSOME_SPACE*(d.chromoYIndex); })
-        .attr('y1', function(d) { return yScale(d.specieX)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
-        .attr('y2', function(d) { return yScale(d.specieY)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('x1', inverted), function(d) { return xScale(d.x1 + d.prependX) + INTERCHROMOSOME_SPACE*(d.chromoXIndex); })
+        .attr(getPositionAttribute('x2', inverted), function(d) { return xScale(d.y1 + d.prependY) + INTERCHROMOSOME_SPACE*(d.chromoYIndex); })
+        .attr(getPositionAttribute('y1', inverted), function(d) { return yScale(d.specieX)+BLOCK_BASE_HEIGHT+CHROMOSOME_BASELINE_HEIGHT+LINE_BLOCK_DIFF; })
+        .attr(getPositionAttribute('y2', inverted), function(d) { return yScale(d.specieY)-BLOCK_BASE_HEIGHT-LINE_BLOCK_DIFF; })
         .style("opacity", 0)
         .style('stroke', function(d){ return preparedData.colors[d.block_id] })
         .style('stroke-width', 1);
     // DEBUG :: console.log("--- DEBUG6 ---"); console.log(bottomLines); console.log(upperLines); console.log(connectionLines);
-}
+    // --------
+    // Draw labels
+
+    var chromosomeLabels = svg.selectAll('chromosomeLabel')
+        .data(preparedData.chromoLabels)
+        .enter().append('g').classed('chromosomeLabel', true)
+        .append('text')
+        .attr('class', 'chromosomeLabelText')
+        .attr(getPositionAttribute('x', inverted), function(d) { let factor = (!inverted) ? 1 : 0.5; return xScale(d.x) + CHROMO_LABEL_OFFSET*factor + INTERCHROMOSOME_SPACE*(d.index); })
+        .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie) })
+        .text(function(d) { return 'Chr ' + d.chromosome })
+        //.attr("transform", function(d) { let offset = (d.x == 0) ? -1 : 1, newX =  xScale(d.x) + CHROMO_LABEL_OFFSET*offset; return "rotate(-45, " + newX + ", " + yScale(d.specie) + ")" });
+
+    var speciesLabels = svg.selectAll('specieLabel')
+        .data(species)
+        .enter().append('g').classed('specieLabel', true)
+        .append('text')
+        .attr('class', 'specieLabelText')
+        .attr('font-weight', 'bold')
+        .attr('font-size', '2em')
+        .attr(getPositionAttribute('x', inverted), SPECIES_LABEL_OFFSET_X)
+        .attr(getPositionAttribute('y', inverted), function(d) { let factor = (!inverted) ? 1 : -1; return yScale(d) + SPECIES_LABEL_OFFSET_Y*factor })
+        .text(function(d) { return d })
+        .attr("transform", function(d) {
+            if(!inverted) return "rotate(-90, " + SPECIES_LABEL_OFFSET_X + ", " + (yScale(d)+SPECIES_LABEL_OFFSET_Y) + ")"
+            else return "translate(0,0)"
+        });
+
+}//(!inverted) ? SPECIES_LABEL_OFFSET_X : -SPECIES_LABEL_OFFSET_X 
 
 function prepareBlockTracerData(species, chromosomes, lengths, events, prepends){
-    let baselineData = [], eventData = [], colors = [], bottomLines = [], upperLines = [], connectionLines = [], singleConnectionLines = [];
+    let baselineData = [], eventData = [], colors = [], bottomLines = [], upperLines = [], connectionLines = [], singleConnectionLines = [], chromoLabels = [];
+
+    // Chromosome Labels
+    Object.entries(prepends).map(function(specie_prepends){
+        let specie = specie_prepends[0], chromos = chromosomes[species.indexOf(specie)], values = specie_prepends[1];
+        for(i in values){ chromoLabels.push({'specie':specie, 'chromosome': chromos[i], 'x': values[i], 'index': i}) }
+    });
+
+    // Chromosome Baseline
     for(specieIndex in species){
         let specie = species[specieIndex],
             chromos = chromosomes[specieIndex],
@@ -428,6 +484,7 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
         }
     }
 
+    // EventData + Colors + Connection Lines
     for(eventIndex in events){
         event = events[eventIndex]
         for(blockInfoIndex in event){
@@ -497,8 +554,46 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
         colors.push("#" + fullColorHex(R_color[eventIndex], G_color[eventIndex], B_color[eventIndex]));
     }
 
-    return {'baselineData': baselineData, 'eventData': eventData, 'colors': colors, 'bottomLines': bottomLines, 'upperLines': upperLines, 'connectionLines': connectionLines, 'singleConnectionLines': singleConnectionLines};
+    return {'baselineData': baselineData, 'eventData': eventData, 'colors': colors, 'bottomLines': bottomLines, 'upperLines': upperLines,
+        'connectionLines': connectionLines, 'singleConnectionLines': singleConnectionLines, 'chromoLabels': chromoLabels};
 }
+
+function getArrayOfSumsFromDict(array_dict){
+    let ret = {};
+    Object.entries(array_dict).map(function(key_val){
+        let tmp_list = [0], values = Object.values(key_val[1]);
+        for(i in values){
+            if(i !=0 ) tmp_list.push(Object.values(key_val[1]).slice(0, i).reduce( function(a,b) { return a+b } ));
+        }
+        ret[key_val[0]] = tmp_list;
+    });
+    return ret;
+}
+
+function getSumOfDictValuesFromDict(array_dict){
+    let sums = {}
+    Object.entries(array_dict).map(function(key_val){ sums[key_val[0]] = Object.values(key_val[1]).reduce( (a, b) => a + b) });
+    return sums;
+}
+
+function getMaxOfDictValuesFromDict(array_dict){
+    let objects = []
+    Object.values(array_dict).map(function(array){ Object.values(array).map( o => objects.push(o) ) })
+    return Math.max.apply(Math, Object.values( objects.map(function(o) { return o; }) ))
+}
+
+function getPositionAttribute(attribute, inverted){
+    if(!inverted) return attribute
+    else { //width, height, x1, x2, x, y1, y2, y
+        let ret;
+        if(attribute.includes('x')) ret = attribute.replace('x','y')
+        else if (attribute.includes('y')) ret = attribute.replace('y','x')
+        else if (attribute.includes('width')) ret = attribute.replace('width','height')
+        else if (attribute.includes('height')) ret = attribute.replace('height','width')
+        return ret;
+    }
+}
+
 
 // ---------------------------
 
