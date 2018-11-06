@@ -38,7 +38,12 @@ $("#autoThreshold").click(function(){
 
 // Fit to Screen (Plabolize) button
 $("#fitScreen").click(function(){
-    fitToScreen();
+    var svg = d3.select(".heatmap > svg");
+    if($(this).children().attr('icon') == 'resize-full'){
+        fitToScreen(); $(this).children().attr('icon', 'resize-small')
+    } else {
+        svg.attr('transform', null); $(this).children().attr('icon', 'resize-full')
+    }
 });
 
 //Slider cell size config
