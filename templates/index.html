@@ -21,7 +21,7 @@
         
         <div class="col-sm-4 center-block">
             <div class="affix sidemenu">
-                <!-- Functionalities Tabs -->                
+                <!-- Functionalities Tabs -->
                 <ul class="nav nav-tabs nav-justified">
                     <li class="active">
                         <a href="#xcoutSideMenu" data-target="#xcoutSideMenu, #xcoutCanvas" data-toggle="tab" >XCout</a>
@@ -30,7 +30,7 @@
                         <a href="#blockTracerSideMenu" data-target="#blockTracerSideMenu, #blockTracerCanvas" data-toggle="tab">BlockTracer</a>
                     </li>
                 </ul>
-
+                
                 <!-- Functionalities Tab Content -->
                 <div id="sidemenu" class="tab-content">
                     <!-- XCout Sidemenu -->
@@ -194,11 +194,11 @@
                         <div id="blockTracerConfig" class="panel-collapse collapse">
                             <div id="resizeRow" class="row config_row text-center sidemenu_member">
                                 <div class="col-xs-8">Resize</br></div>
-                                <div class="col-xs-2 text-left"><button type="button" class="btn btn-secondary btn-block" id="fitBlockTracer" data-toggle="tooltip" title="Fit Traced Blocks" data-placement="top"><bs-glyphicon icon="resize-full"></bs-glyphicon></button></br></div>
+                                <div class="col-xs-2 text-left"><button type="button" class="btn btn-secondary btn-block" id="fitBlockTracer"><bs-glyphicon icon="resize-full"></bs-glyphicon></button></br></div>
                             </div>
                             <div id="connectionLinesRow" class="row config_row text-center sidemenu_member">
                                 <div id="connectionLineText" class="col-xs-8">Show connection lines</br></div>
-                                <div class="col-xs-2 text-left"><button type="button" class="btn btn-warning btn-block" id="showConnectionLines" data-toggle="tooltip" title="Show all connection lines" data-placement="top"><bs-glyphicon icon="eye-open"></bs-glyphicon></button></br></div>
+                                <div class="col-xs-2 text-left"><button type="button" class="btn btn-warning btn-block" id="showConnectionLines"><bs-glyphicon icon="eye-open"></bs-glyphicon></button></br></div>
                             </div>
                         </div>
                     </div>
@@ -227,6 +227,8 @@
 
     <link rel="stylesheet" href="{% static "bower_components/bootstrap-select/dist/css/bootstrap-select.min.css" %}">    
     <script type="text/javascript" src="{% static "bower_components/bootstrap-select/dist/js/bootstrap-select.min.js" %}"></script>
+
+    <script type='text/javascript' src="{% static "bower_components/tinycolor/tinycolor.js" %}"></script>
 
     <script type="text/javascript" src="{% static "js/controllers/indexController.js" %}"></script>
     <script type="text/javascript" src="{% static "js/localComparison.js" %}"></script>

@@ -58,19 +58,21 @@ def trace(request):
         inverted_steps.append(inverted)
         events_steps.append(current_step)
         
+    print(inverted_steps); print(events_steps)
     # Generate list of file lists (Combine)
     l_comparison_list = [[events] for events in events_steps[0]]
     inverted_list = []
     for i, current_step in enumerate(events_steps[1:]):
         tmp_list = []
-        inverted = (inverted_steps[i] and inverted_steps[i-1])
-        #print(inverted)
+        inverted = inverted_steps[i+1] #and inverted_steps[i-1])
+        print(inverted)
+        print(current_step)
         for current_event in current_step:
             for index, comparison_list in enumerate(l_comparison_list):
-                #print(comparison_list[-1])
+                print(comparison_list[-1])
                 evaluation = (not inverted and comparison_list[-1].chromosome_y == current_event.chromosome_x) \
-                    or (inverted and comparison_list[-1].chromosome_x == current_event.chromosome_y)
-                #print(evaluation)
+                    or (inverted and comparison_list[-1].chromosome_y == current_event.chromosome_y)
+                print(evaluation)
                 if evaluation:
                     new_list = [comparison_list[-1], current_event]
                     tmp_list.append(new_list)
@@ -84,10 +86,10 @@ def trace(request):
 
     # Execute BlockTracer
     outputs = []
-    for comparison_list in l_comparison_list:
+    for i, comparison_list in enumerate(l_comparison_list):
         files = ['media/' + comparison.csv for comparison in comparison_list]
         first_overlapped_blocks = obtain_blocks(files[0], 0, get_comparison_name(files[0]))
-        blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list)
+        blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list,  cmp_index=i)
         outputs.extend(blocks_traced)
 
     outputs = clear_repeated_events(clear_duplicate_events(outputs))
@@ -102,7 +104,7 @@ def trace(request):
         'lengths' : lengths_dict, 'non_empty': list(non_emtpy_species_chromo)}
     
     return JsonResponse(json.dumps(jsonResponseDict ), safe=False)
-    
+
 ###################
 ### BlockTracer ###
 ###################
@@ -202,7 +204,7 @@ def compare_blocks(base_block, new_blocks_list):
     
     return blocks, original_blocks
 
-def recursive_overlap_checking(files, index, current_overlapped_blocks, current_original_blocks, comparisons, traced_block_infos = [], prev_blocks_traced = [], min_depth = 1):
+def recursive_overlap_checking(files, index, current_overlapped_blocks, current_original_blocks, comparisons, traced_block_infos = [], prev_blocks_traced = [], min_depth = 1, cmp_index=0):
     blocks_traced = []#copy.deepcopy(prev_blocks_traced)
     comparison = comparisons[index-1]
     comparison_info = {'spX': comparison.chromosome_x.specie.name, 'chrX': comparison.chromosome_x.number, \
@@ -213,7 +215,7 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
         for i in range(len(current_overlapped_blocks)):
             overlapped_block = extract_block_info(current_overlapped_blocks[i])
             #original_block = extract_block_info(current_original_blocks[i])
-            current_block = {'info': comparison_info, 'overlap': overlapped_block}#, 'original': original_block}
+            current_block = {'info': comparison_info, 'overlap': overlapped_block, 'cmp_index': cmp_index}#, 'original': original_block}
 
             # Append BlockInfo to Current BlockTraced
             current_block_traced = copy.deepcopy(traced_block_infos)
@@ -231,7 +233,7 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
             if new_blocks != []:
                 overlapped_block = extract_block_info(current_overlapped_blocks[i][:-1])
                 #original_block = extract_block_info(current_original_blocks[i][:-1])
-                current_block = {'info': comparison_info, 'overlap': overlapped_block}#, 'original': original_block}
+                current_block = {'info': comparison_info, 'overlap': overlapped_block, 'cmp_index': cmp_index}#, 'original': original_block}
 
                 # Create new 'traced_block_infos'
                 new_traced_block_info = copy.deepcopy(traced_block_infos)
@@ -244,7 +246,7 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
                 except:
                     pass
                 # Add new blocks
-                new_blockstraced = recursive_overlap_checking(files, index+1, new_blocks, new_original_blocks, comparisons, new_traced_block_info)
+                new_blockstraced = recursive_overlap_checking(files, index+1, new_blocks, new_original_blocks, comparisons, traced_block_infos=new_traced_block_info, cmp_index=cmp_index)
                 blocks_traced.extend(new_blockstraced)
 
         return blocks_traced

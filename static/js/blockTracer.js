@@ -465,7 +465,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     spinnerOff();
 }
 
-var N_SLICES = 20, MULTIPLIER=2, PREFIX_FACTOR = 0;
+var N_SLICES = 20, MULTIPLIER=2, PREFIX_FACTOR = 1;
 function prepareBlockTracerData(species, chromosomes, lengths, events, prepends){
     let baselineData = [], eventData = [], colors = [], bottomLines = [], upperLines = [], connectionLines = [], singleConnectionLines = [], chromoLabels = [];
 
@@ -508,7 +508,8 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
             
         let currentCmpIndex = prevColorIndex,
             comparisonColorIndex = color_count[event[0].cmp_index],
-            eventsColor = combinationColorsList[prevColorIndex][comparisonColorIndex].toHexString(); color_count[event[0].cmp_index]++;
+            eventsColor = combinationColorsList[prevColorIndex][comparisonColorIndex];
+        eventsColor = (color_count[event[0].cmp_index] % 2 == 0) ? eventsColor.darken().toHexString() : eventsColor.saturate().toHexString(); color_count[event[0].cmp_index]++;
 
         for(blockInfoIndex in event){
             let block_info = event[blockInfoIndex]
@@ -620,10 +621,10 @@ function getPositionAttribute(attribute, inverted){
     }
 }
 
-
-// ---------------------------
-
+// ---------------------
 // --- Document Init ---
+// ---------------------
+
 $(document).ready(function(){
     addNewblockTracerRow(BLOCKTRACER_ID, false);
     document.getElementById('blocktracer1').selectedIndex=1;
