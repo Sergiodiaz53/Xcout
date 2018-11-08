@@ -161,6 +161,17 @@
     #thresholdRow .slider-selection {
         background: lightblue;
     }
+    #canvas {
+        height: 100%;
+    }
+
+    #xcoutCanvas {
+        height: 100%;
+    }
+
+    #blockTracerCanvas {
+        height: 100%;
+    }
 
 /* #######################  */
 
@@ -185,9 +196,9 @@
         position: relative;
     }
 
-    /*.blocktracer-svg {
+    .blocktracer-svg {
         position:absolute;
-    }*/
+    }
 
     
 /* #######################  */

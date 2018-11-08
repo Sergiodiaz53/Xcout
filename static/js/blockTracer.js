@@ -2,12 +2,6 @@
  * Created by Plabolo on 15/10/18.
  */
 
-function getSelectedChromosomesDictionary(){
-    let ret;
-
-    return ret;
-}
-
 // Selection Checks
 function selectionSpeciesCheck(){
     // Species selection check
@@ -120,16 +114,44 @@ function blockTracerSelectedSpecieBehavior(blockTracerSpecieID){
 
 // Export selected overlay to blocktracer
 function exportToBlockTracer(spX, chrX, spY, chrY){
-    console.log("Export to BLOCKTRACER"); console.log(spX); console.log(chrX); console.log(spY); console.log(chrY);
+    // console.log("Export to BLOCKTRACER"); console.log(spX); console.log(chrX); console.log(spY); console.log(chrY);
     // Check if LOCAL or SERVER
+    let changeIndex = 0;
     if(SOURCE_OVERLAY == "SERVER"){
         // Server BlockTrace
         console.log("SERVER")
+        let blockTracerRows = [], specieSelects = [], chromosomeSelects = [];
+        $(".blockTracerRow").each( function(i, d) { if(i == changeIndex || i == changeIndex+1) blockTracerRows.push(d.id[d.id.length-1]) });
+        
+        for(blockTracerIndex in blockTracerRows){
+            let selects = $("select#blocktracer" + blockTracerIndex)
+                specieSelect = $(selects[0]),
+                chromosomeSelect = $(selects[1]);
+
+            specieSelects.push(specieSelect); chromosomeSelects.push(chromosomeSelect);
+            chromosomeSelect.selectpicker();
+            let values = [];
+
+            if(blockTracerIndex == changeIndex){
+                specieSelect.val(spX)
+                values = (chrX != "Overlay") ? [chrX] : CURRENT_OVERLAY.chromosome_numbers.map(x => x[1])
+            } 
+            if(blockTracerIndex == changeIndex+1){
+                specieSelect.val(spY)
+                values = (chrY != "Overlay") ? [chrY] : CURRENT_OVERLAY.chromosome_numbers.map(x => x[1])
+            }
+
+            chromosomeSelect.selectpicker('val',values)
+        }
     }
     else if (SOURCE_OVERLAY == "LOCAL"){
         // Local BlockTrace
         console.log("LOCAL"); alert('BlockTracer not implemented for Local files, yet.')
     }
+}
+
+function getOverlayChromosomeArray(){
+    return []
 }
 
 function extractBlockTracerRowSpecie(rowElement){
@@ -215,7 +237,7 @@ function emptyChromosomesCheck(species, chromosomes, lengths, non_empty) {
 // ---------------------------
 
 var INTERSPECIE_SPACE = 500;
-var INTERCHROMOSOME_SPACE = 100;
+var INTERCHROMOSOME_SPACE = 200;
 var CHROMOSOME_BASELINE_HEIGHT = 5;
 var BLOCK_BASE_HEIGHT = 30;
 var BASELINE_EDGES_WIDTH = 5;
@@ -235,7 +257,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     // DEBUG :: console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(LENGTH_PREPENDS); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
     
     var WIDTH = MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS, // (MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 :
-        HEIGHT = (species.length-1)*INTERSPECIE_SPACE+100, //(species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : 
+        HEIGHT = (species.length-1)*INTERSPECIE_SPACE, //(species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : 
         MARGINS = {
             top: 50,
             right: 30,
@@ -273,8 +295,9 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     // DEBUG :: console.log("--- DEBUG2 ---"); console.log(colorScale); console.log(xAxis); console.log(yAxis); //console.log(xScale); console.log(yScale);
     // --------
     // Draw SVG
-    let svgWidth = WIDTH + MARGINS.left + MARGINS.right + (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES), svgHeight = HEIGHT + MARGINS.top + MARGINS.bottom,
-        svgTransform;
+    let svgWidth = WIDTH + MARGINS.left + MARGINS.right,
+        svgHeight = HEIGHT + MARGINS.top + MARGINS.bottom;
+        
     svg = d3.select('.blocktracer')
         .append("svg")
         .attr(getPositionAttribute('width', inverted), svgWidth)
@@ -728,12 +751,8 @@ function fitBlockTracer(){
 
     var scaleX = width_total/curr_width; //--if height use myHeight/bbh--
     var scaleY = height_total/curr_height;
-    let scale;
     if(scaleX < scaleY) scale=scaleX; else scale=scaleY
-	//---where to move it center of my pane--- (cx)*scale + 
-	var targetX=500
-	var targetY=200
-	//---move its center to target x,y --- translate("+transX+" "+transY+")
+	//---move its center to target x,y --- translate("+transX+" "+transY+") 
 	var transX=cx*(scale-1)
     var transY=cy*(scale-1)
 

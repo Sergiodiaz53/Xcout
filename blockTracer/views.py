@@ -69,10 +69,8 @@ def trace(request):
         print(current_step)
         for current_event in current_step:
             for index, comparison_list in enumerate(l_comparison_list):
-                print(comparison_list[-1])
                 evaluation = (not inverted and comparison_list[-1].chromosome_y == current_event.chromosome_x) \
                     or (inverted and comparison_list[-1].chromosome_y == current_event.chromosome_y)
-                print(evaluation)
                 if evaluation:
                     new_list = [comparison_list[-1], current_event]
                     tmp_list.append(new_list)
@@ -94,7 +92,6 @@ def trace(request):
 
     outputs = clear_repeated_events(clear_duplicate_events(outputs))
 
-    print("\n... OUTPUTS ...")
     for bt in outputs:
         for bi in bt:
             curr_info = bi['info']
@@ -167,7 +164,6 @@ def overlap_coefficient(block_a, block_b):
     x2 = block_a[2]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
     y1 = block_b[1]
     y2 = block_b[3]
-    # print("TEST COEFF");print(str(x1) + ", " + str(x2) + ", " + str(y1) + ", " + str(y2))
     if y2 < y1:
         y1, y2 = y2, y1
     if (min(x2, y2) <= max (x1, y1)):
