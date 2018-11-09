@@ -42,6 +42,8 @@ function addComparisonToComparisonList(specieX, specieY){
 
 // Get all Comparisons Info in Comparison Table
 function getFullComparisonOf(specieX, specieY){
+    overlayOn();
+    spinnerOn("Loading comparisons...");
     var comparisonJson = [];
     for (var i = 0; i<specieX.length; i++){
         auxComparison  = {
@@ -420,6 +422,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
 
     checkSpeciesTable();
     showAlert("Loaded", "Comparison loaded", "info");
+
+    overlayOff();
+    spinnerOff();
 }
 
 // Automatic Threshold (Plabolize) to automatically understand EPW Scores

@@ -98,7 +98,7 @@ function chromosomeListBehavior(listChromosomes, blockTracerSpecieID){
 }
 
 // Selected Specie Request Behavior
-function blockTracerSelectedSpecieBehavior(blockTracerSpecieID){
+function blockTracerSelectedSpecieBehavior(blockTracerSpecieID, callback = $.noop){
     $.ajax({
         type:"GET",
         url:FORCE_URL+"/API/chromosomes",
@@ -108,50 +108,41 @@ function blockTracerSelectedSpecieBehavior(blockTracerSpecieID){
         success: function(content) {
             list_chromosomes = JSON.parse(content).sort(naturalCompare);
             chromosomeListBehavior(list_chromosomes, blockTracerSpecieID)
+            callback();
         }
     });
 }
 
+function changeSpecieAndChromosome(specieSelect, chromosomeSelect, specie, chromosome, blockTracerIndex, callback = $.noop){
+    let values = [];
+    specieSelect.val(specie)
+    blockTracerSelectedSpecieBehavior("blocktracer"+blockTracerIndex, function(){
+        values = (chromosome != "Overlay") ? [chromosome] : CURRENT_OVERLAY.chromosome_numbers.map(x => x[1]);
+        chromosomeSelect.selectpicker('val',values)
+        callback();
+    });
+}
 // Export selected overlay to blocktracer
 function exportToBlockTracer(spX, chrX, spY, chrY){
-    // console.log("Export to BLOCKTRACER"); console.log(spX); console.log(chrX); console.log(spY); console.log(chrY);
     // Check if LOCAL or SERVER
     let changeIndex = 0;
     if(SOURCE_OVERLAY == "SERVER"){
         // Server BlockTrace
-        console.log("SERVER")
         let blockTracerRows = [], specieSelects = [], chromosomeSelects = [];
         $(".blockTracerRow").each( function(i, d) { if(i == changeIndex || i == changeIndex+1) blockTracerRows.push(d.id[d.id.length-1]) });
         
         for(blockTracerIndex in blockTracerRows){
-            let selects = $("select#blocktracer" + blockTracerIndex)
-                specieSelect = $(selects[0]),
-                chromosomeSelect = $(selects[1]);
+            let selects = $("select#blocktracer" + blockTracerIndex), specieSelect = $(selects[0]), chromosomeSelect = $(selects[1]);
 
             specieSelects.push(specieSelect); chromosomeSelects.push(chromosomeSelect);
             chromosomeSelect.selectpicker();
-            let values = [];
 
-            if(blockTracerIndex == changeIndex){
-                specieSelect.val(spX)
-                values = (chrX != "Overlay") ? [chrX] : CURRENT_OVERLAY.chromosome_numbers.map(x => x[1])
-            } 
-            if(blockTracerIndex == changeIndex+1){
-                specieSelect.val(spY)
-                values = (chrY != "Overlay") ? [chrY] : CURRENT_OVERLAY.chromosome_numbers.map(x => x[1])
-            }
-
-            chromosomeSelect.selectpicker('val',values)
+            if(blockTracerIndex == changeIndex){ changeSpecieAndChromosome(specieSelect, chromosomeSelect, spX, chrX, blockTracerIndex); } 
+            if(blockTracerIndex == changeIndex+1){ changeSpecieAndChromosome(specieSelect, chromosomeSelect, spY, chrY, blockTracerIndex, function() { $("a[href='#blockTracerSideMenu']").tab('show') }); }
         }
     }
-    else if (SOURCE_OVERLAY == "LOCAL"){
-        // Local BlockTrace
-        console.log("LOCAL"); alert('BlockTracer not implemented for Local files, yet.')
-    }
-}
 
-function getOverlayChromosomeArray(){
-    return []
+    else if (SOURCE_OVERLAY == "LOCAL"){ alert('BlockTracer not implemented for Local files, yet.') }
 }
 
 function extractBlockTracerRowSpecie(rowElement){
@@ -490,8 +481,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
 
 var N_SLICES = 20, MULTIPLIER=2, PREFIX_FACTOR = 1;
 function prepareBlockTracerData(species, chromosomes, lengths, events, prepends){
-    let baselineData = [], eventData = [], colors = [], bottomLines = [], upperLines = [], connectionLines = [], singleConnectionLines = [], chromoLabels = [];
-
+    let baselineData = [], eventData = [], bottomLines = [], upperLines = [], connectionLines = [], singleConnectionLines = [], chromoLabels = [];
     // Chromosome Labels
     Object.entries(prepends).map(function(specie_prepends){
         let specie = specie_prepends[0], chromos = chromosomes[species.indexOf(specie)], values = specie_prepends[1];
@@ -512,99 +502,93 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
     }
 
     // Colors
-    let cmp_count = {}, color_count = {}, baseColors = [], combinationColorsList = [], baseColorIndex = {}, prevColorIndex = -1, prevCmpIndex = -1;;
-    events.map(function (x) { return x[0].cmp_index}).forEach(function(x) { cmp_count[x] = (cmp_count[x] || 0)+1; color_count[x] = cmp_count[x]*PREFIX_FACTOR });
-
-    for(key_val of Object.entries(cmp_count)){
-        let currentColor = "#" + fullColorHex(R_color[baseColors.length%R_color.length], G_color[baseColors.length%R_color.length], B_color[baseColors.length%R_color.length]);
-        baseColorIndex[key_val[0]] = baseColors.length;
-        let combinationColors = tinycolor(currentColor).analogous(results = key_val[1]*MULTIPLIER, N_SLICES)
-        baseColors.push(currentColor);
-        combinationColorsList.push(combinationColors)
-    }
 
     // EventData + Colors + Connection Lines
+    let blockID = 0;
     for(eventIndex in events){
         let event = events[eventIndex];
+        let currentColor = "#" + fullColorHex(R_color[eventIndex%R_color.length], G_color[eventIndex%R_color.length], B_color[eventIndex%R_color.length]);
+        let combinationColors = tinycolor(currentColor).analogous(results = event.blocks.length*MULTIPLIER, N_SLICES)
+        let colorPrefix = PREFIX_FACTOR*event.blocks.length;
 
-        if(event[0].cmp_index != prevCmpIndex){ prevCmpIndex = event[0].cmp_index; prevColorIndex++; }
-            
-        let currentCmpIndex = prevColorIndex,
-            comparisonColorIndex = color_count[event[0].cmp_index],
-            eventsColor = combinationColorsList[prevColorIndex][comparisonColorIndex];
-        eventsColor = (color_count[event[0].cmp_index] % 2 == 0) ? eventsColor.darken().toHexString() : eventsColor.saturate().toHexString(); color_count[event[0].cmp_index]++;
+        for(blockIndex in event.blocks){
+            let blocks = event.blocks[blockIndex],
+                eventsColor = combinationColors[colorPrefix+parseInt(blockIndex)], modifier = blockIndex % 3;
+                eventsColor = (modifier == 0) ? eventsColor.darken().toHexString() : eventsColor;
+                eventsColor = (modifier == 1) ? eventsColor.lighten().toHexString() : eventsColor;
+                eventsColor = (modifier == 2) ? eventsColor.saturate().toHexString() : eventsColor;
+           
+            for(blockInfoIndex in blocks){
+                let block_info = blocks[blockInfoIndex]
 
-        for(blockInfoIndex in event){
-            let block_info = event[blockInfoIndex]
+                let specieXIndex = species.indexOf(block_info.info.spX), chrXIndex =  chromosomes[specieXIndex].indexOf(block_info.info.chrX),
+                    specieYIndex = species.indexOf(block_info.info.spY), chrYIndex =  chromosomes[specieYIndex].indexOf(block_info.info.chrY),
+                    x1 = block_info.overlap.x1, x2 = block_info.overlap.x2,
+                    y1 = block_info.overlap.y1, y2 = block_info.overlap.y2,
+                    chrX_y_gap = -BLOCK_BASE_HEIGHT, chrY_y_gap = -BLOCK_BASE_HEIGHT;
 
-            let specieXIndex = species.indexOf(block_info.info.spX), chrXIndex =  chromosomes[specieXIndex].indexOf(block_info.info.chrX),
-                specieYIndex = species.indexOf(block_info.info.spY), chrYIndex =  chromosomes[specieYIndex].indexOf(block_info.info.chrY),
-                x1 = block_info.overlap.x1, x2 = block_info.overlap.x2,
-                y1 = block_info.overlap.y1, y2 = block_info.overlap.y2,
-                chrX_y_gap = -BLOCK_BASE_HEIGHT, chrY_y_gap = -BLOCK_BASE_HEIGHT;
+                let currentCond = (block_info.overlap.inverted == true),
+                    prevCond = (blockInfoIndex > 0) ? (blocks[blockInfoIndex-1].overlap.inverted == true) : false;
 
-            let currentCond = (block_info.overlap.inverted == true),
-                prevCond = (blockInfoIndex > 0) ? (event[blockInfoIndex-1].overlap.inverted == true) : false;
+                if(prevCond){
+                    if(currentCond){ chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
+                    else { chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
+                } else {
+                    if(currentCond){ chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
+                }
 
-            if(prevCond){
-                if(currentCond){ chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
-                else { chrX_y_gap = CHROMOSOME_BASELINE_HEIGHT; chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
-            } else {
-                if(currentCond){ chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
+
+                eventData.push({
+                    'block_id': blockID, 'specie': block_info.info.spX, 'chromosome': block_info.info.chrX,
+                    'specieIndex': specieXIndex, 'chromoIndex': chrXIndex, 'color': eventsColor,
+                    'x1': x1, 'x2': x2,
+                    'prepend': prepends[block_info.info.spX][chrXIndex], 'y_gap': chrX_y_gap
+                })
+
+                eventData.push({
+                    'block_id': blockID, 'specie': block_info.info.spY, 'chromosome': block_info.info.chrY,
+                    'specieIndex': specieYIndex, 'chromoIndex': chrYIndex, 'color': eventsColor,
+                    'x1': y1, 'x2': y2,
+                    'prepend': prepends[block_info.info.spY][chrYIndex], 'y_gap': chrY_y_gap
+                })
+
+                bottomLines.push({
+                    'block_id': blockID, 'specie': block_info.info.spX, 'color': eventsColor,
+                    'specieIndex': specieXIndex, 'chromoIndex': chrXIndex,
+                    'x1': x1, 'x2': x2,
+                    'prepend': prepends[block_info.info.spX][chrXIndex]
+                })
+
+                upperLines.push({
+                    'block_id': blockID, 'specie': block_info.info.spY, 'color': eventsColor,
+                    'specieIndex': specieYIndex, 'chromoIndex': chrYIndex,
+                    'x1': y1, 'x2': y2,
+                    'prepend': prepends[block_info.info.spY][chrYIndex]
+                });
+                
+                connectionLines.push({
+                    'block_id': blockID, 'color': eventsColor,
+                    'specieX': block_info.info.spX, 'chromoXIndex': chrXIndex,
+                    'specieY': block_info.info.spY, 'chromoYIndex': chrYIndex,
+                    'prependX': prepends[block_info.info.spX][chrXIndex], 'prependY': prepends[block_info.info.spY][chrYIndex],
+                    'x1': x1, 'x2': x2,
+                    'y1': (currentCond) ? y2 : y1, 'y2': (currentCond) ? y1 : y2
+                });
+
+                singleConnectionLines.push({
+                    'block_id': blockID, 'color': eventsColor,
+                    'specieX': block_info.info.spX, 'chromoXIndex': chrXIndex,
+                    'specieY': block_info.info.spY, 'chromoYIndex': chrYIndex,
+                    'prependX': prepends[block_info.info.spX][chrXIndex], 'prependY': prepends[block_info.info.spY][chrYIndex],
+                    'x1': x1 + (x2-x1)/2, 'y1': y1 + (y2-y1)/2
+                })
             }
-
-
-            eventData.push({
-                'block_id': eventIndex, 'specie': block_info.info.spX, 'chromosome': block_info.info.chrX,
-                'specieIndex': specieXIndex, 'chromoIndex': chrXIndex, 'color': eventsColor,
-                'x1': x1, 'x2': x2, //'len': x2-x1,
-                'prepend': prepends[block_info.info.spX][chrXIndex], 'y_gap': chrX_y_gap
-            })
-
-            eventData.push({
-                'block_id': eventIndex, 'specie': block_info.info.spY, 'chromosome': block_info.info.chrY,
-                'specieIndex': specieYIndex, 'chromoIndex': chrYIndex, 'color': eventsColor,
-                'x1': y1, 'x2': y2, //'len': y2-y1,
-                'prepend': prepends[block_info.info.spY][chrYIndex], 'y_gap': chrY_y_gap
-            })
-
-            bottomLines.push({
-                'block_id': eventIndex, 'specie': block_info.info.spX, 'color': eventsColor,
-                'specieIndex': specieXIndex, 'chromoIndex': chrXIndex,
-                'x1': x1, 'x2': x2,
-                'prepend': prepends[block_info.info.spX][chrXIndex]
-            })
-
-            upperLines.push({
-                'block_id': eventIndex, 'specie': block_info.info.spY, 'color': eventsColor,
-                'specieIndex': specieYIndex, 'chromoIndex': chrYIndex,
-                'x1': y1, 'x2': y2,
-                'prepend': prepends[block_info.info.spY][chrYIndex]
-            });
-            
-            connectionLines.push({
-                'block_id': eventIndex, 'color': eventsColor,
-                'specieX': block_info.info.spX, 'chromoXIndex': chrXIndex,
-                'specieY': block_info.info.spY, 'chromoYIndex': chrYIndex,
-                'prependX': prepends[block_info.info.spX][chrXIndex], 'prependY': prepends[block_info.info.spY][chrYIndex],
-                'x1': x1, 'x2': x2,
-                'y1': (currentCond) ? y2 : y1, 'y2': (currentCond) ? y1 : y2
-            });
-
-            singleConnectionLines.push({
-                'block_id': eventIndex, 'color': eventsColor,
-                'specieX': block_info.info.spX, 'chromoXIndex': chrXIndex,
-                'specieY': block_info.info.spY, 'chromoYIndex': chrYIndex,
-                'prependX': prepends[block_info.info.spX][chrXIndex], 'prependY': prepends[block_info.info.spY][chrYIndex],
-                'x1': x1 + (x2-x1)/2, 'y1': y1 + (y2-y1)/2
-            })
+            blockID++;
         }
-        //colors.push("#" + fullColorHex(R_color[eventIndex], G_color[eventIndex], B_color[eventIndex]));
     }
-
     blockTracerBaseConfig();
 
-    return {'baselineData': baselineData, 'eventData': eventData, 'colors': combinationColorsList, 'bottomLines': bottomLines, 'upperLines': upperLines,
+    return {'baselineData': baselineData, 'eventData': eventData, 'bottomLines': bottomLines, 'upperLines': upperLines,
         'connectionLines': connectionLines, 'singleConnectionLines': singleConnectionLines, 'chromoLabels': chromoLabels};
 }
 

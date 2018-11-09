@@ -87,14 +87,17 @@ def trace(request):
     for i, comparison_list in enumerate(l_comparison_list):
         files = ['media/' + comparison.csv for comparison in comparison_list]
         first_overlapped_blocks = obtain_blocks(files[0], 0, get_comparison_name(files[0]))
-        blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list,  cmp_index=i)
-        outputs.extend(blocks_traced)
+        blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list)
+        outputs.append({'cmp_info': i, 'blocks': blocks_traced})
 
     outputs = clear_repeated_events(clear_duplicate_events(outputs))
 
     for bt in outputs:
-        for bi in bt:
-            curr_info = bi['info']
+        blocks = [b for b in bt.get('blocks')]
+        #print("\n"); print(blocks); print("\n")
+        for bi in blocks:
+            print(bi)
+            curr_info = bi[0]['info']
             non_emtpy_species_chromo.add(curr_info['spX'] + " - " + curr_info['chrX']); non_emtpy_species_chromo.add(curr_info['spY'] + " - " + curr_info['chrY'])
 
     jsonResponseDict = {'events': outputs,
@@ -137,6 +140,8 @@ def obtain_blocks(file, index, name):
     length_x = int(file_events[0].split(',')[0])
     length_y = int(file_events[0].split(',')[1])
     event_list = file_events[2:-1]
+    print("\n File: " + file + " | Name: " + name)
+    print(event_list)
     if len(event_list) == 1:
         event = event_list[0].split(",")
         if int(event[0]) == 0 and int(event[1]) == 0 and int(event[2]) == 0 and int(event[3]) == 0:
@@ -211,7 +216,7 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
         for i in range(len(current_overlapped_blocks)):
             overlapped_block = extract_block_info(current_overlapped_blocks[i])
             #original_block = extract_block_info(current_original_blocks[i])
-            current_block = {'info': comparison_info, 'overlap': overlapped_block, 'cmp_index': cmp_index}#, 'original': original_block}
+            current_block = {'info': comparison_info, 'overlap': overlapped_block}#, 'original': original_block}
 
             # Append BlockInfo to Current BlockTraced
             current_block_traced = copy.deepcopy(traced_block_infos)
@@ -229,7 +234,7 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
             if new_blocks != []:
                 overlapped_block = extract_block_info(current_overlapped_blocks[i][:-1])
                 #original_block = extract_block_info(current_original_blocks[i][:-1])
-                current_block = {'info': comparison_info, 'overlap': overlapped_block, 'cmp_index': cmp_index}#, 'original': original_block}
+                current_block = {'info': comparison_info, 'overlap': overlapped_block}#, 'original': original_block}
 
                 # Create new 'traced_block_infos'
                 new_traced_block_info = copy.deepcopy(traced_block_infos)
@@ -251,20 +256,24 @@ def recursive_overlap_checking(files, index, current_overlapped_blocks, current_
 
 def clear_duplicate_events(events):
     clean_l = []
-    for event in events:
-        if event not in clean_l:
+    all_blocks = [block.get("blocks") for block in events]
+
+    for i, event in enumerate(events):
+        curr_clean = [clear_block.get("blocks") for clear_block in clean_l]
+        if all_blocks[i] not in curr_clean:
             clean_l.append(event)
 
     return clean_l
 
 def clear_repeated_events(events):
     clean_l = []
+    all_blocks = [block.get("blocks", None)[0] for block in events]
 
-    for block_traced in events:
+    for i, block_traced in enumerate(events):
         b_keep = True
-        for block_traced_2 in events:
-            if block_traced != block_traced_2:
-                b_contained = check_contained_blocktraced(block_traced, block_traced_2)
+        for j, block_traced_2 in enumerate(events):
+            if all_blocks[i] != all_blocks[j]:
+                b_contained = check_contained_blocktraced(all_blocks[i], all_blocks[j])
                 if b_contained is True:
                     b_keep = False
                     break
@@ -276,13 +285,17 @@ def clear_repeated_events(events):
 def check_contained_blocktraced(block1, block2):
     infos_1 = [info for info in block1]
     infos_2 = [info for info in block2]
-    index = len(infos_1)-1
+    index = len(infos_1)-1; index_2 = len(infos_2)-1
 
     if index > len(infos_2)-1:
         return False
+    elif index <= 0:
+        return True
 
-    info_1 = infos_1[index]
-    info_2 = infos_2[index]
+    print("----");print(infos_1); print(infos_2)
+    
+    info_1 = infos_1[index_2]
+    info_2 = infos_2[index_2]
     ret = True if info_1 == info_2 else False
 
     return ret
