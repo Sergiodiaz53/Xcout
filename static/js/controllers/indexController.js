@@ -173,8 +173,6 @@ $(function () {
 $('.nav.navbar-tabs > li').on('click', function(e) {
     $('.nav.navbar-nav > li').removeClass('active');
     $(this).addClass('active');
-
-    // Add canvas switch
 });
 
 // --- Document Init ---

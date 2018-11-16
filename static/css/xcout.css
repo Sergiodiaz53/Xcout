@@ -50,6 +50,15 @@
         margin-bottom: 10px;
     }
 
+    .modal-dialog {
+        overflow-y: initial !important;
+    }
+
+    .modal-body{
+        height: 600px;
+        overflow-y: auto;
+    }
+
 /* #######################  */
 
     /** SideMenu **/
@@ -173,16 +182,20 @@
         height: 100%;
     }
 
+    .btOption {
+        margin-top: 15px;
+    }
+
 /* #######################  */
 
     /* BLOCKTRACER */
 
     #blockTracerButton {
-        margin-top: 15px
+        margin-top: 15px;
     }
 
     #blocktracerOptions {
-        margin-top: 15px
+        margin-top: 15px;
     }
     .blockTracerRow {
         margin-top: 15px;

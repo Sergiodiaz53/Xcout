@@ -23,12 +23,8 @@
             <div class="affix sidemenu">
                 <!-- Functionalities Tabs -->
                 <ul class="nav nav-tabs nav-justified">
-                    <li class="active">
-                        <a href="#xcoutSideMenu" data-target="#xcoutSideMenu, #xcoutCanvas" data-toggle="tab" >XCout</a>
-                    </li>
-                    <li>
-                        <a href="#blockTracerSideMenu" data-target="#blockTracerSideMenu, #blockTracerCanvas" data-toggle="tab">BlockTracer</a>
-                    </li>
+                    <li class="active"> <a href="#xcoutSideMenu" data-target="#xcoutSideMenu, #xcoutCanvas" data-toggle="tab" >XCout</a> </li>
+                    <li> <a href="#blockTracerSideMenu" data-target="#blockTracerSideMenu, #blockTracerCanvas" data-toggle="tab">BlockTracer</a> </li>
                 </ul>
                 
                 <!-- Functionalities Tab Content -->
@@ -143,6 +139,7 @@
 
                     <!-- BlockTracer Sidemenu -->
                     <div id="blockTracerSideMenu" class="tab-pane fade">
+                        <!-- BlockTracer Species and Chromosome Selection -->
                         <div class="form-inline text-center sidemenu_member">
                             
                             <div id="blockTracerRow0" class="blockTracerRow form-group row col-xs-12">
@@ -169,18 +166,25 @@
                         </div>
 
                         <div id="blocktracerOptions" class="row config_row text-center sidemenu_member">
-                            <div class="col-xs-6">View</div>
-                            <div id="blocktracerView" class="col-xs-6 btn-group text-center" role="group" aria-label="Button tools menu">
+                            <div class="col-xs-6 btOption">View</div>
+                            <div id="blocktracerView" class="col-xs-6 btn-group text-center  btOption" role="group" aria-label="Button tools menu">
                                 <button id="horizontalBT" type="button" class="btView btn btn-default active">Horizontal <bs-glyphicon icon="resize-horizontal"></bs-glyphicon></button>
                                 <button id="verticalBT" type="button" class="btView btn btn-default" >Vertical <bs-glyphicon icon="resize-vertical"></bs-glyphicon></button>
+                            </div>
+
+                            <div class="col-xs-6 btOption">Detected blocks</div>
+                            <div id="blocktracerView" class="col-xs-6 text-center btOption">
+                                <button id="blockModalButton" type="button" class="btn btn-info" disabled data-toggle="modal" data-target="#myModal"><bs-glyphicon icon="list"></bs-glyphicon></button>
                             </div>
                         </div>
 
                         <div id="emptyChromosomesRow" class="row config_row text-center sidemenu_member" style="margin-top:15px">
                             <div class="col-xs-8">Hide Empty Chromosomes</br></div>
-                            <div class="col-xs-2 text-center"><input id="emptyChromosomesCheck" type="checkbox" onclick="emptyChromosomesChecked()"/></div>
+                            <div class="col-xs-2 text-center"><input id="emptyChromosomesCheck" type="checkbox"/></div>
                         </div>
-                            
+
+
+                        
 
                         <!-- Config -->
                         <div class="horizontal-line" style="margin-top: 15px"></div>
@@ -210,6 +214,50 @@
             <div id="canvas" class="col-sm-12 tab-content">
                 <div id="xcoutCanvas" class="col-sm-12 tab-pane fade in active"><div class="heatmap"></div></div>
                 <div id="blockTracerCanvas" class="col-sm-12 tab-pane fade"><div class="blocktracer"></div>
+            </div>
+        </div>
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" role="dialog" style="width: auto; height: 800">
+            <div class="modal-dialog">
+                <!-- Modal content -->
+                <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">BlockTracer Results</h4>
+                </div>
+                <div class="modal-body">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#allBlocks" data-toggle="tab">Blocks</a></li>
+                        <li><a href="#specificZone" data-toggle="tab">Specific Zone</a></li>
+                    </ul>
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="allBlocks">
+                            <table id='blockInfoTable' class='table table-bordered table-responsive'>
+                                <thead>
+                                    <tr> <th>BlockID</th> <th>Specie</th> <th>Chromosome</th> <th>X</th> <th>Y</th> <th>Strand</th> </tr>
+                                </thead>
+                                <tbody id="blockInfoTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane" id="specificZone">
+                            <p>This only works for the first two species</p>
+                            <table id='specificZoneInfoTable' class='table table-bordered table-responsive'>
+                                <thead>
+                                    <tr> <th>ZoneID</th> <th>Specie</th> <th>Chromosome</th> <th>X</th> <th>Y</th> </tr>
+                                </thead>
+                                <tbody id="specificZoneInfoTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button id="downloadDataButton" type="button" class="btn btn-primary">Download</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+                </div>
             </div>
         </div>
 

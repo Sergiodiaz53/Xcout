@@ -186,5 +186,39 @@ function getValuesOfDOMObjectsByParentKeyID(jQueryOrder){
     return ret;
 }
 
+function convertArrayOfObjectsToCSV(data, columnDelimiter = ",", lineDelimiter = "\n") {  
+    var result, ctr, keys;
+
+    keys = Object.keys(data[0]);
+
+    result = '';
+    result += keys.join(columnDelimiter);
+    result += lineDelimiter;
+
+    data.forEach(function(item) {
+        ctr = 0;
+        keys.forEach(function(key) {
+            if (ctr > 0) result += columnDelimiter;
+
+            result += item[key];
+            ctr++;
+        });
+        result += lineDelimiter;
+    });
+
+    return result;
+}
+
+function encodeDataToURI(data) {  
+    var data;
+    var csv = convertArrayOfObjectsToCSV(data);
+    if (csv == null) return;
+
+    if (!csv.match(/^data:text\/csv/i)) {
+        csv = 'data:text/csv;charset=utf-8,' + csv;
+    }
+    return encodeURI(csv);
+}
+
 // --- DEBUG --- //
 var tmp_test, tmp_var;

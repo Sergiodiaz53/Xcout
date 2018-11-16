@@ -174,7 +174,6 @@ function executeBlockTracer(){
 
     overlayOn();
     spinnerOn("Tracing Blocks...");
-
     if(BLOCK_TRACER_PARAMS.species.toString() == species.toString() && BLOCK_TRACER_PARAMS.chromosomes.toString() == chromosomes.toString()){
         let currSpecies = $.extend(true, [], BLOCK_TRACER_PARAMS.species), currChromosomes = $.extend(true, [], BLOCK_TRACER_PARAMS.chromosomes),
             currResults = $.extend(true, {}, BLOCK_TRACER_PARAMS.results);
@@ -182,8 +181,10 @@ function executeBlockTracer(){
         if(emptyCheck) emptyChromosomesCheck(currSpecies, currChromosomes, currResults.lengths, currResults.non_empty);
         // PAINT
         paintBlockTracer(currSpecies, currChromosomes, currResults.events, currResults.lengths, $("#verticalBT").hasClass('active'));
-    }
-    else $.ajax({
+        $("#blockModalButton").prop('disabled', false);
+        showAlert("Loaded", "BlockTracer succesfully finished", "info");
+    } else 
+    $.ajax({
         type:"POST",
         url:FORCE_URL+"/blocktracer/trace/",
         data: {
@@ -197,6 +198,7 @@ function executeBlockTracer(){
             if(emptyCheck) emptyChromosomesCheck(species, chromosomes, results.lengths, results.non_empty);
 
             paintBlockTracer(species, chromosomes, results.events, results.lengths, $("#verticalBT").hasClass('active'));
+            $("#blockModalButton").prop('disabled', false);
             showAlert("Loaded", "BlockTracer succesfully finished", "info");
         }
     });
@@ -204,7 +206,8 @@ function executeBlockTracer(){
 
 function emptyChromosomesCheck(species, chromosomes, lengths, non_empty) {
     let non_empty_list = [];
-
+    console.log("EMPTY-CHECK")
+    
     for (resultsExists of non_empty) { let items = resultsExists.split(' - '); non_empty_list.push([items[0], items[1]]); }
 
     non_empty_items = non_empty_list.sort(function (a, b) {
@@ -235,6 +238,7 @@ var BASELINE_EDGES_WIDTH = 5;
 var CHROMO_LABEL_OFFSET = -50;
 var SPECIES_LABEL_OFFSET_X = -60;
 var SPECIES_LABEL_OFFSET_Y = 40;
+var MINIMUM_CHROMOSOME_PIXELS = 800;
 
 function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     var MAX_SPECIES_LENGTHS = getSumOfDictValuesFromDict(lengths),
@@ -242,8 +246,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
         LENGTH_PREPENDS = getArrayOfSumsFromDict(lengths),
         CHROMOSOMES_PER_SPECIE = Object.values(chromosomes).map( o => o.length),
         MAX_CHROMOSOME_PER_SPECIES = Math.max.apply(Math, Object.values( CHROMOSOMES_PER_SPECIE.map(function(o) { return o; }) )),
-        MAX_FULL_LENGTH = getMaxOfDictValuesFromDict({1: MAX_SPECIES_LENGTHS}),
-        MINIMUM_CHROMOSOME_PIXELS = 800;
+        MAX_FULL_LENGTH = getMaxOfDictValuesFromDict({1: MAX_SPECIES_LENGTHS});
         
     // DEBUG :: console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(LENGTH_PREPENDS); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
     
@@ -537,7 +540,7 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
                     if(currentCond){ chrY_y_gap = CHROMOSOME_BASELINE_HEIGHT; }
                 }
 
-
+                if(eventData.length == 0 || (eventData[eventData.length-1].x1 != x1 && eventData[eventData.length-1].x2 != x2) )
                 eventData.push({
                     'block_id': blockID, 'specie': block_info.info.spX, 'chromosome': block_info.info.chrX,
                     'specieIndex': specieXIndex, 'chromoIndex': chrXIndex, 'color': eventsColor,
@@ -671,6 +674,135 @@ $("#fitBlockTracer").click(function(){
     }
 
 });
+// blockModalButton
+$('#blockModalButton').click(function() {
+    let blockInfos = generateBlockInfos();
+    generateBlockTable(blockInfos);
+    generateSpecificZonesTable(blockInfos);
+});
+
+DOWNLOADABLE = {'traced': [], 'specific': []};
+$("#downloadDataButton").click(function() {
+    console.log("TEST");
+    let allBlocksActive = document.getElementById("allBlocks").classList.contains('active'),
+        element = document.createElement('a'),
+        filename = (allBlocksActive) ? "tracedBlocks.csv" : "specificZones.csv";
+        data = (allBlocksActive) ? DOWNLOADABLE.traced : DOWNLOADABLE.specific;
+
+    element.setAttribute('href', encodeDataToURI(data));
+    element.setAttribute('download', filename);
+    element.click();
+})
+
+$("#myModal").draggable({
+    handle: ".modal-header"
+}); 
+
+function generateBlockInfos(){
+    let blockInfos = [], blockID = 0;
+    let events = BLOCK_TRACER_PARAMS.results.events;
+
+    for(eventIndex in events){
+        let event = events[eventIndex];
+        
+        for(blockIndex in event.blocks){
+            let blocks = event.blocks[blockIndex];
+            for(blockInfoIndex in blocks){
+                let block_info = blocks[blockInfoIndex]
+                let x1 = block_info.overlap.x1, x2 = block_info.overlap.x2,
+                    y1 = block_info.overlap.y1, y2 = block_info.overlap.y2;
+                let currentCond = (block_info.overlap.inverted == true),
+                    prevCond = (blockInfoIndex > 0) ? (blocks[blockInfoIndex-1].overlap.inverted == true) : false;
+                let strandX = 'f', strandY = 'f';
+
+                if(prevCond){
+                    if(currentCond){ strandX = 'f'; strandY = 'r' }
+                    else { strandX = 'r'; strandY = 'r'; }
+                } else {
+                    if(currentCond){ strandY = 'r'; }
+                }
+
+                if(blockInfos.length == 0 || (blockInfos[blockInfos.length-1].x1 != x1 && blockInfos[blockInfos.length-1].x2 != x2) )
+                blockInfos.push({
+                    'block_id': blockID, 'specie': block_info.info.spX, 'chromosome': block_info.info.chrX,
+                    'x1': x1, 'x2': x2, 'strand': strandX
+                })
+
+                blockInfos.push({
+                    'block_id': blockID, 'specie': block_info.info.spY, 'chromosome': block_info.info.chrY,
+                    'x1': y1, 'x2': y2, 'strand': strandY
+                })
+            }
+            blockID++;
+        }
+    }
+    return blockInfos;
+}
+
+function generateBlockTable(blockInfos, filter=""){
+    let modalBody = document.getElementById('blockInfoTableBody'); let HTMLText = ""
+
+    DOWNLOADABLE.traced = $.extend(true, [], blockInfos)
+    for(block of blockInfos){
+        HTMLText += "<tr> <th>" + block.block_id + "</th> <td>" + block.specie + "</td> <td>" + block.chromosome + "</td> <td>" + block.x1 + "</td> <td>" + block.x2 + "</td> <th>" + block.strand + "</td> </tr>"
+    }
+
+    modalBody.innerHTML = HTMLText;
+}
+
+function generateSpecificZonesTable(blockInfos){
+    let modalBody = document.getElementById('specificZoneInfoTableBody'); let HTMLText = ""
+    let zoneInfos = generateSpecificZones(blockInfos)
+
+    DOWNLOADABLE.specific = $.extend(true, [], zoneInfos)
+    for(i in zoneInfos){
+        block = zoneInfos[i]
+        HTMLText += "<tr> <th>" + i + "</th> <td>" + block.specie + "</td> <td>" + block.chromosome + "</td> <td>" + block.x + "</td> <td>" + block.y + "</td> </tr>"
+    }
+
+    modalBody.innerHTML = HTMLText;
+}
+
+function generateSpecificZones(blockInfos){
+    let specificBlocks = [], sps = BLOCK_TRACER_PARAMS.species.slice(0,2),
+        chrs = BLOCK_TRACER_PARAMS.chromosomes.slice(0,2),
+        sortedBlocks = [[], []], //[new Array(chrs[0].length), new Array(chrs[0].length)],
+        filteredBlocks = blockInfos.filter(function(x) { return (x.specie == sps[0]|| x.specie == sps[1]) } );
+
+    for(i in filteredBlocks){
+        let currBlock = filteredBlocks[i], spIndex = (currBlock.specie == sps[0]) ? 0 : 1, chrIndex = chrs[spIndex].indexOf(currBlock.chromosome);
+        sortedBlocks[spIndex][chrIndex] = sortedBlocks[spIndex][chrIndex] || [];
+        sortedBlocks[spIndex][chrIndex].push( {'x1': currBlock.x1, 'x2': currBlock.x2} )
+    }
+
+    let lengths = [[], []];
+    Object.entries(BLOCK_TRACER_PARAMS.results.lengths).slice(0,2).forEach(function(x,i){ lengths[i] = Object.values(x[1]) } )
+
+    for(spBlockIndex in sortedBlocks){
+        for(chrBlockIndex in sortedBlocks[spBlockIndex]){
+            let chrBlocks = sortedBlocks[spBlockIndex][chrBlockIndex]
+            if(typeof chrBlocks != "undefined"){
+                //chrBlocks.sort(function(a,b) { return (a.x1 < b.x1) ? -1 : 1 } )
+                let tmpObj = chrBlocks.reduce( ( acc, c ) =>  Object.assign(acc, {[c.x1]:c.x2}) , {});
+                sortedBlocks[spBlockIndex][chrBlockIndex] = Object.keys( tmpObj )
+                    .map( s => ({ 'x1' : parseInt(s), 'x2' : tmpObj[ s ] }) )
+                    .sort( (a,b) => a.x1 - b.x1 );
+
+                let currCoord = 0;
+                for(blockInfoIndex in sortedBlocks[spBlockIndex][chrBlockIndex]){
+                    let blockInfo = sortedBlocks[spBlockIndex][chrBlockIndex][blockInfoIndex];
+                    if(currCoord != blockInfo.x1)
+                        specificBlocks.push({ 'specie': sps[spBlockIndex], 'chromosome': chrs[spBlockIndex][chrBlockIndex], 'x': currCoord, 'y': blockInfo.x1 });
+                    currCoord = blockInfo.x2;
+                }
+                if(currCoord != lengths[spBlockIndex][chrBlockIndex])
+                    specificBlocks.push({ 'specie': sps[spBlockIndex], 'chromosome': chrs[spBlockIndex][chrBlockIndex], 'x': currCoord, 'y': lengths[spBlockIndex][chrBlockIndex] });
+            }
+        }
+    }
+
+    return specificBlocks;
+}
 
 function blockTracerBaseConfig(){
     // Fit screen

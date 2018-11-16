@@ -58,7 +58,7 @@ def trace(request):
         inverted_steps.append(inverted)
         events_steps.append(current_step)
         
-    print(inverted_steps); print(events_steps)
+    # print(inverted_steps); print(events_steps)
     # Generate list of file lists (Combine)
     l_comparison_list = [[events] for events in events_steps[0]]
     inverted_list = []
@@ -93,13 +93,14 @@ def trace(request):
     outputs = clear_repeated_events(clear_duplicate_events(outputs))
 
     for bt in outputs:
-        blocks = [b for b in bt.get('blocks')]
+        blocks = [b for b in bt.get('blocks')[0]]
         #print("\n"); print(blocks); print("\n")
         for bi in blocks:
-            print(bi)
-            curr_info = bi[0]['info']
+            #print(bi)
+            curr_info = bi['info']
             non_emtpy_species_chromo.add(curr_info['spX'] + " - " + curr_info['chrX']); non_emtpy_species_chromo.add(curr_info['spY'] + " - " + curr_info['chrY'])
 
+    print(lengths_dict)
     jsonResponseDict = {'events': outputs,
         'lengths' : lengths_dict, 'non_empty': list(non_emtpy_species_chromo)}
     
@@ -140,8 +141,6 @@ def obtain_blocks(file, index, name):
     length_x = int(file_events[0].split(',')[0])
     length_y = int(file_events[0].split(',')[1])
     event_list = file_events[2:-1]
-    print("\n File: " + file + " | Name: " + name)
-    print(event_list)
     if len(event_list) == 1:
         event = event_list[0].split(",")
         if int(event[0]) == 0 and int(event[1]) == 0 and int(event[2]) == 0 and int(event[3]) == 0:
@@ -267,7 +266,7 @@ def clear_duplicate_events(events):
 
 def clear_repeated_events(events):
     clean_l = []
-    all_blocks = [block.get("blocks", None)[0] for block in events]
+    all_blocks = [block.get("blocks") for block in events]
 
     for i, block_traced in enumerate(events):
         b_keep = True
@@ -292,10 +291,10 @@ def check_contained_blocktraced(block1, block2):
     elif index <= 0:
         return True
 
-    print("----");print(infos_1); print(infos_2)
-    
-    info_1 = infos_1[index_2]
-    info_2 = infos_2[index_2]
+    #print("----");print(infos_1); print(infos_2)
+    index = index_2 if index > index_2 else index
+    info_1 = infos_1[index]
+    info_2 = infos_2[index]
     ret = True if info_1 == info_2 else False
 
     return ret
