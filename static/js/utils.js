@@ -47,16 +47,24 @@ function toggler(divId) {
     $("#" + divId).toggle();
 }
 
+function shower(divId) {
+    $("#" + divId).show();
+}
+
 function hider(divId){
     $("#" + divId).hide()
 }
 
-function collapser(divId){
-    $("#" + divId).collapse()
+function collapser(divId, action="toggle"){
+    $("#" + divId).collapse(action);
 }
 
 function emptier(divId){
     $("#" + divId).html('');
+}
+
+function clearFull(divId){
+    $("#" + divId).empty();
 }
 
 function clearDivIdSVG(divId){
@@ -64,6 +72,17 @@ function clearDivIdSVG(divId){
     if(!svg.empty()){
         svg.remove();
     }
+}
+
+function clearSidemenuSelection(){
+    clearFull('comparisonData'); clearFull('comparisonOverlay');
+    clearFull('comparisonPreview'); hider("comparisonInfo");
+    $("#comparisonPreview").removeClass('comparisonPreview');
+    clearOverlay();
+}
+
+function clearOverlay(){
+    ACTIVE_OVERLAY = false; CURRENT_OVERLAY = {}; SOURCE_OVERLAY = ""
 }
 
 // Database Image Url Parser
@@ -100,7 +119,7 @@ function fullColorHex(r,g,b){
     let red = rgbToHex(r), green = rgbToHex(g), blue = rgbToHex(b);
     return red+green+blue;
 }
-
+/*
 // Select label element from axis tick
 function select_x_axis_label(d) {
     console.log(d3.select('.xaxis').selectAll('text'))
@@ -113,7 +132,7 @@ function select_y_axis_label(d) {
     return d3.select('.yaxis')
         .selectAll('text')
         .filter(function(x) { console.log(x); return x == d.specieY + " - " + d.chromosomeY_number; });
-}
+}*/
 
 // Scale Event parameter
 function scaleEventParam(scaled_len, event_param){
@@ -128,12 +147,7 @@ function scientificNotation(x, f) {
 // Number to pairbase notation
 function pairbaseNotation(x, f) {
     let pb = Number.parseFloat(x).toExponential(f);
-    let current_exp = 1000;
-    if(pb / current_exp < 1000) return (pb/current_exp).toFixed(f).split('.')[0] + "Kbp"
-    current_exp = current_exp * 1000
-    if (pb / current_exp < 1000) return (pb/current_exp).toFixed(f).split('.')[0] + "Mbp"
-    current_exp = current_exp * 1000
-    return (pb/current_exp).toFixed(f).split('.')[0] + "Gbp"
+    return (pb/1000000).toFixed(f).split('.')[0];
 }
 
 // Retrieve Species in Table Columns
@@ -150,6 +164,60 @@ function getLoadedSpecies(){
     });
 
     return {'specieX': specieX, 'specieY': specieY};
+}
+
+function hasDuplicates(array) {
+    return (new Set(array)).size !== array.length;
+}
+
+function getValuesOfDOMObjects(jQueryOrder) {
+    let ret = []
+    $(jQueryOrder).each(function() {ret.push(this.value)})
+    return ret;
+}
+
+function getValuesOfDOMObjectsByParentKeyID(jQueryOrder){
+    let ret = {};
+    $(jQueryOrder).each(function(){
+        let parent_id = $(this).parent().attr('id');
+        ret[parent_id] = ret[parent_id] || [];
+        ret[parent_id].push(this.value);
+    });
+    return ret;
+}
+
+function convertArrayOfObjectsToCSV(data, columnDelimiter = ",", lineDelimiter = "\n") {  
+    var result, ctr, keys;
+
+    keys = Object.keys(data[0]);
+
+    result = '';
+    result += keys.join(columnDelimiter);
+    result += lineDelimiter;
+
+    data.forEach(function(item) {
+        ctr = 0;
+        keys.forEach(function(key) {
+            if (ctr > 0) result += columnDelimiter;
+
+            result += item[key];
+            ctr++;
+        });
+        result += lineDelimiter;
+    });
+
+    return result;
+}
+
+function encodeDataToURI(data) {  
+    var data;
+    var csv = convertArrayOfObjectsToCSV(data);
+    if (csv == null) return;
+
+    if (!csv.match(/^data:text\/csv/i)) {
+        csv = 'data:text/csv;charset=utf-8,' + csv;
+    }
+    return encodeURI(csv);
 }
 
 // --- DEBUG --- //

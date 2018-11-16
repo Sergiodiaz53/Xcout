@@ -1,6 +1,7 @@
 /**
  * Created by Sergio and Plabolo on 2/10/17.
  */
+
 var FORCE_URL = "/xcout";
 
 var itemSize = 14,
@@ -16,7 +17,7 @@ var heatmap_svg;
 
 // Add Comparison to Comparison Table/List
 function addComparisonToComparisonList(specieX, specieY){
-    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger glyphicon glyphicon-remove removeButton'></button></td>'";
+    var newRow = "<tr><td class='specieX_name'>"+specieX+"</td><td>vs</td><td class='specieY_name'>"+specieY+"</td><td><button class='btn btn-md btn-danger removeButton'><bs-glyphicon icon='remove'></bs-glyphicon></bs-glyphicon></button></td>'";
 
     //If comparison doesn't exists, add it.
     if(!$('#comparisonList tr > td:contains('+specieX+') + td:contains(vs) + td:contains('+specieY+')').length) $("#comparisonList").find("tbody").append(newRow)
@@ -34,13 +35,16 @@ function addComparisonToComparisonList(specieX, specieY){
         $('#comparisonList .specieY_name').each(function() {
             specieY.push($(this).html())
         });
-
+        
+        clearSidemenuSelection();
         getFullComparisonOf(specieX, specieY);
     });
 }
 
 // Get all Comparisons Info in Comparison Table
 function getFullComparisonOf(specieX, specieY){
+    overlayOn();
+    spinnerOn("Loading comparisons...");
     var comparisonJson = [];
     for (var i = 0; i<specieX.length; i++){
         auxComparison  = {
@@ -81,15 +85,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     var data = full_comparison_json.concat(local_comparison_json);// console.log(data)
 
     // Clear Sidemenu
-    $(".heatmap").html('');
     emptier('comparisonData');
     hider('comparisonInfo');
+    $(".heatmap").html('');
 
     //Create SVG
-    var svg = d3.select("svg > g");
-    if(!svg.empty()){
-        d3.select("svg").remove();
-    }
+    var svg = d3.select(".heatmap > svg > g");
+    if(!svg.empty()){ d3.select("svg").remove(); }
 
     //Get elements for X,Y and UpperLevelXYAxis
     var x_elements = d3.set(data.map(function( comparison ) {return comparison.specieX + " - " + comparison.chromosomeX_number; } )).values(),
@@ -115,17 +117,13 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     //Calculate OverlayCell positions
     var curr_ind = 0;
     for(specie of Object.keys(speciesX_numbers)) {
-        curr_ind += speciesX_numbers[specie];
-        text = specie + " - Overlay";
-        x_elements.splice(curr_ind, 0, text);
+        curr_ind += speciesX_numbers[specie]; text = specie + " - Overlay"; x_elements.splice(curr_ind, 0, text);
         speciesX_numbers[specie] = speciesX_numbers[specie]+1; curr_ind+=1;
     }
 
     curr_ind = 0;
     for(specie of Object.keys(speciesY_numbers)) {
-        curr_ind += speciesY_numbers[specie];
-        text = specie + " - Overlay";
-        y_elements.splice(curr_ind, 0, text);
+        curr_ind += speciesY_numbers[specie]; text = specie + " - Overlay"; y_elements.splice(curr_ind, 0, text);
         speciesY_numbers[specie] = speciesY_numbers[specie]+1; curr_ind+=1;
     }
 
@@ -139,35 +137,19 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
         let currX = specieX[i], currY = specieY[i], items_x, items_y;
         
         for(tick_x of x_elements){
-            items_x = tick_x.split(" - ");
-            if(items_x[0] == currX && items_x[1] == "Overlay"){
-                for(tick_y of y_elements){
-                    items_y = tick_y.split(" - ");
+            items_x = tick_x.split(" - "); if(items_x[0] == currX && items_x[1] == "Overlay"){
+                for(tick_y of y_elements){ items_y = tick_y.split(" - ");
                     if(items_y[0] == currY && items_x[0]==items_y[0]) score = -20; else score = -10;
-                    if(items_y[0] == currY && items_y[1] != "Overlay"){
-                        data.push({
-                            specieX:items_x[0], specieY:items_y[0], 
-                            chromosomeX_number:items_x[1], chromosomeY_number:items_y[1],
-                            img:"none", score:score
-                        })
-                    }
+                    if(items_y[0] == currY && items_y[1] != "Overlay") data.push({ specieX:items_x[0], specieY:items_y[0], chromosomeX_number:items_x[1], chromosomeY_number:items_y[1], img:"none", score:score })
                 }
             }
         }
 
         for(tick_y of y_elements){
-            items_y = tick_y.split(" - ");
-            if(items_y[0] == currY && items_y[1] == "Overlay"){
-                for(tick_x of x_elements){
-                    items_x = tick_x.split(" - ");
+            items_y = tick_y.split(" - "); if(items_y[0] == currY && items_y[1] == "Overlay"){
+                for(tick_x of x_elements){ items_x = tick_x.split(" - ");
                     if(items_x[0] == currX && items_x[0]==items_y[0]) score = -20; else score = -10;
-                    if(items_x[0] == currX && items_x[1] != "Overlay"){
-                        data.push({
-                            specieX:items_x[0], specieY:items_y[0], 
-                            chromosomeX_number:items_x[1], chromosomeY_number:items_y[1],
-                            img:"none", score:score
-                        })
-                    }
+                    if(items_x[0] == currX && items_x[1] != "Overlay") data.push({ specieX:items_x[0], specieY:items_y[0],  chromosomeX_number:items_x[1], chromosomeY_number:items_y[1], img:"none", score:score })
                 }
             }
         }
@@ -180,7 +162,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
     width = itemSize * Object.values(speciesX_numbers).reduce((a, b) => a + b, 0);
     height = itemSize * Object.values(speciesY_numbers).reduce((a, b) => a + b, 0);
 
-    // Clear Overlay (if exists)
+    // Clear Tooltip (if exists)
     d3.select("body").append("div")
         .attr("class", "tooltip_score")
         .style("opacity", 0);
@@ -334,7 +316,6 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                     .style("top", (d3.event.pageY - 28) + "px");
             
             }
-
             for(x_tick of ticks_x_axis[0]){
                 if(x_tick.innerHTML == d.specieX + " - " + d.chromosomeX_number){
                     tick_dom = d3.select(x_tick);
@@ -379,7 +360,22 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
             
             if (d.score != -20){
                 var string = "";
-                var data_string = "<h3> (X) " + d.specieX + " - "  + d.chromosomeX_number + " </br> vs </br> (Y) "  + d.specieY + " - "  + d.chromosomeY_number + "</br></h3>";
+                var data_string = '<div class="horizontal-line"></div>\
+                <button type="button" class="btn btn-primary btn-md pull-left" onclick=\'exportToBlockTracer("' + d.specieX + '","' + d.chromosomeX_number + '","' + d.specieY + '","' + d.chromosomeY_number + '")\'>Export to BlockTracer\
+                        <bs-glyphicon icon="export"></bs-glyphicon></button>\
+                <button type="button" class="btn btn-warning btn-md pull-right" onclick="clearSidemenuSelection()">\
+                        <bs-glyphicon icon="menu-down"></bs-glyphicon></button>\
+                    <table id="infoTable" class="table table-bordered table-hover"> \
+                        <tr> \
+                            <th scope="row">X Axis</th> \
+                            <td>' + d.specieX + ' - Chromosome: ' + d.chromosomeX_number + '</td> \
+                        </tr> \
+                        <tr> \
+                            <th scope="row">Y Axis</th> \
+                            <td>' + d.specieY + ' - Chromosome: ' + d.chromosomeY_number + '</td> \
+                        </tr> \
+                    '
+
                 var div = $("#comparisonPreview");
                 d3.select(this).classed("clicked", true);
                 if(d.score == -10) {
@@ -394,39 +390,7 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                         
                     } else {
                         // Overlay server
-                        $.ajax({
-                            type:"GET",
-                            url:FORCE_URL+"/API/overlay",
-                            data: {
-                                'specieX': sp_x,
-                                'specieY': sp_y,
-                                'chromosomeX': chr_x,
-                                'chromosomeY': chr_y,
-                                'threshold': overlay_threshold
-                            },
-                            success: function(content){
-                                response = JSON.parse(content);
-                                tmp_test = response;
-
-                                // Add comparison data -- HEADER
-                                $("#comparisonData").html(data_string);
-
-                                // Add image -- EVENTS METHOD
-                                let chromosome_numbers = [];
-                                let colors = [...new Set(response.events.map(item => item.color))];
-
-                                for(url of response.urls){ chromosome_numbers.push(imgUrlParser(url, response.base_axis)); }
-
-                                overlayComparisonEvents(response.events, response.max_x, response.max_y, response.lengths, response.base_axis, chromosome_numbers, colors)
-
-                                toggler("comparisonInfo");
-                                $("#collapseOverlay").collapse("show");
-                            },
-                            error: function(error){
-                                response = error.responseJSON
-                                showAlert("Error", response.message, "danger")
-                            }
-                        });
+                        serverOverlayEvents(sp_x, sp_y, chr_x, chr_y, data_string);
                     }
                     div.removeClass('comparisonPreview');
                     overlayOff();
@@ -434,9 +398,15 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
                 }
                 else{
                     div.addClass('comparisonPreview');
-                    clearDivIdSVG("comparisonOverlay");
+                    clearDivIdSVG("comparisonOverlay"); clearOverlay();
                     // Add comparison data
-                    data_string += "<h3>Score: "  + d.score + "</h3>";
+                    data_string += '<tr> \
+                            <th scope="row">Score</th> \
+                            <td>' + d.score + '</td> \
+                        </tr> \
+                    </table> \
+                    '
+                    //"<h3>Score: "  + d.score + "</h3>";
                     $("#comparisonData").html(data_string);
 
                     // Add image
@@ -453,216 +423,9 @@ function visualizeFullComparisonFromJSON(full_comparison_json = [], local_compar
 
     checkSpeciesTable();
     showAlert("Loaded", "Comparison loaded", "info");
-}
 
-// Overlay ComparisonEvents
-function overlayComparisonEvents(events, max_x, max_y, lengths, base_axis, chromosome_numbers, colors){
-
-    var WIDTH = 455,
-        HEIGHT = 495;
-    var MARGINS = {
-            top: 15,
-            right: 15,
-            bottom: 55,
-            left: 55
-        }
-    var WIDTH = WIDTH - MARGINS.left - MARGINS.right,
-        HEIGHT = HEIGHT - MARGINS.top - MARGINS.bottom;
-
-    var stroke_width = 2;
-    var axis_decimals = 2;
-    var grid_ticks = 6
-
-    // Clear Sidemenu
-    var comparisonPreview = $("#comparisonPreview");
-    comparisonPreview.html('');
-    comparisonPreview.removeClass('comparisonPreview');
-
-    if(base_axis == 'Y') [max_x, max_y] =  [max_y, max_x];
-
-    // Clear SVG
-    var svg = d3.select("#comparisonOverlay > svg");
-    if(!svg.empty()){
-        svg.remove();
-    }
-
-    //Set xScale
-    var xScale = d3.scale.linear()
-        .domain([0,max_x])
-        .range([0, WIDTH]);
-    //Set xAxis
-    var xAxis = d3.svg.axis()
-        .scale(xScale)
-        .orient("bottom")
-        .tickFormat(function (d) {
-            return (d!=0) ? pairbaseNotation(d, axis_decimals) : 0;
-        });
-
-    //Set yScale
-    var yScale = d3.scale.linear()
-        .domain([0,max_y])
-        .range([0, HEIGHT]);
-
-    //Set yAxis
-    var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient("left")
-        .tickFormat(function (d) {
-            return (d!=0) ? pairbaseNotation(d, axis_decimals) : 0;
-        });
-
-    // Create SVG
-    svg = d3.select('#comparisonOverlay')
-        .append("svg")
-        .attr("width", WIDTH + MARGINS.left + MARGINS.right)
-        .attr("height", HEIGHT + MARGINS.top + MARGINS.bottom)
-        .attr("class", 'comparisonOverlay')
-        .append('g')
-        .attr('transform', 'translate(' + MARGINS.left + ',' + MARGINS.top + ')');
-       
-    // Paint Events
-    var event_lines;
-    if(base_axis = 'X'){
-        event_lines = svg.selectAll('line')
-            .data(events).enter()
-            .append('g').append('line')
-            .attr('y1', function(d) { return yScale(scaleEventParam(lengths[d.cmp], d.x1)); })
-            .attr('x1', function(d) { return xScale(scaleEventParam(max_x,d.y1)); })
-            .attr('y2', function(d) { return yScale(scaleEventParam(lengths[d.cmp], d.x2)); })
-            .attr('x2', function(d) { return xScale(scaleEventParam(max_x,d.y2)); })
-            .attr('data-legend', function(d) { return chromosome_numbers[d.cmp] })
-            .style('stroke', function(d){ return d.color })
-            .style('stroke-width', stroke_width)
-            .style('z-index', 110);
-    }else{
-        event_lines = svg.selectAll('line')
-            .data(events).enter()
-            .append('g').append('line')
-            .attr('y1', function(d) { return yScale(scaleEventParam(max_x,d.y1)); })
-            .attr('x1', function(d) { return xScale(scaleEventParam(lengths[d.cmp], d.x1)); })
-            .attr('y2', function(d) { return yScale(scaleEventParam(max_x,d.y2)); })
-            .attr('x2', function(d) { return xScale(scaleEventParam(lengths[d.cmp], d.x2)); })
-            .attr('data-legend', function(d) { return chromosome_numbers[d.cmp] })
-            .style('stroke', function(d){ return d.color })
-            .style('stroke-width', stroke_width)
-            .style('z-index', 110);
-    }
-
-    var ticks_xAxis = svg.append("g")
-        /*.attr('transform', function (d) {
-            return "translate(" + MARGINS.left + ",0)";
-        })*/
-        .call(yAxis)
-        .selectAll('text')
-        .attr('font-weight', 'bold')
-        .style('font-size', '13px')
-        .style('text-anchor', 'end')
-        .attr('transform', function (d) {
-            return "translate(-7,0)rotate(-45)";
-        });
-    
-    var ticks_yAxis = svg.append("g")
-        .attr('transform', function (d) {
-            return "translate(0," + (HEIGHT) + ")";
-        })
-        .call(xAxis)
-        .selectAll('text')
-        .attr('font-weight', 'bold')
-        .style('font-size', '13px')
-        .style('text-anchor', 'end')
-        .attr('transform', function (d) {
-            return "rotate(-45)";//translate(0,5)
-        });
-
-    // Legend
-    let string = ""
-    for(chr_i in chromosome_numbers){
-        if(chr_i % 4 == 0)
-            string+="<div> ";
-        string += "<div style='background-color: " + colors[chr_i] + ";'>&emsp;</div> <div>" + chromosome_numbers[chr_i][1] + "</div>"
-        if((chr_i-3) % 4 == 0)
-            string+="</div>";
-    }
-    $("#collapseOverlayInfo").html(string);
-
-    
-    var tooltip_event = d3.select("body").append("div")
-        .attr("class", "tooltip_event")
-        .style("opacity", 0);
-        
-    // Behaviour
-    event_lines
-        // Tooltip :: ON
-        .on("mouseover", function(d) {
-            let event_info = "From: " + chromosome_numbers[d.cmp][0] + " - " + chromosome_numbers[d.cmp][1];
-
-
-            if(base_axis = 'X'){
-                event_info += "</br>x1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
-                event_info += "</br>y1 : " + scaleEventParam(lengths[d.cmp], d.x1).toLocaleString()
-                event_info += "</br>x2 : " + scaleEventParam(max_x,d.y2).toLocaleString();
-                event_info += "</br>y2 : " + scaleEventParam(lengths[d.cmp], d.x2).toLocaleString()
-            }else{
-                event_info += "</br>x1 : " + scaleEventParam(lengths[d.cmp], d.x1).toLocaleString()
-                event_info += "</br>y1 : " + scaleEventParam(max_x,d.y1).toLocaleString()
-                event_info += "</br>x2 : " + scaleEventParam(lengths[d.cmp], d.x2).toLocaleString()
-                event_info += "</br>y2 : " + scaleEventParam(max_x,d.y2).toLocaleString()
-            }
-
-            tooltip_event.transition()		
-                .duration(200)
-                .style("opacity", .9);
-                tooltip_event.html(event_info)
-                .style("left", (d3.event.pageX) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
-
-            d3.select(this)
-                .style('stroke-width', stroke_width*2);
-        })
-        // Tooltip :: OFF	
-        .on("mouseout", function(d) {		
-            tooltip_event.transition()		
-                .duration(500)		
-                .style("opacity", 0);
-            
-            d3.select(this)
-                .style('stroke-width', stroke_width);
-        })
-
-    // --- Create Grid
-    // Add the X gridlines
-    svg.selectAll("line.horizontalGrid").data(yScale.ticks(grid_ticks)).enter()
-        .append("line")
-        .attr(
-        {
-            "class":"horizontalGrid",
-            "x1" : 0,
-            "x2" : WIDTH,
-            "y1" : function(d){ return yScale(d);},
-            "y2" : function(d){ return yScale(d);},
-            "fill" : "none",
-            "shape-rendering" : "crispEdges",
-            "stroke" : "lightgrey",
-            "stroke-width" : "1px",
-            'stroke-opacity' : '0.6'
-        });
-    
-    // Add the Y gridlines
-    svg.selectAll("line.verticalGrid").data(xScale.ticks(grid_ticks)).enter()
-        .append("line")
-        .attr(
-        {
-            "class":"horizontalGrid",
-            "x1" : function(d){ return xScale(d);},
-            "x2" : function(d){ return xScale(d);},
-            "y1" : 0,
-            "y2" : HEIGHT,
-            "fill" : "none",
-            "shape-rendering" : "crispEdges",
-            "stroke" : "lightgrey",
-            "stroke-width" : "1px",
-            'stroke-opacity' : '0.6',
-        });
+    overlayOff();
+    spinnerOff();
 }
 
 // Automatic Threshold (Plabolize) to automatically understand EPW Scores

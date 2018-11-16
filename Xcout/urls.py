@@ -23,4 +23,5 @@ urlpatterns = [
     url(r'^xcout', include('coreViewController.urls')),
     url(r'^xcout/admin/', admin.site.urls),
     url(r'^xcout/API/',include('comparisonManager.urls') ),
+    url(r'^xcout/blocktracer/',include('blockTracer.urls') ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -31,6 +31,34 @@
         z-index:100;
     }
 
+    .nav-justified {
+        margin-left: 5%;
+        margin-bottom: 15px;
+        width: 90% !important;
+    }
+
+    .nav-justified > .active a {
+        font-weight: bold;
+        font-size: 1.5em;
+    }
+
+    div.horizontal-line {
+        width: 100%; /* Line width */ 
+        background-color: black; /* Line color */ 
+        height: 1px; /* Override in-line if you want specific height. */ 
+        display:inline-block;
+        margin-bottom: 10px;
+    }
+
+    .modal-dialog {
+        overflow-y: initial !important;
+    }
+
+    .modal-body{
+        height: 600px;
+        overflow-y: auto;
+    }
+
 /* #######################  */
 
     /** SideMenu **/
@@ -120,6 +148,7 @@
         margin-left: 15px;
         width: 15%;
     }
+    
     #colorRow .slider-track-low {
         background: red;
     }
@@ -134,9 +163,58 @@
         background-image: linear-gradient(to right, green 0%, lightgrey 100%);
     }
 
+    #numberChromosomesCheck {
+        margin-left: 15px;
+    }
+    
     #thresholdRow .slider-selection {
         background: lightblue;
     }
+    #canvas {
+        height: 100%;
+    }
+
+    #xcoutCanvas {
+        height: 100%;
+    }
+
+    #blockTracerCanvas {
+        height: 100%;
+    }
+
+    .btOption {
+        margin-top: 15px;
+    }
+
+/* #######################  */
+
+    /* BLOCKTRACER */
+
+    #blockTracerButton {
+        margin-top: 15px;
+    }
+
+    #blocktracerOptions {
+        margin-top: 15px;
+    }
+    .blockTracerRow {
+        margin-top: 15px;
+        margin-bottom: 10x;
+    }
+
+    .blocktracer {
+        float:left;
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+
+    .blocktracer-svg {
+        position:absolute;
+    }
+
+    
+/* #######################  */
 
     /* HEATMAP*/
 
@@ -146,7 +224,7 @@
         width: 100%;
         position: relative;
     }
-
+    
     .heatsvg {
         position:absolute;
     }
@@ -193,7 +271,7 @@
         right: 0;
         bottom: 0;
         background-color: rgba(127,127,127,0.5);
-        z-index: 5;
+        z-index: 1000;
         cursor: pointer;
     }
 
@@ -255,3 +333,8 @@
     }
 
 /* #######################  */
+
+    .filtered-legend {
+        opacity: 0.4;
+        font-style: italic;
+    }

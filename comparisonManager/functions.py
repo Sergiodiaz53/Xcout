@@ -1,13 +1,11 @@
 from comparisonManager.models import *
 from django.http import JsonResponse
+from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes, permission_classes
-from django.http import HttpResponse
 import json
 import os
 
-from .models import *
-from django.http import HttpResponse
 from django.core.files.images import ImageFile
 import csv
 
@@ -61,6 +59,23 @@ def generateJSONComparisonFromSpecies(request):
 
     return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
 
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def generateJSONChromosomesFromSpecie(request):
+    specie = request.GET.get('specie', '')
+    jsonChromosomeList = []
+
+    chromosomes = Chromosome.objects.all().filter(specie__name = specie)
+    jsonChromosomeList = [chromosome.number for chromosome in chromosomes]
+    
+    return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
 def updateDBfromCSV(request):
     with open("images/test.csv") as f:
         reader = csv.reader(f, delimiter=',')
@@ -72,11 +87,9 @@ def updateDBfromCSV(request):
             ### SPECIES --
             # Specie X
             n_sp_x = row[0].split('.')[0]
-            print("##### SPECIE ##### " + n_sp_x)
             check_sp_x = Specie.objects.filter(name = n_sp_x).count()
             if check_sp_x > 0:
                 spX = Specie.objects.get(name = n_sp_x)
-                print("-- ALREDY EXISTS --")
             else:
                 # ShortName
                 sn_x = ''
@@ -87,15 +100,11 @@ def updateDBfromCSV(request):
                 spX = Specie.objects.create(name=n_sp_x,short_name=sn_x.upper(),accesion_number=id_x)
                 spX.save()
 
-            print("### ADDED ### " + n_sp_x)
-
             # Specie Y
             n_sp_y = row[1].split('.')[0]
-            print("##### SPECIE ##### " + n_sp_y)
             check_sp_y = Specie.objects.filter(name = n_sp_y).count()
             if check_sp_y > 0:
                 spY = Specie.objects.get(name = n_sp_y)
-                print("-- ALREDY EXISTS --")
             else:
                 # ShortName
                 sn_y = ''
@@ -106,45 +115,35 @@ def updateDBfromCSV(request):
                 spY = Specie.objects.create(name=n_sp_y,short_name=sn_y.upper(),accesion_number=id_y)
                 spY.save()
 
-            print("### ADDED ### " + n_sp_y)
-
             ### CHROMOSOMES --
             # Chr X - nCX
             n_chr_x = row[5]
-            print("##### CHROMOSOME ##### " + n_chr_x)
             check_chr_x = Chromosome.objects.filter(specie=spX, number=n_chr_x).count()
             if check_chr_x > 0:
                 chrX = Chromosome.objects.get(specie=spX, number=n_chr_x)
-                print("-- ALREDY EXISTS --")
             else:
                 len_x = int(row[8])
                 chrX = Chromosome.objects.create(specie=spX, fasta='www.test.com', number=n_chr_x, length=len_x)
                 chrX.save()
 
-            print("### ADDED ### " + n_chr_x)
             # Chr Y - nCY
             n_chr_y = row[6]
-            print("##### CHROMOSOME ##### " + n_chr_y)
             check_chr_y = Chromosome.objects.filter(specie=spY, number=n_chr_y).count()
             if check_chr_y > 0:
                 chrY = Chromosome.objects.get(specie=spY, number=n_chr_y)
-                print("-- ALREDY EXISTS --")
             else:
                 len_y = int(row[9])
                 chrY = Chromosome.objects.create(specie=spY, fasta='www.test.com', number=n_chr_y, length=len_y)
                 chrY.save()
 
-            print("### ADDED ### " + n_chr_y)
             ### COMPARISON --
             # Image
             img_name = row[4]
             csv_name = img_name.rsplit('.', 2)[0] + ".events.txt"
-            print("##### IMAGE ##### " + img_name)
             check_img = Comparison.objects.filter(chromosome_x=chrX, chromosome_y=chrY).count()
             if check_img > 0:
                 # Image Exists alredy
                 img_comp = Comparison.objects.get(chromosome_x=chrX, chromosome_y=chrY)
-                print("-- ALREDY EXISTS --")
             else:
                 current_score = row[7]
                 os.rename("images/"+img_name, "media/"+img_name)
@@ -152,10 +151,7 @@ def updateDBfromCSV(request):
                 comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score, img=img_name, csv=csv_name)
                 comp.save()
 
-
-            print("### ADDED ### " + img_name)
-
-    print("------------------ Done -------------------")
+    print("--------- DONE LOADING CSV FROM INDEX --------- ")
 
     return HttpResponse('OK', content_type="text/plain")
 
@@ -171,6 +167,7 @@ def createOverlayedImage(request):
     chromosomeX = request.GET.get('chromosomeX', '')
     chromosomeY = request.GET.get('chromosomeY', '')
     threshold = request.GET.get('threshold', '')
+    overlay_max = request.GET.get('overlay_max', '')
     overlay_axis = 'X' if chromosomeX == 'Overlay' else 'Y'
     inverted = False
     #max_len_chromosome = False#True if request.GET.get('max_len_chromosome', '') == 'True' else False
@@ -187,23 +184,24 @@ def createOverlayedImage(request):
             comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieY, chromosome_y__specie__name = specieX, chromosome_y__number = chromosomeX)
         else:
             comparisons = Comparison.objects.all().filter(chromosome_x__specie__name = specieY, chromosome_y__specie__name = specieX, chromosome_x__number = chromosomeY)
-
-    print("---- DEBUG -----")
-    print("specieX :: " + specieX)
-    print("specieY :: " + specieY)
-    print("chromosomeX :: " + chromosomeX)
-    print("chromosomeY :: " + chromosomeY)
-    print("threshold :: " + threshold)
-    print("overlay_axis :: " + overlay_axis)
-    print("inverted :: " + str(inverted))
-    print("---- DEBUG -----")
-
+    print(inverted)
     # Filter comparisons by threshold
     cmp_data = []
     base_max_len = 0
 
-    for comparison in comparisons:
-        if comparison.score <= float(threshold):
+    if(overlay_max == '0'):
+        for comparison in comparisons:
+            if comparison.score <= float(threshold):
+                if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
+                    tmp_len = comparison.chromosome_y.length; base_max_len = comparison.chromosome_x.length
+                else:
+                    tmp_len = comparison.chromosome_x.length; base_max_len = comparison.chromosome_y.length
+
+                cmp_info = (comparison.img.url[1:], tmp_len, comparison.csv)
+                cmp_data.append(cmp_info)
+    else:
+        sorted_comparisons = sorted(comparisons, key=lambda x: x.score)
+        for comparison in sorted_comparisons[:int(overlay_max)]:
             if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
                 tmp_len = comparison.chromosome_y.length; base_max_len = comparison.chromosome_x.length
             else:
@@ -228,42 +226,6 @@ def createOverlayedImage(request):
     max_len = max(seq_lengths)# if max_len_chromosome == True else sum(seq_lengths)
     colors = []
     
-    """
-
-    if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
-        BACKGROUND_INIT_W = 25
-        BACKGROUND_END_H = 1000
-    else:
-        BACKGROUND_INIT_W = 0
-        BACKGROUND_END_H = 965
-
-    DIFF_W = PLOT_INIT_PIXEL-BACKGROUND_INIT_W
-        
-    ### ------------------ IMAGE METHOD
-    # Create new image
-    background = transparent_background(images_paths[0])
-    background = background.crop((BACKGROUND_INIT_W, BACKGROUND_INIT_H, BACKGROUND_END_W, BACKGROUND_END_H))
-
-    #rgb = create_rgb_colors(len(urls)-1)
-    i=0
-    colors.append('#%02x%02x%02x' % (R_color[i], G_color[i], B_color[i]))
-
-    for img_path in images_paths[1:]:
-        current_img = transparent_background(img_path)
-        current_img = current_img.crop((PLOT_INIT_PIXEL, PLOT_INIT_PIXEL, PLOT_MAX_PIXEL_W, PLOT_MAX_PIXEL_H))
-        current_img = resize_crop(current_img, max_len, seq_lengths[i+1], overlay_axis, inverted)
-        
-        change_color_transparent_img(current_img, (R_color[i], G_color[i], B_color[i]))
-        colors.append('#%02x%02x%02x' % (R_color[i], G_color[i], B_color[i]))
-        i+=1
-        
-        background.paste(current_img, (DIFF_W, DIFF_H), current_img)
-    
-    # Base64 Encode Image
-    buffered = BytesIO()
-    background.convert("RGB").save(buffered, format = "PNG")
-    img_str = base64.b64encode(buffered.getvalue())
-    """
     
     ### ------------------ EVENTS METHOD
     csv_data = []
@@ -286,7 +248,7 @@ def createOverlayedImage(request):
                     'cmp':i,
                     'color': '#%02x%02x%02x' % (R_color[i], G_color[i], B_color[i])
                 })
-    print(csv_data)
+
     if((not inverted and overlay_axis == 'Y') or (inverted and overlay_axis == 'X')):
         max_len_x = base_max_len; max_len_y = max_len; base_axis = 'X'
     else:
@@ -299,11 +261,9 @@ def createOverlayedImage(request):
         'events': csv_data,
         'max_x': max_len_x,
         'max_y': max_len_y,
-        #'color': colors,
-        #'img': str(img_str)[2:],
         'base_axis': base_axis
     }
-    #response = HttpResponse(img_str, content_type="text/plain")
+
     response = JsonResponse(json.dumps(response_data), safe=False)
     return response
 

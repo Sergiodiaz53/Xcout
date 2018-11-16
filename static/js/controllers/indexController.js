@@ -20,13 +20,17 @@ $("#addComparison").click(function(){
         specieY.push($(this).html())
     });
 
-    getFullComparisonOf(specieX, specieY)
+    getFullComparisonOf(specieX, specieY);
+});
+
+// Load local button
+$("#loadLocal").click(function(){
+    collapser("collapseLocal"); //  data-toggle="collapse" data-target="#collapseLocal"
 });
 
 // Auto Threshold (Plabolize) button
 $("#autoThreshold").click(function(){
     plabolize();
-
     function plabolize(){
         getScoresThreshold()
     }
@@ -34,7 +38,12 @@ $("#autoThreshold").click(function(){
 
 // Fit to Screen (Plabolize) button
 $("#fitScreen").click(function(){
-    fitToScreen();
+    var svg = d3.select(".heatmap > svg");
+    if($(this).children().attr('icon') == 'resize-full'){
+        fitToScreen(); $(this).children().attr('icon', 'resize-small')
+    } else {
+        svg.attr('transform', null); $(this).children().attr('icon', 'resize-full')
+    }
 });
 
 //Slider cell size config
@@ -144,6 +153,28 @@ function checkSpeciesTable(){
         $('#configButton').removeAttr('disabled');
 }
 
+
+$('#specieX').on('change', function() {
+    newComparisonsButtonBehavior();
+});
+
+$('#specieY').on('change', function() {
+    newComparisonsButtonBehavior();
+});
+
+// Show tooltips
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip({'hover': 'focus'})
+    $('#numberChromosomes').tooltip({'hover': 'focus', 'title': 'Number of Chromosomes to Overlay'})
+    $('#numberChromosomesCheck').tooltip({'hover': 'focus', 'title': 'Adjust threshold by number of Chromosomes to Overlay'})
+})
+
+// Functionalities navigation bar
+$('.nav.navbar-tabs > li').on('click', function(e) {
+    $('.nav.navbar-nav > li').removeClass('active');
+    $(this).addClass('active');
+});
+
 // --- Document Init ---
 $(document).ready(function(){
     // Make species different as default
@@ -155,12 +186,4 @@ $(document).ready(function(){
     }
 
     checkSpeciesTable();
-});
-
-$('#specieX').on('change', function() {
-    newComparisonsButtonBehavior();
-});
-
-$('#specieY').on('change', function() {
-    newComparisonsButtonBehavior();
 });
