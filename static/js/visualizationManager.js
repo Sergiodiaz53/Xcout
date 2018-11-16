@@ -1,7 +1,8 @@
 /**
  * Created by Sergio and Plabolo on 2/10/17.
  */
-var FORCE_URL = "";//"/xcout";
+
+var FORCE_URL = "/xcout";
 
 var itemSize = 14,
     cellSize = itemSize - 1,
