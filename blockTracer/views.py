@@ -38,7 +38,6 @@ def trace(request):
             specie_dict[chromosome] = db_query.length
         lengths_dict[specie] = specie_dict
         
-
     # Retrieve all CSV names
     events_steps = []
     inverted_steps = []
@@ -64,17 +63,14 @@ def trace(request):
     inverted_list = []
     for i, current_step in enumerate(events_steps[1:]):
         tmp_list = []
-        inverted = inverted_steps[i+1] #and inverted_steps[i-1])
-        print(inverted)
-        print(current_step)
+        inverted = inverted_steps[i+1] # To fix inverted, add invert function to Comparison class and if inverted invert, then add.
         for current_event in current_step:
             for index, comparison_list in enumerate(l_comparison_list):
                 evaluation = (not inverted and comparison_list[-1].chromosome_y == current_event.chromosome_x) \
                     or (inverted and comparison_list[-1].chromosome_y == current_event.chromosome_y)
                 if evaluation:
-                    new_list = [comparison_list[-1], current_event]
+                    new_list = copy.deepcopy(comparison_list); new_list.append(current_event)
                     tmp_list.append(new_list)
-
 
         l_comparison_list = tmp_list
     
@@ -90,21 +86,20 @@ def trace(request):
         blocks_traced = recursive_overlap_checking(files, 1, first_overlapped_blocks, first_overlapped_blocks, comparison_list)
         outputs.append({'cmp_info': i, 'blocks': blocks_traced})
 
-    outputs = clear_repeated_events(clear_duplicate_events(outputs))
-
-    for bt in outputs:
-        blocks = [b for b in bt.get('blocks')[0]]
-        #print("\n"); print(blocks); print("\n")
-        for bi in blocks:
-            #print(bi)
-            curr_info = bi['info']
-            non_emtpy_species_chromo.add(curr_info['spX'] + " - " + curr_info['chrX']); non_emtpy_species_chromo.add(curr_info['spY'] + " - " + curr_info['chrY'])
-
-    print(lengths_dict)
-    jsonResponseDict = {'events': outputs,
-        'lengths' : lengths_dict, 'non_empty': list(non_emtpy_species_chromo)}
+    outputs = sorted(clear_repeated_events( clear_duplicate_events(outputs)), key = lambda o: -1 if len(o['blocks']) == 0 else len(o['blocks'][0]) )
     
-    return JsonResponse(json.dumps(jsonResponseDict ), safe=False)
+    for bt in outputs:
+        blocks = bt.get('blocks')
+        if len(blocks) > 0:
+            blocks = [b for b in blocks[0]]
+            for bi in blocks:
+                curr_info = bi['info']
+                non_emtpy_species_chromo.add(curr_info['spX'] + " - " + curr_info['chrX']); non_emtpy_species_chromo.add(curr_info['spY'] + " - " + curr_info['chrY'])
+
+        jsonResponseDict = {'events': outputs,
+            'lengths' : lengths_dict, 'non_empty': list(non_emtpy_species_chromo)}
+
+        return JsonResponse(json.dumps(jsonResponseDict), safe=False)
 
 ###################
 ### BlockTracer ###

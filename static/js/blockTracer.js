@@ -333,8 +333,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
         .attr(getPositionAttribute('width', inverted), function(d) { return BASELINE_EDGES_WIDTH; })/*s[d.specie]*/
         .attr(getPositionAttribute('height', inverted), CHROMOSOME_BASELINE_HEIGHT*2)
 
-    // DEBUG :: 
-    //console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
+    // DEBUG :: console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
     // --------
 
     // Setup BlockInfo groups
