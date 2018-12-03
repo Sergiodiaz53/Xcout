@@ -96,16 +96,18 @@ def trace(request):
                 curr_info = bi['info']
                 non_emtpy_species_chromo.add(curr_info['spX'] + " - " + curr_info['chrX']); non_emtpy_species_chromo.add(curr_info['spY'] + " - " + curr_info['chrY'])
 
-    jsonResponseDict = {'events': outputs,
-        'lengths' : lengths_dict, 'non_empty': list(non_emtpy_species_chromo)}
+        jsonResponseDict = {'events': outputs,
+            'lengths' : lengths_dict, 'non_empty': list(non_emtpy_species_chromo)}
 
-    return JsonResponse(json.dumps(jsonResponseDict), safe=False)
+        return JsonResponse(json.dumps(jsonResponseDict), safe=False)
 
 ###################
 ### BlockTracer ###
 ###################
 
 def check_inversion(event):
+    if(len(event) < 2):
+        return event
     if event[0] > event[2]:
         event[0], event[2] = event[2], event[0]
     if event[1] > event[3]:
