@@ -8,7 +8,16 @@ include/
 local/
 share/
 
-static/bower_components/
+static/bower_components/*
+!static/bower_components/bootstrap-alerts/
+
+
+images/
+comparisonManager/migrations/*
+
+COPYALL.sh
+EXECUTE.sh
+file_paths.txt
 
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio
