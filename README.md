@@ -29,6 +29,7 @@ Requirements: Python 3 & Bower (Virtualenv is recommended)
 - Install bower components (bower install)
 * `cd static`
 * `bower install`
+* `cd ..`
 
 - Setup Django
 * `python manage.py makemigrations`
