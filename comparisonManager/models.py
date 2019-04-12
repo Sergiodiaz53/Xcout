@@ -31,6 +31,11 @@ class Comparison(models.Model):
     def __str__(self):
         return u'%s vs %s | Score :: %s' % (self.chromosome_x, self.chromosome_y, str(self.score))
 
-
-
+class Annotation(models.Model):
+    specie = models.ForeignKey(Specie, on_delete=models.CASCADE)
+    gen_x = models.BigIntegerField(null=False)
+    gen_y = models.BigIntegerField(null=False)
+    locus_tag = models.CharField(max_length=20)
+    db_xref = models.CharField(max_length=20)
+    
 
