@@ -79,7 +79,7 @@ def generateJSONChromosomesFromSpecie(request):
 def generateJSONAnnotationFromSpecie(request):
     specie = request.GET.get('specie', '')
 
-    annotations = Annotation.objects.all().filter(specie__name = specie)
+    annotations = Annotation.objects.all().filter(specie__name = specie).order_by('gen_x')
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())
     #jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
