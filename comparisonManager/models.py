@@ -39,5 +39,4 @@ class Annotation(models.Model):
     db_xref = models.CharField(max_length=20)
 
     def __str__(self):
-        return u'Specie: %s | %s:%s Locus: %s XRef: %s' % (self.specie, str(self.gen_x), str(self.gen_y), self.locus_tag, self.db_xref)   
-
+        return u'Specie: %s | %s:%s Locus: %s XRef: %s' % (self.specie, str(self.gen_x), str(self.gen_y), self.locus_tag, self.db_xref)
