@@ -9,4 +9,5 @@ urlpatterns = [
         url(r'^updateDB/', functions.updateDBfromCSV, name='updateDBfromCSV'),
         url(r'^overlay/', functions.createOverlayedImage, name="createOverlayedImage"),
         url(r'^color_threshold/', functions.automaticColorThreshold, name="automaticColorThreshold"),
+        url(r'^annotations/', functions.generateJSONAnnotationFromSpecie, name='generateJSONAnnotationFromSpecie'),
 ]

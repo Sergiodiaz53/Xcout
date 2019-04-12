@@ -76,6 +76,20 @@ def generateJSONChromosomesFromSpecie(request):
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([])
+def generateJSONAnnotationFromSpecie(request):
+    specie = request.GET.get('specie', '')
+
+    annotations = Annotation.objects.all().filter(specie__name = specie)
+    # You MUST convert QuerySet to List object
+    jsonAnnotationList = list(annotations.values())
+    #jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
+    
+    return JsonResponse(jsonAnnotationList, safe=False)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
 def updateDBfromCSV(request):
     with open("images/test.csv") as f:
         reader = csv.reader(f, delimiter=',')
@@ -146,8 +160,8 @@ def updateDBfromCSV(request):
                 img_comp = Comparison.objects.get(chromosome_x=chrX, chromosome_y=chrY)
             else:
                 current_score = row[7]
-                os.rename("images/"+img_name, "media/"+img_name)
-                os.rename("images/"+csv_name, "media/"+csv_name)
+#                os.rename("images/"+img_name, "media/"+img_name)
+#                os.rename("images/"+csv_name, "media/"+csv_name)
                 comp = Comparison.objects.create(chromosome_x=chrX, chromosome_y=chrY, score=current_score, img=img_name, csv=csv_name)
                 comp.save()
 
