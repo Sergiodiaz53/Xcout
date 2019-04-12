@@ -15,3 +15,4 @@ class ComparisonAdmin(admin.ModelAdmin):
 admin.site.register(Specie)
 admin.site.register(Chromosome)
 admin.site.register(Comparison, ComparisonAdmin)
+admin.site.register(Annotation)

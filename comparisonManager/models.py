@@ -37,5 +37,7 @@ class Annotation(models.Model):
     gen_y = models.BigIntegerField(null=False)
     locus_tag = models.CharField(max_length=20)
     db_xref = models.CharField(max_length=20)
-    
+
+    def __str__(self):
+	return u'Specie: %s | %s:%s Locus: %s XRef: %s' % (self.specie, str(self.gen_x), str(self.gen_y), str(self.locus_tag), str(self.db_xref))   
 
