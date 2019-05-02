@@ -48,7 +48,7 @@ function addNewblockTracerRow(id, erase=true){
     for(specie of list_species){
         species_html += '<option value="' + specie + '">' + specie + '</option>';
     }
-    newSpecieSelect.innerHTML = species_html
+    newSpecieSelect.innerHTML = species_html;
 
     // Append Specie Selection
     newSpecieSelectDiv.appendChild(newSpecieSelect);
@@ -56,14 +56,14 @@ function addNewblockTracerRow(id, erase=true){
 
     // Create Chromosome Selection
     newChromosomeSelectDiv.className = 'col-xs-6';
-    newChromosomeSelectDiv.innerHTML = '<select id="blocktracer' + BLOCKTRACER_ID + '" multiple class="selectpicker" data-live-search="true" title="Select chromosomes..." data-actions-box="true">'
+    newChromosomeSelectDiv.innerHTML = '<select id="blocktracer' + BLOCKTRACER_ID + '" multiple class="selectpicker" data-live-search="true" title="Select chromosomes..." data-actions-box="true">';
 
     // Append Chromosome Selection
     newRow.appendChild(newChromosomeSelectDiv);
 
     // Create and Append Buttons
     newButtonDiv.className = 'col-xs-3';
-    newButtonDiv.innerHTML = '<button id="blocktracer' + BLOCKTRACER_ID + '" type="button" class="btn btn-info" onclick="addNewblockTracerRow(' + BLOCKTRACER_ID + ')" data-toggle="tooltip" title="Add new BlockTracer selection" data-placement="bottom"><bs-glyphicon icon="plus"></bs-glyphicon></button>'
+    newButtonDiv.innerHTML = '<button id="blocktracer' + BLOCKTRACER_ID + '" type="button" class="btn btn-info" onclick="addNewblockTracerRow(' + BLOCKTRACER_ID + ')" data-toggle="tooltip" title="Add new BlockTracer selection" data-placement="bottom"><bs-glyphicon icon="plus"></bs-glyphicon></button>';
     if(erase==true) newButtonDiv.innerHTML = newButtonDiv.innerHTML + '<button type="button" class="btn btn-warning" onclick="removeBlockTracerRow(' + BLOCKTRACER_ID + ')" data-toggle="tooltip" title="Add new BlockTracer selection" data-placement="bottom"><bs-glyphicon icon="minus"></bs-glyphicon></button>';
     
     newRow.appendChild(newButtonDiv);
@@ -83,13 +83,13 @@ function removeBlockTracerRow(id){
 
 // Clear all BlockTracerRow
 function clearAllBlockTracerRow(){
-    $(".blockTracerRow").remove()
+    $(".blockTracerRow").remove();
     blockTracerButtonBehavior();
 }
 
 // Chromosome List Behavior
 function chromosomeListBehavior(listChromosomes, blockTracerSpecieID){
-    data_string = ""
+    data_string = "";
     for(chromosome of listChromosomes){
         data_string+='<option value="' + chromosome + '">' + chromosome + '</option>'
     }
@@ -107,7 +107,7 @@ function blockTracerSelectedSpecieBehavior(blockTracerSpecieID, callback = $.noo
         },
         success: function(content) {
             list_chromosomes = JSON.parse(content).sort(naturalCompare);
-            chromosomeListBehavior(list_chromosomes, blockTracerSpecieID)
+            chromosomeListBehavior(list_chromosomes, blockTracerSpecieID);
             callback();
         }
     });
@@ -115,10 +115,10 @@ function blockTracerSelectedSpecieBehavior(blockTracerSpecieID, callback = $.noo
 
 function changeSpecieAndChromosome(specieSelect, chromosomeSelect, specie, chromosome, blockTracerIndex, callback = $.noop){
     let values = [];
-    specieSelect.val(specie)
+    specieSelect.val(specie);
     blockTracerSelectedSpecieBehavior("blocktracer"+blockTracerIndex, function(){
         values = (chromosome != "Overlay") ? [chromosome] : CURRENT_OVERLAY.chromosome_numbers.map(x => x[1]);
-        chromosomeSelect.selectpicker('val',values)
+        chromosomeSelect.selectpicker('val',values);
         callback();
     });
 }
@@ -157,7 +157,7 @@ function extractBlockTracerRowsData(){
     let blockTracerChromosomes = getValuesOfDOMObjectsByParentKeyID("select.selectpicker option:selected");
     blockTracerChromosomes = Object.keys(blockTracerChromosomes).map(function(key){
         return blockTracerChromosomes[key];
-    })
+    });
 
     return [blockTracerSpecies, blockTracerChromosomes]
 }
@@ -166,11 +166,11 @@ function extractBlockTracerRowsData(){
 /* --- BlockTracer Main --- */
 // ---------------------------
 
-var BLOCK_TRACER_PARAMS = {'species': [], 'chromosomes': [], 'results': {}}
+var BLOCK_TRACER_PARAMS = {'species': [], 'chromosomes': [], 'results': {}};
 
 function executeBlockTracer(){
     let data = extractBlockTracerRowsData();
-    let species = data[0], chromosomes=data[1], emptyCheck = document.getElementById('emptyChromosomesCheck').checked; console.log(data)
+    let species = data[0], chromosomes=data[1], emptyCheck = document.getElementById('emptyChromosomesCheck').checked; console.log(data);
 
     overlayOn();
     spinnerOn("Tracing Blocks...");
@@ -193,7 +193,7 @@ function executeBlockTracer(){
         },
         success: function(content) {
             results = JSON.parse(content); console.log(results);
-            BLOCK_TRACER_PARAMS = {'species': $.extend(true, [], species), 'chromosomes':  $.extend(true, [], chromosomes), 'results':  $.extend(true, {}, results)}
+            BLOCK_TRACER_PARAMS = {'species': $.extend(true, [], species), 'chromosomes':  $.extend(true, [], chromosomes), 'results':  $.extend(true, {}, results)};
 
             if(emptyCheck) emptyChromosomesCheck(species, chromosomes, results.lengths, results.non_empty);
 
@@ -206,7 +206,7 @@ function executeBlockTracer(){
 
 function emptyChromosomesCheck(species, chromosomes, lengths, non_empty) {
     let non_empty_list = [];
-    console.log("EMPTY-CHECK")
+    console.log("EMPTY-CHECK");
     
     for (resultsExists of non_empty) { let items = resultsExists.split(' - '); non_empty_list.push([items[0], items[1]]); }
 
@@ -248,7 +248,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
         MAX_CHROMOSOME_PER_SPECIES = Math.max.apply(Math, Object.values( CHROMOSOMES_PER_SPECIE.map(function(o) { return o; }) )),
         MAX_FULL_LENGTH = getMaxOfDictValuesFromDict({1: MAX_SPECIES_LENGTHS});
         
-    // DEBUG :: console.log("--- DEBUG1 ---"); console.log(MAX_SPECIES_LENGTHS); console.log(LENGTH_PREPENDS); console.log(CHROMOSOMES_PER_SPECIE); console.log(MAX_CHROMOSOME_PER_SPECIES); console.log(MAX_FULL_LENGTH);
+    //console.log("--- DEBUG1 ---"); console.log("MAX_SPECIES_LENGTHS", MAX_SPECIES_LENGTHS); console.log("LENGTH_PREPENDS", LENGTH_PREPENDS); console.log("CHROMOSOMES_PER_SPECIE", CHROMOSOMES_PER_SPECIE); console.log("MAX_CHROMOSOME_PER_SPECIES", MAX_CHROMOSOME_PER_SPECIES); console.log("MAX_FULL_LENGTH", MAX_FULL_LENGTH);
     
     var WIDTH = MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS, // (MAX_CHROMOSOME_PER_SPECIES*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 :
         HEIGHT = (species.length-1)*INTERSPECIE_SPACE, //(species.length*MINIMUM_CHROMOSOME_PIXELS < 1000) ? 1000 : 
@@ -282,9 +282,9 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
 
     //Set Axes
     var xAxis = d3.svg.axis()
-        .scale((!inverted) ? xScale : yScale)
+        .scale((!inverted) ? xScale : yScale);
     var yAxis = d3.svg.axis()
-        .scale((!inverted) ? yScale : xScale)
+        .scale((!inverted) ? yScale : xScale);
 
     // DEBUG :: console.log("--- DEBUG2 ---"); console.log(colorScale); console.log(xAxis); console.log(yAxis); //console.log(xScale); console.log(yScale);
     // --------
@@ -303,12 +303,12 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     // Setup data
     var preparedData = prepareBlockTracerData(species, chromosomes, lengths, events, LENGTH_PREPENDS);
     // DEBUG :: 
-    console.log("--- DEBUG3 ---"); console.log(preparedData);
+    //console.log("--- DEBUG3 ---"); console.log(preparedData);
     // ---
     // Draw chromosome lines
     var chromosomeBaseLines = svg.selectAll('chromoBase')
         .data(preparedData.baselineData)
-        .enter().append('g').classed('chromoBase', true)
+        .enter().append('g').classed('chromoBase', true);
         
         chromosomeBaseLines.append('rect')
         .attr('class', 'chromosomeBaseline')
@@ -331,7 +331,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
         .attr(getPositionAttribute('x', inverted), function(d) { return  xScale(d.x2)+xScale(d.x1) + INTERCHROMOSOME_SPACE*d.index; })/*s[d.specie]*/
         .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie); })
         .attr(getPositionAttribute('width', inverted), function(d) { return BASELINE_EDGES_WIDTH; })/*s[d.specie]*/
-        .attr(getPositionAttribute('height', inverted), CHROMOSOME_BASELINE_HEIGHT*2)
+        .attr(getPositionAttribute('height', inverted), CHROMOSOME_BASELINE_HEIGHT*2);
 
     // DEBUG :: console.log("--- DEBUG4 ---"); console.log(chromosomeBaseLines);
     // --------
@@ -339,7 +339,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     // Setup BlockInfo groups
     var tracedBlocks = svg.selectAll('blockInfo')
         .data(preparedData.eventData)
-        .enter().append('g').classed('blockInfo', true)
+        .enter().append('g').classed('blockInfo', true);
 
         // Draw blocks
         tracedBlocks.append('rect')
@@ -356,6 +356,8 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                     .style("opacity", 1)
                     .style("z-index", 10)
                     .classed("clicked", false);
+
+                hideAnnotation();
             } else {
                 d3.select(this).classed("clicked");
                 var block_id = d.block_id;
@@ -365,14 +367,18 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                     .classed("clicked", function () {
                         if (d3.select(this).style("opacity") == 1) return true;
                         else return false;
-                    })
+                    });
 
                 svg.selectAll('line').filter(".linesBlock")
                     .style("opacity", function (d2) { return d2.block_id == block_id ? 1 : 0; })
                     .classed("clicked", function () {
                         if (d3.select(this).style("opacity") == 1) return true;
                         else return false;
-                    })
+                    });
+                // ANNOTATIONS
+                showAnnotation();
+                getAnnotationFrom(d.specie)
+                console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
             }
         });
     
@@ -459,7 +465,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
         .attr('class', 'chromosomeLabelText')
         .attr(getPositionAttribute('x', inverted), function(d) { let factor = (!inverted) ? 1 : 0.5; return xScale(d.x) + CHROMO_LABEL_OFFSET*factor + INTERCHROMOSOME_SPACE*(d.index); })
         .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie) })
-        .text(function(d) { return 'Chr ' + d.chromosome })
+        .text(function(d) { return 'Chr ' + d.chromosome });
         //.attr("transform", function(d) { let offset = (d.x == 0) ? -1 : 1, newX =  xScale(d.x) + CHROMO_LABEL_OFFSET*offset; return "rotate(-45, " + newX + ", " + yScale(d.specie) + ")" });
 
     var speciesLabels = svg.selectAll('specieLabel')
@@ -473,7 +479,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
         .attr(getPositionAttribute('y', inverted), function(d) { let factor = (!inverted) ? 1 : -1; return yScale(d) + SPECIES_LABEL_OFFSET_Y*factor })
         .text(function(d) { return d })
         .attr("transform", function(d) {
-            if(!inverted) return "rotate(-90, " + SPECIES_LABEL_OFFSET_X + ", " + (yScale(d)+SPECIES_LABEL_OFFSET_Y) + ")"
+            if(!inverted) return "rotate(-90, " + SPECIES_LABEL_OFFSET_X + ", " + (yScale(d)+SPECIES_LABEL_OFFSET_Y) + ")";
             else return "translate(0,0)"
         });
 
@@ -496,8 +502,8 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
             chromos = chromosomes[specieIndex],
             added_space = 0;
         for(chrIndex in chromos){
-            let chr = chromos[chrIndex]
-            curr_len = lengths[specie][chr]
+            let chr = chromos[chrIndex];
+            curr_len = lengths[specie][chr];
             baselineData.push({'specie': specie, 'chromosome': chr, 'x1': added_space, 'x2': curr_len, 'index': parseInt(chrIndex)});
             added_space += curr_len
         }
@@ -510,7 +516,7 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
     for(eventIndex in events){
         let event = events[eventIndex];
         let currentColor = "#" + fullColorHex(R_color[eventIndex%R_color.length], G_color[eventIndex%R_color.length], B_color[eventIndex%R_color.length]);
-        let combinationColors = tinycolor(currentColor).analogous(results = event.blocks.length*MULTIPLIER, N_SLICES)
+        let combinationColors = tinycolor(currentColor).analogous(results = event.blocks.length*MULTIPLIER, N_SLICES);
         let colorPrefix = PREFIX_FACTOR*event.blocks.length;
 
         for(blockIndex in event.blocks){
@@ -521,7 +527,7 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
                 eventsColor = (modifier == 2) ? eventsColor.saturate().toHexString() : eventsColor;
            
             for(blockInfoIndex in blocks){
-                let block_info = blocks[blockInfoIndex]
+                let block_info = blocks[blockInfoIndex];
 
                 let specieXIndex = species.indexOf(block_info.info.spX), chrXIndex =  chromosomes[specieXIndex].indexOf(block_info.info.chrX),
                     specieYIndex = species.indexOf(block_info.info.spY), chrYIndex =  chromosomes[specieYIndex].indexOf(block_info.info.chrY),
@@ -545,21 +551,21 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
                     'specieIndex': specieXIndex, 'chromoIndex': chrXIndex, 'color': eventsColor,
                     'x1': x1, 'x2': x2,
                     'prepend': prepends[block_info.info.spX][chrXIndex], 'y_gap': chrX_y_gap
-                })
+                });
 
                 eventData.push({
                     'block_id': blockID, 'specie': block_info.info.spY, 'chromosome': block_info.info.chrY,
                     'specieIndex': specieYIndex, 'chromoIndex': chrYIndex, 'color': eventsColor,
                     'x1': y1, 'x2': y2,
                     'prepend': prepends[block_info.info.spY][chrYIndex], 'y_gap': chrY_y_gap
-                })
+                });
 
                 bottomLines.push({
                     'block_id': blockID, 'specie': block_info.info.spX, 'color': eventsColor,
                     'specieIndex': specieXIndex, 'chromoIndex': chrXIndex,
                     'x1': x1, 'x2': x2,
                     'prepend': prepends[block_info.info.spX][chrXIndex]
-                })
+                });
 
                 upperLines.push({
                     'block_id': blockID, 'specie': block_info.info.spY, 'color': eventsColor,
@@ -607,25 +613,25 @@ function getArrayOfSumsFromDict(array_dict){
 }
 
 function getSumOfDictValuesFromDict(array_dict){
-    let sums = {}
+    let sums = {};
     Object.entries(array_dict).map(function(key_val){ sums[key_val[0]] = Object.values(key_val[1]).reduce( (a, b) => a + b) });
     return sums;
 }
 
 function getMaxOfDictValuesFromDict(array_dict){
-    let objects = []
-    Object.values(array_dict).map(function(array){ Object.values(array).map( o => objects.push(o) ) })
+    let objects = [];
+    Object.values(array_dict).map(function(array){ Object.values(array).map( o => objects.push(o) ) });
     return Math.max.apply(Math, Object.values( objects.map(function(o) { return o; }) ))
 }
 
 function getPositionAttribute(attribute, inverted){
-    if(!inverted) return attribute
+    if(!inverted) return attribute;
     else { //width, height, x1, x2, x, y1, y2, y
         let ret;
-        if(attribute.includes('x')) ret = attribute.replace('x','y')
-        else if (attribute.includes('y')) ret = attribute.replace('y','x')
-        else if (attribute.includes('width')) ret = attribute.replace('width','height')
-        else if (attribute.includes('height')) ret = attribute.replace('height','width')
+        if(attribute.includes('x')) ret = attribute.replace('x','y');
+        else if (attribute.includes('y')) ret = attribute.replace('y','x');
+        else if (attribute.includes('width')) ret = attribute.replace('width','height');
+        else if (attribute.includes('height')) ret = attribute.replace('height','width');
         return ret;
     }
 }
@@ -691,7 +697,7 @@ $("#downloadDataButton").click(function() {
     element.setAttribute('href', encodeDataToURI(data));
     element.setAttribute('download', filename);
     element.click();
-})
+});
 
 $("#myModal").draggable({
     handle: ".modal-header"
@@ -707,7 +713,7 @@ function generateBlockInfos(){
         for(blockIndex in event.blocks){
             let blocks = event.blocks[blockIndex];
             for(blockInfoIndex in blocks){
-                let block_info = blocks[blockInfoIndex]
+                let block_info = blocks[blockInfoIndex];
                 let x1 = block_info.overlap.x1, x2 = block_info.overlap.x2,
                     y1 = block_info.overlap.y1, y2 = block_info.overlap.y2;
                 let currentCond = (block_info.overlap.inverted == true),
@@ -725,7 +731,7 @@ function generateBlockInfos(){
                 blockInfos.push({
                     'block_id': blockID, 'specie': block_info.info.spX, 'chromosome': block_info.info.chrX,
                     'x1': x1, 'x2': x2, 'strand': strandX
-                })
+                });
 
                 blockInfos.push({
                     'block_id': blockID, 'specie': block_info.info.spY, 'chromosome': block_info.info.chrY,
@@ -739,9 +745,9 @@ function generateBlockInfos(){
 }
 
 function generateBlockTable(blockInfos, filter=""){
-    let modalBody = document.getElementById('blockInfoTableBody'); let HTMLText = ""
+    let modalBody = document.getElementById('blockInfoTableBody'); let HTMLText = "";
 
-    DOWNLOADABLE.traced = $.extend(true, [], blockInfos)
+    DOWNLOADABLE.traced = $.extend(true, [], blockInfos);
     for(block of blockInfos){
         HTMLText += "<tr> <th>" + block.block_id + "</th> <td>" + block.specie + "</td> <td>" + block.chromosome + "</td> <td>" + block.x1 + "</td> <td>" + block.x2 + "</td> <th>" + block.strand + "</td> </tr>"
     }
@@ -750,12 +756,12 @@ function generateBlockTable(blockInfos, filter=""){
 }
 
 function generateSpecificZonesTable(blockInfos){
-    let modalBody = document.getElementById('specificZoneInfoTableBody'); let HTMLText = ""
-    let zoneInfos = generateSpecificZones(blockInfos)
+    let modalBody = document.getElementById('specificZoneInfoTableBody'); let HTMLText = "";
+    let zoneInfos = generateSpecificZones(blockInfos);
 
-    DOWNLOADABLE.specific = $.extend(true, [], zoneInfos)
+    DOWNLOADABLE.specific = $.extend(true, [], zoneInfos);
     for(i in zoneInfos){
-        block = zoneInfos[i]
+        block = zoneInfos[i];
         HTMLText += "<tr> <th>" + i + "</th> <td>" + block.specie + "</td> <td>" + block.chromosome + "</td> <td>" + block.x + "</td> <td>" + block.y + "</td> </tr>"
     }
 
@@ -775,11 +781,11 @@ function generateSpecificZones(blockInfos){
     }
 
     let lengths = [[], []];
-    Object.entries(BLOCK_TRACER_PARAMS.results.lengths).slice(0,2).forEach(function(x,i){ lengths[i] = Object.values(x[1]) } )
+    Object.entries(BLOCK_TRACER_PARAMS.results.lengths).slice(0,2).forEach(function(x,i){ lengths[i] = Object.values(x[1]) } );
 
     for(spBlockIndex in sortedBlocks){
         for(chrBlockIndex in sortedBlocks[spBlockIndex]){
-            let chrBlocks = sortedBlocks[spBlockIndex][chrBlockIndex]
+            let chrBlocks = sortedBlocks[spBlockIndex][chrBlockIndex];
             if(typeof chrBlocks != "undefined"){
                 //chrBlocks.sort(function(a,b) { return (a.x1 < b.x1) ? -1 : 1 } )
                 let tmpObj = chrBlocks.reduce( ( acc, c ) =>  Object.assign(acc, {[c.x1]:c.x2}) , {});
@@ -813,7 +819,7 @@ function blockTracerBaseConfig(){
 
 function showConnectionLines() {
     $("#showConnectionLines").children().attr('icon', 'eye-close');
-    document.getElementById('connectionLineText').innerHTML = "Hide connection lines"
+    document.getElementById('connectionLineText').innerHTML = "Hide connection lines";
 
     let svg = d3.select(".blocktracer > svg");
     svg.selectAll("rect").filter(".tracedBlock").style("opacity", 1);
@@ -825,7 +831,7 @@ function showConnectionLines() {
 
 function hideConnectionLines() {
     $("#showConnectionLines").children().attr('icon', 'eye-open');
-    document.getElementById('connectionLineText').innerHTML = "Show connection lines"
+    document.getElementById('connectionLineText').innerHTML = "Show connection lines";
     let svg = d3.select(".blocktracer > svg");
     svg.selectAll("rect").filter(".tracedBlock").style("opacity", 1);
     svg = svg.selectAll('line');
@@ -850,13 +856,13 @@ function fitBlockTracer(){
         blocktracerDiv = $(".blocktracer");
 
 	var bb=svg[0].getBBox();
-	var bbx=bb.x
-	var bby=bb.y
-	var bbw=bb.width
-	var bbh=bb.height
+	var bbx=bb.x;
+	var bby=bb.y;
+	var bbw=bb.width;
+	var bbh=bb.height;
 	//---center of graph---
-	var cx=bbx+.5*bbw
-	var cy=bby+.5*bbh
+	var cx=bbx+.5*bbw;
+	var cy=bby+.5*bbh;
     //---create scale: ratio of desired width/height vs current width/height--
 	var width_total = blocktracerDiv.width();
     var height_total = blocktracerDiv.height();
@@ -866,10 +872,66 @@ function fitBlockTracer(){
 
     var scaleX = width_total/curr_width; //--if height use myHeight/bbh--
     var scaleY = height_total/curr_height;
-    if(scaleX < scaleY) scale=scaleX; else scale=scaleY
+    if(scaleX < scaleY) scale=scaleX; else scale=scaleY;
 	//---move its center to target x,y --- translate("+transX+" "+transY+") 
-	var transX=cx*(scale-1)
-    var transY=cy*(scale-1)
+	var transX=cx*(scale-1);
+    var transY=cy*(scale-1);
 
 	svg[0].setAttribute("transform","translate("+transX+","+transY+")scale("+scale+","+scale+")")
+}
+
+
+// ANNOTATION
+
+function showAnnotation() {
+    $('#annotation-sidebar-wrapper').show();
+}
+
+function hideAnnotation() {
+    $('#annotation-sidebar-wrapper').hide();
+}
+
+function getAnnotationTest(){
+    $.ajax({
+        type: "GET",
+        url: "http://localhost:8000/xcout/API/annotations/",
+        data: {
+            specie: 'PONAB'
+        },
+        success: function(response) {
+            populateTable(response, '#annotation-tbody');
+        }
+    });
+}
+
+function getAnnotationFrom(species){
+    $.ajax({
+        type: "GET",
+        url: "http://localhost:8000/xcout/API/annotations/",
+        data: {
+            specie: species
+        },
+        success: function(response) {
+            populateTable(response, '#annotation-tbody');
+        }
+    });
+}
+
+function populateTable(response, table){
+    $(table).empty();
+    let parsed = JSON.parse(response);
+    $.each(parsed, function(index) {
+        let data = parsed[index];
+        let row = $('<tr>')
+            .append($('<th>')
+                .attr('scope', 'row')
+                .text(data.gen_x + '..' + data.gen_y))
+            .append($('<td>')
+                .text(data.gen_y - data.gen_x))
+            .append($('<td>')
+                .text(data.product))
+            .append($('<td>')
+                .text(data.note));
+        $(table).append(row);
+    });
 }

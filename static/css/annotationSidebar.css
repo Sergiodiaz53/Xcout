@@ -1,0 +1,28 @@
+#annotation-sidebar-wrapper {
+  /*min-height: 100vh;
+  margin-left: -15rem;*/
+  /*margin-top: 50px;*/
+  height: 100%;
+  padding: 10px;
+  width: 400px;
+
+  /* Force scrollable sidebar */
+  max-height: 100vh;
+  overflow: auto;
+
+  /* Sidebar is hidden by default */
+  display: none;
+  right: 0;
+  /* Overlays current page */
+  position: fixed;
+}
+
+#annotation-top {
+  /*position: fixed;*/
+}
+
+#annotation-content {
+  /*margin-top: 100px;
+  padding: none;*/
+}
+

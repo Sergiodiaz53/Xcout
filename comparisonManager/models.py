@@ -35,8 +35,11 @@ class Annotation(models.Model):
     specie = models.ForeignKey(Specie, on_delete=models.CASCADE)
     gen_x = models.BigIntegerField(null=False)
     gen_y = models.BigIntegerField(null=False)
-    locus_tag = models.CharField(max_length=20)
-    db_xref = models.CharField(max_length=20)
+    #locus_tag = models.CharField(max_length=20)
+    #db_xref = models.CharField(max_length=20)
+    product = models.CharField(max_length=200, default="No data found.")
+    note = models.CharField(max_length=200, default="No data found.")
 
     def __str__(self):
-        return u'Specie: %s | %s:%s Locus: %s XRef: %s' % (self.specie, str(self.gen_x), str(self.gen_y), self.locus_tag, self.db_xref)
+        return u'Specie: %s | %s:%s | Product: %s | Note: %s' % (self.specie, str(self.gen_x), str(self.gen_y), self.product, self.note)
+        #return u'Specie: %s | %s:%s Locus: %s XRef: %s' % (self.specie, str(self.gen_x), str(self.gen_y), self.locus_tag, self.db_xref)

@@ -84,7 +84,7 @@ def generateJSONAnnotationFromSpecie(request):
     jsonAnnotationList = list(annotations.values())
     #jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
     
-    return JsonResponse(jsonAnnotationList, safe=False)
+    return JsonResponse(json.dumps(jsonAnnotationList), safe=False)
 
 
 @api_view(['GET'])
