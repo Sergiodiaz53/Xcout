@@ -72,6 +72,7 @@ def generateJSONChromosomesFromSpecie(request):
     
     return JsonResponse(json.dumps(jsonChromosomeList), safe=False)
 
+# ANNOTATION
 
 @api_view(['GET'])
 @authentication_classes([])
@@ -79,13 +80,34 @@ def generateJSONChromosomesFromSpecie(request):
 def generateJSONAnnotationFromSpecie(request):
     specie = request.GET.get('specie', '')
 
-    annotations = Annotation.objects.all().filter(specie__name = specie).order_by('gen_x')
+    annotations = Annotation.objects.all().filter(specie__name=specie).order_by('gen_x')
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())
-    #jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
-    
+    # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
+
     return JsonResponse(json.dumps(jsonAnnotationList), safe=False)
 
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def generateJSONAnnotationFromSpecieBetweenPositions(request):
+    specie = request.GET.get('specie', '')
+    gen_x = request.GET.get('gen_x', '')
+    gen_y = request.GET.get('gen_y', '')
+
+    annotations = Annotation.objects.all().filter(
+            specie__name=specie,
+            gen_x__gte=gen_x,
+            gen_y__lte=gen_y
+        ).order_by('gen_x')
+    # You MUST convert QuerySet to List object
+    jsonAnnotationList = list(annotations.values())
+    # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
+
+    return JsonResponse(json.dumps(jsonAnnotationList), safe=False)
+
+# ============
 
 @api_view(['GET'])
 @authentication_classes([])

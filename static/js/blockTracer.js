@@ -377,7 +377,8 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                     });
                 // ANNOTATIONS
                 showAnnotation();
-                getAnnotationFrom(d.specie)
+                getAnnotationFrom(d.specie);
+                appendInfo(d.specie, d.x1, d.x2);
                 console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
             }
         });
@@ -894,7 +895,7 @@ function hideAnnotation() {
 function getAnnotationTest(){
     $.ajax({
         type: "GET",
-        url: "http://localhost:8000/xcout/API/annotations/",
+        url: "http://localhost:8000/xcout/API/annotation_test/",
         data: {
             specie: 'PONAB'
         },
@@ -904,12 +905,14 @@ function getAnnotationTest(){
     });
 }
 
-function getAnnotationFrom(species){
+function getAnnotationFrom(species, gen_x, gen_y){
     $.ajax({
         type: "GET",
-        url: "http://localhost:8000/xcout/API/annotations/",
+        url: "http://localhost:8000/xcout/API/annotation_between/",
         data: {
-            specie: species
+            specie: species,
+            gen_x: gen_x,
+            gen_y: gen_y
         },
         success: function(response) {
             populateTable(response, '#annotation-tbody');
@@ -934,4 +937,13 @@ function populateTable(response, table){
                 .text(data.note));
         $(table).append(row);
     });
+}
+
+function appendInfo(species, gen_x, gen_y){
+    $('#annotation-species').empty()
+        .append('<small class="text-muted">Species: </small>')
+        .append(species);
+    $('#annotation-fragment').empty()
+        .append('<small class="text-muted">Fragment coordinates: </small>')
+        .append(gen_x + '..' + gen_y);
 }
