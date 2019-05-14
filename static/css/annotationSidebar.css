@@ -1,28 +1,35 @@
 #annotation-sidebar-wrapper {
-  /*min-height: 100vh;
-  margin-left: -15rem;*/
-  /*margin-top: 50px;*/
-  height: 100%;
-  padding: 10px;
-  width: 400px;
+    height: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: 500px;
 
-  /* Force scrollable sidebar */
-  max-height: 100vh;
-  overflow: auto;
+    /* Force scrollable sidebar */
+    max-height: 100vh;
+    overflow: auto;
 
-  /* Sidebar is hidden by default */
-  display: none;
-  right: 0;
-  /* Overlays current page */
-  position: fixed;
+    /* Sidebar is hidden by default */
+    display: none;
+    right: 0;
+
+    /* Overlays current page */
+    position: fixed;
+
+    background-color: white;
+}
+
+#annotation-table {
+    /*margin-top: 100px;
+    padding: none;*/
+    /*width: 100%;*/
 }
 
 #annotation-top {
-  /*position: fixed;*/
+    /*position: fixed;*/
 }
 
-#annotation-content {
-  /*margin-top: 100px;
-  padding: none;*/
+.highlight {
+    background-color: crimson;
+    color: white;
 }
 

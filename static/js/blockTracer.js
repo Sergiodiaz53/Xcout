@@ -240,6 +240,9 @@ var SPECIES_LABEL_OFFSET_X = -60;
 var SPECIES_LABEL_OFFSET_Y = 40;
 var MINIMUM_CHROMOSOME_PIXELS = 800;
 
+var selectedBlock, svgInverted;
+
+
 function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     var MAX_SPECIES_LENGTHS = getSumOfDictValuesFromDict(lengths),
         //MAX_CHROMOSOME_LENGTH = getMaxOfDictValuesFromDict(lengths),
@@ -269,8 +272,10 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     // -------- 
     // Scales
     //Set ColorScale
-    var widthDomain = [0, MAX_FULL_LENGTH], widthRange = [0, WIDTH - (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES)],
-        heightDomain = species, heightRange = [25, HEIGHT];
+    var widthDomain = [0, MAX_FULL_LENGTH],
+        widthRange = [0, WIDTH - (INTERCHROMOSOME_SPACE*MAX_CHROMOSOME_PER_SPECIES)],
+        heightDomain = species,
+        heightRange = [25, HEIGHT];
 
     //Set Scales
     var xScale = d3.scale.linear()
@@ -341,48 +346,89 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
         .data(preparedData.eventData)
         .enter().append('g').classed('blockInfo', true);
 
-        // Draw blocks
-        tracedBlocks.append('rect')
-        .attr('class', function(d) { return 'tracedBlock block'+d.block_id} )
-        .attr(getPositionAttribute('x', inverted), function(d) { return  xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*(d.chromoIndex); })/*s[d.specie] */ 
+    // Draw blocks
+    tracedBlocks.append('rect')
+    .attr('class', function(d) { return 'tracedBlock block'+d.block_id} )
+    .attr(getPositionAttribute('x', inverted), function(d) {
+        return xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*(d.chromoIndex);
+        //paintAnnotation(tracedBlocks, d.specie, pos_x, yScale(d.specie) + d.y_gap, xScale(2713156), xScale(2813156));
+        //return  pos_x;
+    })/*s[d.specie] */
+    .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie) + d.y_gap; })
+    .attr(getPositionAttribute('width', inverted), function(d) { return xScale(d.x2)-xScale(d.x1); })/*s[d.specie]*/
+    .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT)
+    .attr('fill', function(d) { return d.color }) //preparedData.colors[d.block_id]
+    .on("click", function(d) {
+        //ANNOTATION
+        hideConnectionLines();
+        selectedBlock = d3.select(this);
+        // get object from DOM object bound
+        //selectedBlock.text( function (d) { console.log(d); return d; });
+        // or
+        //selectedBlock.each(function(d){ console.log('each',d); });
+        // get attributes of rect object
+        //console.log(selectedBlock.attr('x'));
+
+        svgInverted = inverted;
+
+        if(d3.select(this).classed("clicked")){
+            svg.selectAll("rect")
+                .style("opacity", 1)
+                .style("z-index", 10)
+                .classed("clicked", false);
+
+            // ANNOTATION
+            hideAnnotation();
+            d3.selectAll('#annotation_block').remove();
+        } else {
+            d3.select(this).classed("clicked");
+            var block_id = d.block_id;
+            svg.selectAll("rect").filter(".tracedBlock")
+                .style("opacity", function (d2) { return d2.block_id == block_id ? 1 : 0.3; })
+                .style("z-index", function (d2) { return d2.block_id == block_id ? 10 : 1 })
+                .classed("clicked", function () {
+                    if (d3.select(this).style("opacity") == 1) return true;
+                    else return false;
+                });
+
+            svg.selectAll('line').filter(".linesBlock")
+                .style("opacity", function (d2) { return d2.block_id == block_id ? 1 : 0; })
+                .classed("clicked", function () {
+                    if (d3.select(this).style("opacity") == 1) return true;
+                    else return false;
+                });
+            // ANNOTATION
+            showAnnotation();
+            getAnnotationFrom(d.specie, d.x1, d.x2);
+            appendInfo(d.specie, d.x1, d.x2);
+            //console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
+
+            //let pos_x1 = xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE * d.chromoIndex;
+            //let pos_y = yScale(d.specie) + d.y_gap;
+
+            //paintAnnotation(tracedBlocks, inverted, pos_x1, pos_y, xScale(10013156), xScale(27713156));
+        }
+    });
+
+    // INICIO DE BLOQUE
+    tracedBlocks.append('rect')
+        .attr(getPositionAttribute('x', inverted), function(d) {
+            /*console.log("--- DEBUG ANNO2 ---");
+            console.log("BlockID: ", d.block_id);
+            console.log("Starting point: ", xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*(d.chromoIndex));
+            console.log("prepend: ", d.prepend);//Espacio acumulado de los anteriores cromosomas
+            console.log("xScale: ", xScale(d.prepend + d.x1));
+            console.log("without_xScale: ", d.prepend + d.x1);
+            console.log("interchromosome_space: ",INTERCHROMOSOME_SPACE);
+            console.log("chromoIndex:", (d.chromoIndex));*/
+            return  xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*(d.chromoIndex);
+        })/*s[d.specie] */
         .attr(getPositionAttribute('y', inverted), function(d) { return yScale(d.specie) + d.y_gap; })
-        .attr(getPositionAttribute('width', inverted), function(d) { return xScale(d.x2)-xScale(d.x1); })/*s[d.specie]*/
+        .attr(getPositionAttribute('width', inverted), 1)/*s[d.specie]*/
         .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT)
-        .attr('fill', function(d) { return d.color }) //preparedData.colors[d.block_id]
-        .on("click", function(d) {
-            hideConnectionLines();
-            if(d3.select(this).classed("clicked")){
-                svg.selectAll("rect")
-                    .style("opacity", 1)
-                    .style("z-index", 10)
-                    .classed("clicked", false);
+        .attr('fill', "black" );
+    // -------------------
 
-                hideAnnotation();
-            } else {
-                d3.select(this).classed("clicked");
-                var block_id = d.block_id;
-                svg.selectAll("rect").filter(".tracedBlock")
-                    .style("opacity", function (d2) { return d2.block_id == block_id ? 1 : 0.3; })
-                    .style("z-index", function (d2) { return d2.block_id == block_id ? 10 : 1 })
-                    .classed("clicked", function () {
-                        if (d3.select(this).style("opacity") == 1) return true;
-                        else return false;
-                    });
-
-                svg.selectAll('line').filter(".linesBlock")
-                    .style("opacity", function (d2) { return d2.block_id == block_id ? 1 : 0; })
-                    .classed("clicked", function () {
-                        if (d3.select(this).style("opacity") == 1) return true;
-                        else return false;
-                    });
-                // ANNOTATIONS
-                showAnnotation();
-                getAnnotationFrom(d.specie);
-                appendInfo(d.specie, d.x1, d.x2);
-                console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
-            }
-        });
-    
     // DEBUG :: console.log("--- DEBUG5 ---"); console.log(tracedBlocks);
     // --------
     // Draw blocks and connection lines
@@ -493,7 +539,9 @@ function prepareBlockTracerData(species, chromosomes, lengths, events, prepends)
     let baselineData = [], eventData = [], bottomLines = [], upperLines = [], connectionLines = [], singleConnectionLines = [], chromoLabels = [];
     // Chromosome Labels
     Object.entries(prepends).map(function(specie_prepends){
-        let specie = specie_prepends[0], chromos = chromosomes[species.indexOf(specie)], values = specie_prepends[1];
+        let specie = specie_prepends[0],
+            chromos = chromosomes[species.indexOf(specie)],
+            values = specie_prepends[1];
         for(i in values){ chromoLabels.push({'specie':specie, 'chromosome': chromos[i], 'x': values[i], 'index': i}) }
     });
 
@@ -882,7 +930,7 @@ function fitBlockTracer(){
 }
 
 
-// ANNOTATION
+// ANNOTATION =========================================================================
 
 function showAnnotation() {
     $('#annotation-sidebar-wrapper').show();
@@ -897,53 +945,141 @@ function getAnnotationTest(){
         type: "GET",
         url: "http://localhost:8000/xcout/API/annotation_test/",
         data: {
-            specie: 'PONAB'
+            species: 'PONAB'
         },
         success: function(response) {
-            populateTable(response, '#annotation-tbody');
+            populateTable(response, '#annotation-table');
         }
     });
 }
 
-function getAnnotationFrom(species, gen_x, gen_y){
+function getAnnotationFrom(species, gen_x1, gen_x2){
     $.ajax({
         type: "GET",
         url: "http://localhost:8000/xcout/API/annotation_between/",
         data: {
-            specie: species,
-            gen_x: gen_x,
-            gen_y: gen_y
+            species: species,
+            gen_x1: gen_x1,
+            gen_x2: gen_x2
         },
         success: function(response) {
-            populateTable(response, '#annotation-tbody');
+            populateTable(response, '#annotation-table');
         }
     });
 }
 
 function populateTable(response, table){
-    $(table).empty();
+    let tbody = $(table).children('tbody');
+    tbody.empty();
     let parsed = JSON.parse(response);
     $.each(parsed, function(index) {
         let data = parsed[index];
         let row = $('<tr>')
+            //.attr('class', 'clickable-row')
             .append($('<th>')
                 .attr('scope', 'row')
-                .text(data.gen_x + '..' + data.gen_y))
+                .attr('class', 'gen_x1')
+                .text(data.gen_x1))
+            .append($('<th>')
+                .attr('scope', 'row')
+                .attr('class', 'gen_x2')
+                .text(data.gen_x2))
             .append($('<td>')
-                .text(data.gen_y - data.gen_x))
+                .attr('class', 'length')
+                .text(data.gen_x2 - data.gen_x1))
             .append($('<td>')
+                .attr('class', 'product')
                 .text(data.product))
             .append($('<td>')
+                .attr('class', 'note')
                 .text(data.note));
-        $(table).append(row);
+        tbody.append(row);
     });
 }
 
-function appendInfo(species, gen_x, gen_y){
+function appendInfo(species, block_x1, block_x2){
     $('#annotation-species').empty()
         .append('<small class="text-muted">Species: </small>')
-        .append(species);
+        .append('<span class="block_species">' + species + '</span>');
     $('#annotation-fragment').empty()
         .append('<small class="text-muted">Fragment coordinates: </small>')
-        .append(gen_x + '..' + gen_y);
+        .append('<span class="block_pos_x1">' + block_x1 + '</span>..<span class="block_pos_x2">' + block_x2 + '</span>');
 }
+
+function paintAnnotation(block, inverted, annotation){
+    // get annotation range
+    let gen_x1 = annotation.find('.gen_x1').html();
+    let gen_x2 = annotation.find('.gen_x2').html();
+
+    // hay que comprobar si están invertidos
+    let escalated_x1 = parseInt(inverted ? block.attr('y') : block.attr('x'));
+    let escalated_width = inverted ? block.attr('height') : block.attr('width');
+    let escalated_x2 = escalated_width - escalated_x1;
+    let escalated_y = parseInt(inverted ? block.attr('x') : block.attr('y'));
+
+    // ESCALADO
+    // data bound to the DOM object(rect)
+    let block_x1 = block[0][0].__data__.x1;
+    let block_x2 = block[0][0].__data__.x2;
+    
+    // scale annotation size to the block size
+    let widthDomain = [block_x1, block_x2],
+        widthRange = [escalated_x1, escalated_x2];
+    
+    let blockScale = d3.scale.linear()
+        .domain(widthDomain)
+        .range(widthRange);
+    // lets invert the color of the annotation
+    let inverted_color = invertColor(block.attr('fill'));
+    
+    // attach the annotation somewhere 
+    d3.select('.blockInfo').append('rect')
+        .attr('id', 'annotation_block')
+        .attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
+        .attr(getPositionAttribute('y', inverted), function() { return escalated_y + 1.5; })
+        .attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
+        .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
+        .attr('fill', 'none')
+        .attr('stroke', inverted_color)
+        .attr('stroke-width','3px')
+        .attr('stroke-alignment','inside');
+}
+
+function invertColor(hex) {
+    if (hex.indexOf('#') === 0) {
+        hex = hex.slice(1);
+    }
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    if (hex.length !== 6) {
+        throw new Error('Invalid HEX color.');
+    }
+    // invert color components
+    var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+        g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+        b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+    return "#" + padZero(r) + padZero(g) + padZero(b);
+}
+
+function padZero(str, len) {
+    len = len || 2;
+    var zeros = new Array(len).join('0');
+    return (zeros + str).slice(-len);
+}
+
+// Highlight row / remove rect / paint
+$(document).ready(function() {
+    $('#annotation-table').on('click', 'tbody tr', function(event) {
+        //console.log(event);
+        let row = $(this);
+        if(row.hasClass('highlight')){
+            row.removeClass('highlight');
+            d3.selectAll('#annotation_block').remove();
+        } else {
+            d3.selectAll('#annotation_block').remove();
+            row.addClass('highlight').siblings().removeClass('highlight');
+            paintAnnotation(selectedBlock, svgInverted, row);
+        }
+    });
+});

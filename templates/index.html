@@ -291,23 +291,24 @@
     <!-- ANNOTATION SIDEBAR -->
 
 <div class="bg-light border-right" id="annotation-sidebar-wrapper">
-  <div class="bg-light" id="annotation-top">
+  <div id="annotation-top">
     <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotation()">Close</button>
     <button class="btn btn-primary" id="menu-toggle" onclick="getAnnotationTest()">Test</button>
     <p class="h4 text-center" id="annotation-species"></p>
     <p class="h5 text-center" id="annotation-fragment"></p>
   </div>
   <div id="annotation-content">
-    <table class="table table-sm table-striped table-hover table-bordered">
+    <table id="annotation-table" class="table table-sm table-bordered"> <!--table-striped table-hover-->
       <thead>
         <tr>
-          <th scope="col">Position</th>
+          <th scope="col">Start</th>
+          <th scope="col">End</th>
           <th scope="col">Length</th>
           <th scope="col">Product</th>
           <th scope="col">Note</th>
         </tr>
       </thead>
-      <tbody id="annotation-tbody">
+      <tbody>
 
       </tbody>
     </table>
