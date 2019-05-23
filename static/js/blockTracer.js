@@ -1043,23 +1043,27 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2){
     // get annotation range
     //let gen_x1 = annotation.find('.gen_x1').html();
     //let gen_x2 = annotation.find('.gen_x2').html();
-    console.log('block',block);
+    console.log('block----------------',block);
     // hay que comprobar si están invertidos
-    let escalated_x1 = parseInt(inverted ? block.attributes.y.value : block.attributes.x.value);
-    let escalated_width = inverted ? block.attributes.height.value : block.attributes.width.value;
-    let escalated_x2 = escalated_width - escalated_x1;
-    let escalated_y = parseInt(inverted ? block.attributes.x.value : block.attributes.y.value);
+    let escalated_x1 = parseFloat(inverted ? block.attributes.y.value : block.attributes.x.value);
+    let escalated_width = parseFloat(inverted ? block.attributes.height.value : block.attributes.width.value);
+    let escalated_x2 = escalated_width + escalated_x1;
+    let escalated_y = parseFloat(inverted ? block.attributes.x.value : block.attributes.y.value);
 
-    /*console.log('escalated_x1',escalated_x1);
-    console.log('escalated_width',escalated_width);
+    console.log('escalated_x1',escalated_x1);
     console.log('escalated_x2',escalated_x2);
+    console.log('escalated_width',escalated_width);
     console.log('escalated_y',escalated_y);
-    */
+
     // ESCALADO
     // data bound to the DOM object(rect)
     let block_x1 = block.__data__.x1;
     let block_x2 = block.__data__.x2;
-    
+
+
+    console.log('block_x1',block_x1);
+    console.log('block_x2',block_x2);
+
     // scale annotation size to the block size
     let widthDomain = [block_x1, block_x2],
         widthRange = [escalated_x1, escalated_x2];
@@ -1067,6 +1071,15 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2){
     let blockScale = d3.scale.linear()
         .domain(widthDomain)
         .range(widthRange);
+
+    console.log('blockScale(gen_x1)',blockScale(gen_x1));
+    console.log('gen_x1',gen_x1);
+    console.log('gen_x2 - gen_x1',gen_x2 - gen_x1);
+
+    console.log('x1:escalated_x1 + blockScale(gen_x1)', escalated_x1 + blockScale(gen_x1));
+    console.log('width:blockScale(gen_x2 - gen_x1)',blockScale(gen_x2 - gen_x1));
+    console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2)-blockScale(gen_x1));
+
     // lets invert the color for the annotation
     let inverted_color = invertColor(block.attributes.fill.value);
     //let inverted_color = 'red';
@@ -1076,9 +1089,11 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2){
     //d3.select('.blockInfo').append('rect')
     d3.select(parent).append('rect')
         .attr('id', 'annotation_block')
-        .attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
+        //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
+        .attr(getPositionAttribute('x', inverted), function() { return  blockScale(gen_x1); })
         .attr(getPositionAttribute('y', inverted), function() { return escalated_y + 1.5; })
-        .attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
+        //.attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
+        .attr(getPositionAttribute('width', inverted), function() { return  Math.abs(blockScale(gen_x2)-blockScale(gen_x1)); })
         .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
         .attr('fill', 'none')
         .attr('stroke', inverted_color)
@@ -1122,6 +1137,7 @@ $(document).ready(function() {
             let gen_x1 = row.find('.gen_x1').html();
             let gen_x2 = row.find('.gen_x2').html();
             paintAnnotation(selectedBlock[0][0], svgInverted, gen_x1, gen_x2);
+            console.log('LETS TRACE=============================    ');
             traceAnnotation(selectedBlock[0][0].__data__.specie, gen_x1, gen_x2, trace);
         }
     });

@@ -1,5 +1,5 @@
 # Xcout README
-#About
+## About
 ### Authors
 - Sergio Díaz del Pino 
 - Pablo Rodríguez Brazzarola
