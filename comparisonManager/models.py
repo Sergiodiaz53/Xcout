@@ -41,8 +41,8 @@ class Annotation(models.Model):
     gen_x2 = models.BigIntegerField(null=False)
     #locus_tag = models.CharField(max_length=20)
     #db_xref = models.CharField(max_length=20)
-    product = models.CharField(max_length=200, default="No data found.")
-    note = models.CharField(max_length=200, default="No data found.")
+    product = models.CharField(max_length=500, default="No data found.")
+    note = models.CharField(max_length=500, default="No data found.")
 
     def __str__(self):
         return u'Species: %s | %s:%s | Product: %s | Note: %s' % (self.species, str(self.gen_x1), str(self.gen_x2), self.product, self.note)

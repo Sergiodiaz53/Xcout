@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes, permission_classes
 import json
 import os
+from Bio import SeqIO
 
 from django.core.files.images import ImageFile
 import csv
@@ -100,12 +101,87 @@ def generateJSONAnnotationFromSpecieBetweenPositions(request):
             species__name=species,
             gen_x1__gte=gen_x1,
             gen_x2__lte=gen_x2
-        ).order_by('gen_x1')
+        ).order_by('gen_x1')[:50]
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())
     # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
 
     return JsonResponse(json.dumps(jsonAnnotationList), safe=False)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def loadAnnotations(request):
+    '''print('-------------------')
+    print(Specie.objects.all().values('name'))
+    print('-------------------')
+    print(Specie.objects.all().values('short_name'))
+    print('-------------------')
+    print(Specie.objects.all().values('accesion_number'))
+    print('-------------------')
+    print(species_name, gen_x1, gen_x2, product, note)
+    print('-------------------')'''
+
+    annotations_path = os.getcwd() + '/annotations/'
+    # output_path = os.getcwd() + '\\output\\'
+    annotation_file = [f.split('.')[0] for f in listdir(annotations_path) if isfile(join(annotations_path, f))]
+    print(annotation_file)
+    print(os.getcwd())
+
+    for genbank_file_name in listdir(annotations_path):
+        if isfile(join(annotations_path, genbank_file_name)):
+            print(genbank_file_name)
+
+            species_name = genbank_file_name.split('.')[0]
+            print(species_name)
+            species = Specie.objects.get(name=species_name)
+            print(species)
+
+            with open(annotations_path + genbank_file_name, 'r') as genbank_file:
+                # output_file.write(str(genbank_file_name) + '\n\n')
+                total = 0
+                sin_repetir = 0
+                for index, record in enumerate(SeqIO.parse(genbank_file, 'genbank')):
+                    features = [feature for feature in record.features if feature.type == 'CDS']
+                    i = 0
+                    anterior_start = -1
+                    anterior_end = -1
+
+                    for feature in features:
+                        # record.annotations['source']
+                        # print feature.qualifiers
+                        if anterior_start != int(feature.location.start) and \
+                                anterior_end != int(feature.location.end):
+                            sin_repetir += 1
+                            try:
+                                # print '\n NO ES NULO!! \n'
+                                Annotation.objects.create(species=species,
+                                                          gen_x1=int(feature.location.start),
+                                                          gen_x2=int(feature.location.end),
+                                                          product=feature.qualifiers['product'][0],
+                                                          note=feature.qualifiers['note'][0].replace(
+                                                              'Derived by automated computational analysis '
+                                                              'using gene prediction method:', 'By'))
+                                # output_file.write(str(ann) + '\n')
+                            except KeyError:
+                                # print '\n note ES TOPE NULO JODEEEEEEEEER!! \n'
+                                Annotation.objects.create(species=species,
+                                                          gen_x1=int(feature.location.start),
+                                                          gen_x2=int(feature.location.end),
+                                                          product=feature.qualifiers['product'][0])
+                                # output_file.write(str(ann) + '\n')
+                        anterior_start = int(feature.location.start)
+                        anterior_end = int(feature.location.end)
+                        i += 1
+
+                    total += i
+                    print('==> ANOTACIONES EN ' + record.id + ': ' + str(i))
+                    print('====> TOTAL ANOTACIONES: ' + str(total))
+                    print('====> TOTAL ANOTACIONES SIN REPETIR: ' + str(sin_repetir))
+                    print('====> SOBRAN: ' + str(total - sin_repetir))
+
+    return HttpResponse('OK', content_type="text/plain")
 
 # ============
 

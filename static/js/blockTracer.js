@@ -1032,7 +1032,7 @@ function populateTable(response, table){
 
 function appendInfo(species, block_x1, block_x2){
     $('#annotation-species').empty()
-        .append('<small class="text-muted">Species: </small>')
+        .append('<small class="text-muted">Selected species: </small>')
         .append('<span class="block_species">' + species + '</span>');
     $('#annotation-fragment').empty()
         .append('<small class="text-muted">Fragment coordinates: </small>')
@@ -1142,3 +1142,13 @@ $(document).ready(function() {
         }
     });
 });
+
+/*$(document).ready(function() {
+    $('#annotation-table').DataTable( {
+        "scrollX": true
+    } );
+} );*/
+/*
+$(function() {
+        $('#annotation-table').Lazy();
+    });*/

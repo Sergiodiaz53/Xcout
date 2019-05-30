@@ -11,4 +11,5 @@ urlpatterns = [
         url(r'^color_threshold/', functions.automaticColorThreshold, name="automaticColorThreshold"),
         url(r'^annotation_test/', functions.generateJSONAnnotationFromSpecie, name='generateJSONAnnotationFromSpecie'),
         url(r'^annotation_between/', functions.generateJSONAnnotationFromSpecieBetweenPositions, name='generateJSONAnnotationFromSpecieBetweenPositions'),
+        url(r'^loadAnnotations/', functions.loadAnnotations, name='loadAnnotations'),
 ]

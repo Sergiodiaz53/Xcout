@@ -7,7 +7,7 @@
     /* Force scrollable sidebar */
     max-height: 100vh;
     overflow: auto;
-
+    /*overflow-x: scroll;*/
     /* Sidebar is hidden by default */
     display: none;
     right: 0;
@@ -16,6 +16,9 @@
     position: fixed;
 
     background-color: white;
+
+    margin-top: -70px;
+    padding-top: 70px;
 }
 
 #annotation-table {
