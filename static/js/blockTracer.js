@@ -994,7 +994,7 @@ function traceAnnotation(species, gen_x1, gen_x2, blocks){
                 $.each(JSON.parse(annotations), function (index, annotation){
                     //console.log('block',block);
                     //console.log('$(block)',$(block));
-                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2);
+                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
                 });
             });
 
@@ -1107,7 +1107,7 @@ function appendInfo(species, block_x1, block_x2){
         .append('<span class="block_pos_x1">' + block_x1 + '</span>..<span class="block_pos_x2">' + block_x2 + '</span>');
 }
 
-function paintAnnotation(block, inverted, gen_x1, gen_x2){
+function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
     // get annotation range
     //let gen_x1 = annotation.find('.gen_x1').html();
     //let gen_x2 = annotation.find('.gen_x2').html();
@@ -1165,7 +1165,9 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2){
         .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
         .attr('fill', 'none')
         .attr('stroke', inverted_color)
-        .attr('stroke-width','3px');
+        .attr('stroke-width','3px')
+            .append("svg:title")
+                .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
 }
 
 function invertColor(hex) {
@@ -1204,7 +1206,8 @@ $(document).ready(function() {
             row.addClass('highlight').siblings().removeClass('highlight');
             let gen_x1 = row.find('.gen_x1').html();
             let gen_x2 = row.find('.gen_x2').html();
-            paintAnnotation(selectedBlock[0][0], svgInverted, gen_x1, gen_x2);
+            let product = row.find('.product').html();
+            paintAnnotation(selectedBlock[0][0], svgInverted, gen_x1, gen_x2, product);
             console.log('LETS TRACE=============================    ');
             traceAnnotation(selectedBlock[0][0].__data__.specie, gen_x1, gen_x2, trace);
         }
