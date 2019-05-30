@@ -102,6 +102,37 @@ def generateJSONAnnotationFromSpecieBetweenPositions(request):
             gen_x1__gte=gen_x1,
             gen_x2__lte=gen_x2
         ).order_by('gen_x1')[:50]
+    print(annotations)
+    # You MUST convert QuerySet to List object
+    jsonAnnotationList = list(annotations.values())
+    # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
+
+    return JsonResponse(json.dumps(jsonAnnotationList), safe=False)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
+    species = request.GET.get('species', '')
+    gen_x1 = request.GET.get('gen_x1', '')
+    gen_x2 = request.GET.get('gen_x2', '')
+    start = int(request.GET.get('start', ''))
+    end = int(request.GET.get('end', ''))
+
+    if start < 0:
+        annotations = Annotation.objects.all().filter(
+            species__name=species,
+            gen_x1__gte=gen_x1,
+            gen_x2__lte=gen_x2
+        ).order_by('-gen_x1')[abs(end):abs(start)]
+    else:
+        annotations = Annotation.objects.all().filter(
+                species__name=species,
+                gen_x1__gte=gen_x1,
+                gen_x2__lte=gen_x2
+            ).order_by('gen_x1')[start:end]
+    print(annotations)
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())
     # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])

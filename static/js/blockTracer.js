@@ -392,8 +392,14 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                     else return false;
                 });
             // ANNOTATION
-            showAnnotation();
+            /*showAnnotation();
             getAnnotationFrom(d.specie, d.x1, d.x2).done( function (response) {
+                appendInfo(d.specie, d.x1, d.x2);
+                populateTable(response, '#annotation-table');
+            });*/
+            showAnnotation();
+            resetPagination();
+            getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done( function (response) {
                 appendInfo(d.specie, d.x1, d.x2);
                 populateTable(response, '#annotation-table');
             });
@@ -1000,6 +1006,68 @@ function traceAnnotation(species, gen_x1, gen_x2, blocks){
         }
     });
 }
+
+// LAZY LOADING ===================================================
+function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end){
+    return $.ajax({
+        type: "GET",
+        url: "http://localhost:8000/xcout/API/annotation_between_paginated/",
+        data: {
+            species: species,
+            gen_x1: gen_x1,
+            gen_x2: gen_x2,
+            start: start,
+            end: end
+        }
+    });
+}
+
+var PAGE_SIZE = 8;
+var page_start = 0;
+var page_end = PAGE_SIZE;
+
+function resetPagination(){
+    page_start = 0;
+    page_end = PAGE_SIZE;
+}
+
+function nextAnnotationPage(){
+    page_start+=PAGE_SIZE;
+    page_end+=PAGE_SIZE;
+
+    let species = $(".block_species").html();
+    let gen_x1 = parseInt($(".block_pos_x1").html());
+    let gen_x2 = parseInt($(".block_pos_x2").html());
+
+    getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
+                //appendInfo(species, gen_x1, gen_x2);
+                if ($.trim(response)) {// si no está vacio
+                    populateTable(response, '#annotation-table');
+                } else {
+                    resetPagination()
+                }
+            });
+}
+
+function previousAnnotationPage(){
+    page_start-=PAGE_SIZE;
+    page_end-=PAGE_SIZE;
+
+    let species = $(".block_species").html();
+    let gen_x1 = parseInt($(".block_pos_x1").html());
+    let gen_x2 = parseInt($(".block_pos_x2").html());
+
+    getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
+                //appendInfo(species, gen_x1, gen_x2);
+                if ($.trim(response)) {// si no está vacio
+                    populateTable(response, '#annotation-table');
+                } else {
+                    resetPagination()
+                }
+            });
+}
+
+//==========================================================================
 
 function populateTable(response, table){
     let tbody = $(table).children('tbody');
