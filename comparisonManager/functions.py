@@ -185,34 +185,38 @@ def loadAnnotations(request):
                         if anterior_start != int(feature.location.start) and \
                                 anterior_end != int(feature.location.end):
                             sin_repetir += 1
+
                             try:
-                                # print '\n NO ES NULO!! \n'
-                                Annotation.objects.create(species=species,
-                                                          gen_x1=int(feature.location.start),
-                                                          gen_x2=int(feature.location.end),
-                                                          strand=int(feature.location.strand),
-                                                          product=feature.qualifiers['product'][0],
-                                                          note=feature.qualifiers['note'][0].replace(
-                                                              'Derived by automated computational analysis '
-                                                              'using gene prediction method:', 'By'))
-                                # output_file.write(str(ann) + '\n')
+                                product = feature.qualifiers['product'][0]
                             except KeyError:
-                                # print '\n note ES TOPE NULO JODEEEEEEEEER!! \n'
+                                product = 'Unknown'
+
+                            try:
+                                note = feature.qualifiers['note'][0].replace(
+                                    'Derived by automated computational analysis '
+                                    'using gene prediction method:', 'By')
+                            except KeyError:
+                                note = 'No note'
+
+                            try:
                                 Annotation.objects.create(species=species,
                                                           gen_x1=int(feature.location.start),
                                                           gen_x2=int(feature.location.end),
                                                           strand=int(feature.location.strand),
-                                                          product=feature.qualifiers['product'][0])
-                                # output_file.write(str(ann) + '\n')
+                                                          product=product,
+                                                          note=note)
+                            except KeyError:
+                                print('Exception: Missing annotation in position ' + str(i))
+
                         anterior_start = int(feature.location.start)
                         anterior_end = int(feature.location.end)
                         i += 1
 
                     total += i
                     print('==> ANOTACIONES EN ' + record.id + ': ' + str(i))
-                    print('====> TOTAL ANOTACIONES: ' + str(total))
-                    print('====> TOTAL ANOTACIONES SIN REPETIR: ' + str(sin_repetir))
-                    print('====> SOBRAN: ' + str(total - sin_repetir))
+                print('====> TOTAL ANOTACIONES: ' + str(total))
+                print('====> TOTAL ANOTACIONES SIN REPETIR: ' + str(sin_repetir))
+                print('====> SOBRAN: ' + str(total - sin_repetir))
 
     return HttpResponse('OK', content_type="text/plain")
 
