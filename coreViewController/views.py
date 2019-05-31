@@ -10,3 +10,9 @@ def contact(request):
 
 def help(request):
     return render(request, 'help.html')
+
+#=========================================================
+
+
+def test(request):
+    return render(request, 'test_annotation.html')

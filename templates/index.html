@@ -21,6 +21,9 @@
         
         <div class="col-sm-3 center-block">
             <div class="affix sidemenu">
+            <!-- ANNOTATION TEST -->
+            <button class="btn btn-primary" id="menu-toggle" onclick="showAnnotation()">Open annotation menu</button>
+            <!-- !ANNOTATION TEST -->
                 <!-- Functionalities Tabs -->
                 <ul class="nav nav-tabs nav-justified">
                     <li class="active"> <a href="#xcoutSideMenu" data-target="#xcoutSideMenu, #xcoutCanvas" data-toggle="tab" >XCout</a> </li>
@@ -283,5 +286,38 @@
     <script type="text/javascript" src="{% static "js/localComparison.js" %}"></script>
     <script type="text/javascript" src="{% static "js/overlayEvents.js" %}"></script>
     <script type="text/javascript" src="{% static "js/blockTracer.js" %}"></script>
+
+
+    <!-- ANNOTATION SIDEBAR -->
+
+<div class="bg-light border-right" id="annotation-sidebar-wrapper">
+  <div id="annotation-top">
+    <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotation()">Close</button>
+    <button class="btn btn-primary" id="menu-toggle" onclick="getAnnotationTest()">Test</button>
+    <button class="btn btn-success" id="menu-toggle" onclick="previousAnnotationPage()">Previous</button>
+    <button class="btn btn-success" id="menu-toggle" onclick="nextAnnotationPage()">Next</button>
+    <p class="h4 text-center" id="annotation-species"></p>
+    <p class="h5 text-center" id="annotation-fragment"></p>
+  </div>
+  <div id="annotation-content">
+    <table id="annotation-table" class="table table-sm table-bordered"> <!--table-striped table-hover-->
+      <thead>
+        <tr>
+          <th scope="col">Start</th>
+          <th scope="col">End</th>
+          <th scope="col">Length</th>
+          <th scope="col">Product</th>
+          <th scope="col">Note</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<link rel="stylesheet" href="{% static "css/annotationSidebar.css" %}">
+    <!--<script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>-->
 
 {% endblock %}
