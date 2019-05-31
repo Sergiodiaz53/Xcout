@@ -13,7 +13,6 @@ static/bower_components/*
 
 
 images/
-comparisonManager/migrations/*
 
 COPYALL.sh
 EXECUTE.sh
