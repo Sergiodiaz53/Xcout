@@ -944,10 +944,10 @@ function hideAnnotation() {
     $('#annotation-sidebar-wrapper').hide();
 }
 
-function getAnnotationTest(){
+/*function getAnnotationTest(){
     $.ajax({
         type: "GET",
-        url: "http://localhost:8000/xcout/API/annotation_test/",
+        url: FORCE_URL + "/API/annotation_test/",
         data: {
             species: 'PONAB'
         },
@@ -955,28 +955,12 @@ function getAnnotationTest(){
             populateTable(response, '#annotation-table');
         }
     });
-}
-/*
-function getAnnotationFrom(species, gen_x1, gen_x2, callback){
-    $.ajax({
-        type: "GET",
-        url: "http://localhost:8000/xcout/API/annotation_between/",
-        data: {
-            species: species,
-            gen_x1: gen_x1,
-            gen_x2: gen_x2
-        },
-        success: function(response) {
-            //populateTable(response, '#annotation-table');
-
-        }
-    });
 }*/
 
 function getAnnotationFrom(species, gen_x1, gen_x2){
     return $.ajax({
         type: "GET",
-        url: "http://localhost:8000/xcout/API/annotation_between/",
+        url: FORCE_URL + "/API/annotation_between/",
         data: {
             species: species,
             gen_x1: gen_x1,
@@ -1011,7 +995,7 @@ function traceAnnotation(species, gen_x1, gen_x2, blocks){
 function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end){
     return $.ajax({
         type: "GET",
-        url: "http://localhost:8000/xcout/API/annotation_between_paginated/",
+        url: FORCE_URL + "/API/annotation_between_paginated/",
         data: {
             species: species,
             gen_x1: gen_x1,
