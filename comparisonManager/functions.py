@@ -190,6 +190,7 @@ def loadAnnotations(request):
                                 Annotation.objects.create(species=species,
                                                           gen_x1=int(feature.location.start),
                                                           gen_x2=int(feature.location.end),
+                                                          strand=int(feature.location.strand),
                                                           product=feature.qualifiers['product'][0],
                                                           note=feature.qualifiers['note'][0].replace(
                                                               'Derived by automated computational analysis '
@@ -200,6 +201,7 @@ def loadAnnotations(request):
                                 Annotation.objects.create(species=species,
                                                           gen_x1=int(feature.location.start),
                                                           gen_x2=int(feature.location.end),
+                                                          strand=int(feature.location.strand),
                                                           product=feature.qualifiers['product'][0])
                                 # output_file.write(str(ann) + '\n')
                         anterior_start = int(feature.location.start)
