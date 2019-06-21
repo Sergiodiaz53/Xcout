@@ -12,7 +12,17 @@ class ComparisonAdmin(admin.ModelAdmin):
     search_fields = ('chromosome_x', 'chromosome_y')
     list_per_page = 20
 
+
+class AnnotationAdmin(admin.ModelAdmin):
+    list_display = ('species', 'gen_x1', 'gen_x2', 'strand', 'product', 'note')
+    list_display_links = ('species', 'gen_x1', 'gen_x2', 'strand', 'product', 'note')
+    list_filter = ('species', 'strand')
+    ordering = ['species']
+    # search_fields = ('species', 'strand')
+    list_per_page = 20
+
+
 admin.site.register(Specie)
 admin.site.register(Chromosome)
 admin.site.register(Comparison, ComparisonAdmin)
-admin.site.register(Annotation)
+admin.site.register(Annotation, AnnotationAdmin)

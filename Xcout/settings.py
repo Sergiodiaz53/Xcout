@@ -144,3 +144,6 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
 # Media files
 MEDIA_URL = '/xcout/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# higher than the count of fields
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000
