@@ -205,8 +205,11 @@ def loadAnnotations(request):
                                                           strand=int(feature.location.strand),
                                                           product=product,
                                                           note=note)
-                            except KeyError:
-                                print('Exception: Missing annotation in position ' + str(i))
+                            except Exception as e:
+                                print('Exception: Cannot create annotation in position ' + str(i) + ' - e: ' + str(e))
+                                # print(e.message, e.args)
+                            # except KeyError:
+                               # print('Exception: Missing annotation in position ' + str(i))
 
                         anterior_start = int(feature.location.start)
                         anterior_end = int(feature.location.end)
