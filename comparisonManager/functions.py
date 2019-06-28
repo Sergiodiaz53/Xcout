@@ -132,7 +132,7 @@ def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
                 gen_x1__gte=gen_x1,
                 gen_x2__lte=gen_x2
             ).order_by('gen_x1')[start:end]
-    print(annotations)
+    # print(annotations)
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())
     # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])

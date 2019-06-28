@@ -317,6 +317,32 @@
   </div>
 </div>
 
+    <!-- ANNOTATION SELECTION SIDEBAR -->
+
+<div class="border-right" id="annotation-selection-sidebar-wrapper">
+    <button class="btn btn-danger" id="menu-toggle" onclick="hideSelectedAnnotation()">Close</button>
+  <div id="annotation-selected">
+    <p class="h4 text-center" id="annotation-species"></p>
+      <table id="annotation-selected-table" class="table table-sm table-bordered">
+      <thead>
+        <tr>
+          <th scope="col">Start</th>
+          <th scope="col">End</th>
+          <th scope="col">Length</th>
+          <th scope="col">Product</th>
+          <th scope="col">Note</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+  <div id="annotation-others">
+
+  </div>
+</div>
+
 <link rel="stylesheet" href="{% static "css/annotationSidebar.css" %}">
     <!--<script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>-->
 
