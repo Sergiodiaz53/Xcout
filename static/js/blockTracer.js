@@ -975,17 +975,49 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks){
         //console.log(index + ':' + block.__data__);
         if(block.__data__.specie !== species){
             getAnnotationFrom(block.__data__.specie, gen_x1, gen_x2).done( function (annotations) {
-                //console.log('Annotations', annotations);
-                //Crear tabla
-                let newSpecieTable = createSpeciesTable(block.__data__.specie, gen_x1, gen_x2, '#annotation-others');
-                //popular tabla
-                populateTable(annotations, newSpecieTable); // tiene que llevar # en el id
+                let parsed = JSON.parse(annotations);
+                /*console.log('Annotations:', annotations);
+                console.log('Length:', annotations.length);
+                console.log('Size:', annotations.size);
+                console.log('Annotations:', Array.isArray(annotations));
+                console.log('==================');
+                console.log('Annotations:', parsed);
+                console.log('Length:', parsed.length);
+                console.log('Size:', parsed.size);
+                console.log('Annotations:', Array.isArray(parsed));*/
+                if(Array.isArray(parsed) && parsed.length === 0){
+                    console.log('No annotations found');
+                    $('#annotation-others')
+                        .append($('<p>')
+                        .attr('id', 'annotation-species')
+                        .attr('class', 'h4 text-center')
+                        .append($('<small>')
+                            .attr('class', 'text-muted')
+                            .text('Species: '))
+                        .append($('<span>')
+                            .attr('class', 'block_species')
+                            .text(block.__data__.specie))
 
-                $.each(JSON.parse(annotations), function (index, annotation){
-                    //console.log('block',block);
-                    //console.log('$(block)',$(block));
-                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
-                });
+                        .append($('<h5>')
+                        .text('No annotations found')
+                        ));
+                }else{
+                    let parsed = JSON.parse(annotations);
+                    //Crear tabla
+                    let newSpecieTableId = createSpeciesTable(block.__data__.specie, parsed.length, '#annotation-others');
+                    //poblar tabla
+                    console.log(newSpecieTableId);
+                    //newSpecieTableId = newSpecieTableId.replace('#annotation-selected-table ', '');
+                    console.log(newSpecieTableId);
+                    populateTable(annotations, newSpecieTableId); // tiene que llevar # en el id
+
+                    $.each(parsed, function (index, annotation){
+                        //console.log('block',block);
+                        //console.log('$(block)',$(block));
+                        paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
+                    });
+                }
+
             });
 
             /*let annotations = getAnnotationFrom(block.__data__.specie, gen_x1, gen_x2);
@@ -1080,23 +1112,34 @@ function hideSelectedAnnotation() {
     $('#annotation-selection-sidebar-wrapper').hide();
 }
 
-function createSpeciesTable(species, block_x1, block_x2, div){
+function createSpeciesTable(species, coincidences, div){
     $(div).append($('<p>')
         .attr('id', 'annotation-species')
         .attr('class', 'h4 text-center')
         .append($('<small>')
             .attr('class', 'text-muted')
-            .text('Selected species: '))
+            .text('Species: '))
         .append($('<span>')
             .attr('class', 'block_species')
             .text(species))
+    );
+
+    $(div).append($('<p>')
+        .attr('id', 'annotation-count')
+        .attr('class', 'h4 text-center')
+        .append($('<small>')
+            .attr('class', 'text-muted')
+            .text('Coincidences: '))
+        .append($('<span>')
+            .attr('class', 'block_coincidences')
+            .text(coincidences))
     );
 
     let tableId = 'annotation-table-' + species;
 
     $(div).append($('<table>')
         .attr('id', tableId)
-        .attr('class', 'table table-sm table-bordered')
+        .attr('class', 'table table-sm table-bordered annotation-comparison-tables')
         .append($('<thead>')
             .append($('<tr>')
                 .append($('<th>')
@@ -1117,6 +1160,7 @@ function createSpeciesTable(species, block_x1, block_x2, div){
         .append($('<tbody>'))
     );
 
+    //return '#annotation-comparison-tables #' + tableId;
     return '#' + tableId;
 }
 
@@ -1167,17 +1211,17 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
     // get annotation range
     //let gen_x1 = annotation.find('.gen_x1').html();
     //let gen_x2 = annotation.find('.gen_x2').html();
-    console.log('block----------------',block);
+    //console.log('block----------------',block);
     // hay que comprobar si están invertidos
     let escalated_x1 = parseFloat(inverted ? block.attributes.y.value : block.attributes.x.value);
     let escalated_width = parseFloat(inverted ? block.attributes.height.value : block.attributes.width.value);
     let escalated_x2 = escalated_width + escalated_x1;
     let escalated_y = parseFloat(inverted ? block.attributes.x.value : block.attributes.y.value);
 
-    console.log('escalated_x1',escalated_x1);
+    /*console.log('escalated_x1',escalated_x1);
     console.log('escalated_x2',escalated_x2);
     console.log('escalated_width',escalated_width);
-    console.log('escalated_y',escalated_y);
+    console.log('escalated_y',escalated_y);*/
 
     // ESCALADO
     // data bound to the DOM object(rect)
@@ -1185,8 +1229,8 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
     let block_x2 = block.__data__.x2;
 
 
-    console.log('block_x1',block_x1);
-    console.log('block_x2',block_x2);
+    /*console.log('block_x1',block_x1);
+    console.log('block_x2',block_x2);*/
 
     // scale annotation size to the block size
     let widthDomain = [block_x1, block_x2],
@@ -1196,13 +1240,13 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
         .domain(widthDomain)
         .range(widthRange);
 
-    console.log('blockScale(gen_x1)',blockScale(gen_x1));
+    /*console.log('blockScale(gen_x1)',blockScale(gen_x1));
     console.log('gen_x1',gen_x1);
     console.log('gen_x2 - gen_x1',gen_x2 - gen_x1);
 
     console.log('x1:escalated_x1 + blockScale(gen_x1)', escalated_x1 + blockScale(gen_x1));
     console.log('width:blockScale(gen_x2 - gen_x1)',blockScale(gen_x2 - gen_x1));
-    console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2)-blockScale(gen_x1));
+    console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2)-blockScale(gen_x1));*/
 
     // lets invert the color for the annotation
     let inverted_color = invertColor(block.attributes.fill.value);

@@ -15,13 +15,14 @@
     /* Overlays current page */
     position: fixed;
 
-    background-color: white;
+    background-color: #E7E7E7;
 
     margin-top: -70px;
     padding-top: 70px;
 }
 
 #annotation-table {
+    background-color: white;
     /*margin-top: 100px;
     padding: none;*/
     /*width: 100%;*/
@@ -60,6 +61,12 @@
     padding-top: 70px;
 }
 
-#annotation-selected {
+.annotation-comparison-tables {
+    /*background-color: crimson;*/
+    background-color: white;
+}
+
+#annotation-selected-table tbody tr{
     background-color: crimson;
+    color: white;
 }
