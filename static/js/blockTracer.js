@@ -1057,7 +1057,7 @@ function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end){
     });
 }
 
-var PAGE_SIZE = 8;
+var PAGE_SIZE = 10;
 var page_start = 0;
 var page_end = PAGE_SIZE;
 
@@ -1100,6 +1100,40 @@ function previousAnnotationPage(){
                     resetPagination()
                 }
             });
+}
+
+function getAnnotationsLength(species){
+   return $.ajax({
+        type: "GET",
+        url: FORCE_URL + "/API/annotation_length/",
+        data: {
+            species: species
+        }
+    });
+}
+
+function goToPage(form){
+    let species = $(".block_species").html();
+    let gen_x1 = parseInt($(".block_pos_x1").html());
+    let gen_x2 = parseInt($(".block_pos_x2").html());
+
+    let page = form.search;
+    let last_page = getAnnotationsLength(species)/PAGE_SIZE;
+
+    if ((page >= 0) && (page <= last_page)){
+        page_start += page;
+        page_end += page + PAGE_SIZE;
+
+
+        getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
+                    //appendInfo(species, gen_x1, gen_x2);
+                    if ($.trim(response)) {// si no está vacio
+                        populateTable(response, '#annotation-table');
+                    } else {
+                        resetPagination()
+                    }
+                });
+    }
 }
 
 // SELECTED ANNOTATION ===================================================

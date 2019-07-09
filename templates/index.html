@@ -292,10 +292,29 @@
 
 <div class="bg-light border-right" id="annotation-sidebar-wrapper">
   <div id="annotation-top">
-    <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotation()">Close</button>
+    <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotation()">
+        <span class="glyphicon glyphicon-remove"></span>
+    </button>
     <!--<button class="btn btn-primary" id="menu-toggle" onclick="getAnnotationTest()">Test</button>-->
-    <button class="btn btn-success" id="menu-toggle" onclick="previousAnnotationPage()">Previous</button>
-    <button class="btn btn-success" id="menu-toggle" onclick="nextAnnotationPage()">Next</button>
+    <button class="btn btn-success" id="menu-toggle" onclick="previousAnnotationPage()">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+    </button>
+    <button class="btn btn-success" id="menu-toggle" onclick="nextAnnotationPage()">
+        <span class="glyphicon glyphicon-chevron-right"></span>
+    </button>
+
+    <div class="search-container">
+        <form action="#" onsubmit="return goToPage(this);">
+            <input type="text" placeholder="Page" name="search">
+            <button type="submit">
+                <span class="glyphicon glyphicon-search">
+            </button>
+        </form>
+        <div id="search-info">
+            Page <span id="current-page"></span> of <span id="last-page"></span>
+        </div>
+    </div>
+
     <p class="h4 text-center" id="annotation-species"></p>
     <p class="h5 text-center" id="annotation-fragment"></p>
   </div>
@@ -320,7 +339,9 @@
     <!-- ANNOTATION SELECTION SIDEBAR -->
 
 <div class="border-right" id="annotation-selection-sidebar-wrapper">
-    <button class="btn btn-danger" id="menu-toggle" onclick="hideSelectedAnnotation()">Close</button>
+    <button class="btn btn-danger" id="menu-toggle" onclick="hideSelectedAnnotation()">
+        <span class="glyphicon glyphicon-remove"></span>
+    </button>
   <div id="annotation-selected">
     <p class="h4 text-center" id="annotation-species"></p>
       <table id="annotation-selected-table" class="table table-sm table-bordered">

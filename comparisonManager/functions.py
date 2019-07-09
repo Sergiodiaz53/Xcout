@@ -143,6 +143,14 @@ def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([])
+def getAnnotationsLength(request):
+    species = request.GET.get('species', '')
+    return Annotation.objects.all().filter(species__name=species).count()
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
 def loadAnnotations(request):
     '''print('-------------------')
     print(Specie.objects.all().values('name'))

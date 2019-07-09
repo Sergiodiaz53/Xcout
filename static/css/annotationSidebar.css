@@ -70,3 +70,20 @@
     background-color: crimson;
     color: white;
 }
+
+#annotation-sidebar-wrapper tbody{
+    font-size: 11px;
+}
+
+#annotation-selection-sidebar-wrapper tbody{
+    font-size: 11px;
+}
+
+#search-container {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+#search-container input{
+    width: 10px;
+}
