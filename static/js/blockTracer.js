@@ -402,7 +402,11 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
             getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done( function (response) {
                 appendInfo(d.specie, d.x1, d.x2, '#annotation-top');
                 populateTable(response, '#annotation-table');
+
+                $("#input-search").val(0);
+                showPageInfo(d.specie)
             });
+;
 
             trace = d3.selectAll('.tracedBlock.clicked');
             //console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
@@ -971,10 +975,28 @@ function getAnnotationFrom(species, gen_x1, gen_x2){
 
 function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks){
     $('#annotation-others').empty();
+
+    // Set data for relative search
+    let annotation_length = gen_x2 - gen_x1;
+    let distance_block_annotation = 0;
+    $.each(blocks[0] , function (index, block){
+        if(block.__data__.specie === species){
+            // Distance between block start and annotation start
+            distance_block_annotation = gen_x1 - block.__data__.x1;
+        }
+    });
+
     $.each(blocks[0] , function (index, block){
         //console.log(index + ':' + block.__data__);
         if(block.__data__.specie !== species){
-            getAnnotationFrom(block.__data__.specie, gen_x1, gen_x2).done( function (annotations) {
+            // Use relative location
+            let annotation_x1 = block.__data__.x1 + distance_block_annotation;
+            let annotation_x2 = annotation_x1 + annotation_length;
+            console.log('annotation_length: ' + annotation_length);
+            console.log('distance_block_annotation: ' + distance_block_annotation);
+            console.log('annotation_x1: ' + annotation_x1);
+            console.log('annotation_x2: ' + annotation_x2);
+            getAnnotationFrom(block.__data__.specie, annotation_x1, annotation_x2).done( function (annotations) {
                 let parsed = JSON.parse(annotations);
                 /*console.log('Annotations:', annotations);
                 console.log('Length:', annotations.length);
@@ -997,7 +1019,6 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks){
                         .append($('<span>')
                             .attr('class', 'block_species')
                             .text(block.__data__.specie))
-
                         .append($('<h5>')
                         .text('No annotations found')
                         ));
@@ -1074,13 +1095,27 @@ function nextAnnotationPage(){
     let gen_x1 = parseInt($(".block_pos_x1").html());
     let gen_x2 = parseInt($(".block_pos_x2").html());
 
+    //$("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
+    //showPageInfo(species);
+
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
                     populateTable(response, '#annotation-table');
+                    getAnnotationsLength(species).done( function (annotations_count) {
+                        if(page_start < 0) {
+                            $("#input-search").val(Math.ceil((annotations_count/PAGE_SIZE) + Math.ceil(page_start/PAGE_SIZE)));
+                        } else {
+                            $("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
+                        }
+                        showPageInfo(species);
+                        console.log('NEXT: page_start: ' + page_start + ' page_end: ' + page_end);
+                    });
                 } else {
                     resetPagination()
                 }
+
+                //console.log('NEXT: page_start: ' + page_start + ' page_end: ' + page_end);
             });
 }
 
@@ -1093,47 +1128,73 @@ function previousAnnotationPage(){
     let gen_x2 = parseInt($(".block_pos_x2").html());
 
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
-                //appendInfo(species, gen_x1, gen_x2);
-                if ($.trim(response)) {// si no está vacio
-                    populateTable(response, '#annotation-table');
+        //appendInfo(species, gen_x1, gen_x2);
+        if ($.trim(response)) {// si no está vacio
+            populateTable(response, '#annotation-table');
+            getAnnotationsLength(species).done( function (annotations_count) {
+                if(page_start < 0) {
+                    $("#input-search").val(Math.ceil((annotations_count/PAGE_SIZE) + Math.ceil(page_start/PAGE_SIZE)));
                 } else {
-                    resetPagination()
+                    $("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
                 }
+                showPageInfo(species);
+                console.log('PREVIOUS: page_start: ' + page_start + ' page_end: ' + page_end);
             });
+        } else {
+            resetPagination()
+        }
+    });
 }
 
 function getAnnotationsLength(species){
    return $.ajax({
         type: "GET",
-        url: FORCE_URL + "/API/annotation_length/",
+        url: FORCE_URL + "/API/annotation_count/",
         data: {
             species: species
         }
     });
 }
 
-function goToPage(form){
+function goToPage(){
     let species = $(".block_species").html();
     let gen_x1 = parseInt($(".block_pos_x1").html());
     let gen_x2 = parseInt($(".block_pos_x2").html());
+    let page = parseInt($("#input-search").val());
+    let current_page = parseInt($("#current-page").html());
 
-    let page = form.search;
-    let last_page = getAnnotationsLength(species)/PAGE_SIZE;
+    getAnnotationsLength(species).done( function (annotations_count) {
+        let last_page = Math.ceil(annotations_count/PAGE_SIZE);
 
-    if ((page >= 0) && (page <= last_page)){
-        page_start += page;
-        page_end += page + PAGE_SIZE;
+        //console.log('species: ' + species + ' gen_x1: ' + gen_x1 + ' gen_x2: ' + gen_x2 + ' page: ' + page + ' last_page: ' + last_page + ' annotation count: ' + annotations_count);
+        console.log('page: ' + page + ' current_page: ' + current_page);
+        if ((page >= 0) && (page <= last_page) && (page !== current_page)){
+            page_start += page*10;
+            page_end += page*10 + PAGE_SIZE;
+            //console.log('SEARCH: page_start: ' + page_start + ' page_end: ' + page_end);
+
+            getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
+                //appendInfo(species, gen_x1, gen_x2);
+                if ($.trim(response)) {// si no está vacio
+                    showPageInfo(species);
+                    populateTable(response, '#annotation-table');
+                } else {
+                    resetPagination();
+                }
+            });
+        }
+    });
 
 
-        getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
-                    //appendInfo(species, gen_x1, gen_x2);
-                    if ($.trim(response)) {// si no está vacio
-                        populateTable(response, '#annotation-table');
-                    } else {
-                        resetPagination()
-                    }
-                });
-    }
+}
+
+function showPageInfo(species){
+    let page = parseInt($("#input-search").val());
+    getAnnotationsLength(species).done( function (annotations_count) {
+        $('#current-page').text(page);
+        $('#last-page').text(Math.ceil(annotations_count/PAGE_SIZE)-1);
+    //console.log('species: ' + species + ' page: ' + page + ' annotations_count: ' + annotations_count)
+    });
 }
 
 // SELECTED ANNOTATION ===================================================

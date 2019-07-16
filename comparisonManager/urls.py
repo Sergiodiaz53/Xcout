@@ -13,5 +13,5 @@ urlpatterns = [
         url(r'^annotation_between/', functions.generateJSONAnnotationFromSpecieBetweenPositions, name='generateJSONAnnotationFromSpecieBetweenPositions'),
         url(r'^load_annotations/', functions.loadAnnotations, name='loadAnnotations'),
         url(r'^annotation_between_paginated/', functions.generateJSONAnnotationFromSpecieBetweenPositionsPaginated, name='generateJSONAnnotationFromSpecieBetweenPositionsPaginated'),
-        url(r'^annotation_length/', functions.getAnnotationsLength, name='getAnnotationsLength'),
+        url(r'^annotation_count/', functions.getAnnotationsCount, name='getAnnotationsCount'),
 ]

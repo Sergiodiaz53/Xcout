@@ -79,11 +79,27 @@
     font-size: 11px;
 }
 
-#search-container {
+.search-container {
     display: inline-block;
-    margin-left: 10px;
+    margin-left: 6px;
 }
 
-#search-container input{
-    width: 10px;
+.search-container button{
+    margin-right: 6px;
+}
+
+.search-container div {
+    display: inline-block;
+}
+
+.search-container input{
+    width: 110px;
+}
+
+#menu-left {
+    margin-left: 6px;
+}
+
+#search-info {
+    font-style: italic;
 }

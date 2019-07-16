@@ -296,20 +296,20 @@
         <span class="glyphicon glyphicon-remove"></span>
     </button>
     <!--<button class="btn btn-primary" id="menu-toggle" onclick="getAnnotationTest()">Test</button>-->
-    <button class="btn btn-success" id="menu-toggle" onclick="previousAnnotationPage()">
+    <button class="btn btn-success" id="menu-left" onclick="previousAnnotationPage()">
         <span class="glyphicon glyphicon-chevron-left"></span>
     </button>
-    <button class="btn btn-success" id="menu-toggle" onclick="nextAnnotationPage()">
+    <button class="btn btn-success" id="menu-right" onclick="nextAnnotationPage()">
         <span class="glyphicon glyphicon-chevron-right"></span>
     </button>
 
     <div class="search-container">
-        <form action="#" onsubmit="return goToPage(this);">
-            <input type="text" placeholder="Page" name="search">
-            <button type="submit">
-                <span class="glyphicon glyphicon-search">
+        <!--<form action="#" onsubmit="return goToPage(this);">-->
+            <input id="input-search" type="number" placeholder="Page" name="search" min="0">
+            <button class="btn btn-default" id="menu-toggle" onclick="goToPage()">
+                <span class="glyphicon glyphicon-search"></span>
             </button>
-        </form>
+        <!--</form>-->
         <div id="search-info">
             Page <span id="current-page"></span> of <span id="last-page"></span>
         </div>
