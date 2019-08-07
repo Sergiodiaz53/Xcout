@@ -404,7 +404,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                 populateTable(response, '#annotation-table');
 
                 $("#input-search").val(0);
-                showPageInfo(d.specie)
+                showPageInfo(d.specie, d.x1, d.x2)
             });
 ;
 
@@ -1088,8 +1088,10 @@ function resetPagination(){
 }
 
 function nextAnnotationPage(){
+    console.log('===================\n-->\n ANTES - page_start: ' + page_start + ' page_end: ' + page_end);
     page_start+=PAGE_SIZE;
     page_end+=PAGE_SIZE;
+    console.log(' DESPU - page_start: ' + page_start + ' page_end: ' + page_end);
 
     let species = $(".block_species").html();
     let gen_x1 = parseInt($(".block_pos_x1").html());
@@ -1102,14 +1104,16 @@ function nextAnnotationPage(){
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
                     populateTable(response, '#annotation-table');
-                    getAnnotationsLength(species).done( function (annotations_count) {
+                    getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
                         if(page_start < 0) {
                             $("#input-search").val(Math.ceil((annotations_count/PAGE_SIZE) + Math.ceil(page_start/PAGE_SIZE)));
+                        } else if(Math.ceil(page_start/PAGE_SIZE) >= Math.ceil(annotations_count/PAGE_SIZE)){
+                            resetPagination()
                         } else {
                             $("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
                         }
-                        showPageInfo(species);
-                        console.log('NEXT: page_start: ' + page_start + ' page_end: ' + page_end);
+                        showPageInfo(species, gen_x1, gen_x2);
+                        //console.log('NEXT: page_start: ' + page_start + ' page_end: ' + page_end);
                     });
                 } else {
                     resetPagination()
@@ -1120,8 +1124,10 @@ function nextAnnotationPage(){
 }
 
 function previousAnnotationPage(){
+    console.log('===================\n<--\n ANTES - page_start: ' + page_start + ' page_end: ' + page_end);
     page_start-=PAGE_SIZE;
     page_end-=PAGE_SIZE;
+    console.log(' DESPU - page_start: ' + page_start + ' page_end: ' + page_end);
 
     let species = $(".block_species").html();
     let gen_x1 = parseInt($(".block_pos_x1").html());
@@ -1131,14 +1137,14 @@ function previousAnnotationPage(){
         //appendInfo(species, gen_x1, gen_x2);
         if ($.trim(response)) {// si no está vacio
             populateTable(response, '#annotation-table');
-            getAnnotationsLength(species).done( function (annotations_count) {
+            getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
                 if(page_start < 0) {
                     $("#input-search").val(Math.ceil((annotations_count/PAGE_SIZE) + Math.ceil(page_start/PAGE_SIZE)));
                 } else {
                     $("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
                 }
-                showPageInfo(species);
-                console.log('PREVIOUS: page_start: ' + page_start + ' page_end: ' + page_end);
+                showPageInfo(species, gen_x1, gen_x2);
+                //console.log('PREVIOUS: page_start: ' + page_start + ' page_end: ' + page_end);
             });
         } else {
             resetPagination()
@@ -1146,12 +1152,14 @@ function previousAnnotationPage(){
     });
 }
 
-function getAnnotationsLength(species){
+function getAnnotationsLength(species, gen_x1, gen_x2){
    return $.ajax({
         type: "GET",
         url: FORCE_URL + "/API/annotation_count/",
         data: {
-            species: species
+            species: species,
+            gen_x1: gen_x1,
+            gen_x2: gen_x2
         }
     });
 }
@@ -1162,35 +1170,37 @@ function goToPage(){
     let gen_x2 = parseInt($(".block_pos_x2").html());
     let page = parseInt($("#input-search").val());
     let current_page = parseInt($("#current-page").html());
+    console.log('===================\nGOTO\n ANTES - page_start: ' + page_start + ' page_end: ' + page_end);
 
-    getAnnotationsLength(species).done( function (annotations_count) {
+    getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
         let last_page = Math.ceil(annotations_count/PAGE_SIZE);
 
         //console.log('species: ' + species + ' gen_x1: ' + gen_x1 + ' gen_x2: ' + gen_x2 + ' page: ' + page + ' last_page: ' + last_page + ' annotation count: ' + annotations_count);
         console.log('page: ' + page + ' current_page: ' + current_page);
         if ((page >= 0) && (page <= last_page) && (page !== current_page)){
-            page_start += page*10;
-            page_end += page*10 + PAGE_SIZE;
+            page_start = page * PAGE_SIZE;
+            page_end = (page * PAGE_SIZE) + PAGE_SIZE;
             //console.log('SEARCH: page_start: ' + page_start + ' page_end: ' + page_end);
 
             getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
-                    showPageInfo(species);
+                    showPageInfo(species, gen_x1, gen_x2);
                     populateTable(response, '#annotation-table');
                 } else {
                     resetPagination();
                 }
             });
         }
+        console.log(' DESPU - page_start: ' + page_start + ' page_end: ' + page_end);
     });
 
 
 }
 
-function showPageInfo(species){
+function showPageInfo(species, gen_x1, gen_x2){
     let page = parseInt($("#input-search").val());
-    getAnnotationsLength(species).done( function (annotations_count) {
+    getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
         $('#current-page').text(page);
         $('#last-page').text(Math.ceil(annotations_count/PAGE_SIZE)-1);
     //console.log('species: ' + species + ' page: ' + page + ' annotations_count: ' + annotations_count)

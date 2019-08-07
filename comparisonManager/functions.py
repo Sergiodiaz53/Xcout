@@ -145,7 +145,12 @@ def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
 @permission_classes([])
 def getAnnotationsCount(request):
     species = request.GET.get('species', '')
-    count = Annotation.objects.all().filter(species__name=species).count()
+    gen_x1 = request.GET.get('gen_x1', '')
+    gen_x2 = request.GET.get('gen_x2', '')
+
+    count = Annotation.objects.all().filter(species__name=species,
+                gen_x1__gte=gen_x1,
+                gen_x2__lte=gen_x2).count()
     print('===> count: ' + str(count))
     return HttpResponse(count, content_type="text/plain")
 
