@@ -14,4 +14,5 @@ urlpatterns = [
         url(r'^load_annotations/', functions.loadAnnotations, name='loadAnnotations'),
         url(r'^annotation_between_paginated/', functions.generateJSONAnnotationFromSpecieBetweenPositionsPaginated, name='generateJSONAnnotationFromSpecieBetweenPositionsPaginated'),
         url(r'^annotation_count/', functions.getAnnotationsCount, name='getAnnotationsCount'),
+        url(r'^annotation_gaps_csv/', functions.generateCSVAnnotationGaps, name='generateCSVAnnotationGaps'),
 ]

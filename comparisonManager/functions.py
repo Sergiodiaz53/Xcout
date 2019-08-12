@@ -92,7 +92,7 @@ def generateJSONAnnotationFromSpecie(request):
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([])
-def generateJSONAnnotationFromSpecieBetweenPositions(request):
+def generateCSVAnnotationGaps(request):
     species = request.GET.get('species', '')
     gen_x1 = request.GET.get('gen_x1', '')
     gen_x2 = request.GET.get('gen_x2', '')
@@ -102,6 +102,37 @@ def generateJSONAnnotationFromSpecieBetweenPositions(request):
             gen_x1__gte=gen_x1,
             gen_x2__lte=gen_x2
         ).order_by('gen_x1')[:50]
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Row', 'Species', 'Start_block', 'End_block', 'Gap_x1', 'Gap_x2'])
+
+    for idx, annotation in enumerate(annotations):
+        if idx == 0:
+            writer.writerow([idx, species, gen_x1, gen_x2, gen_x1, annotation.gen_x1])
+        elif idx == len(annotations) - 1:
+            writer.writerow([idx, species, gen_x1, gen_x2, annotation.gen_x2, gen_x2])
+        else:
+            writer.writerow([idx, species, gen_x1, gen_x2, annotation.gen_x2, annotation.gen_x1])
+
+    return response
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def generateJSONAnnotationFromSpecieBetweenPositions(request):
+    species = request.GET.get('species', '')
+    gen_x1 = request.GET.get('gen_x1', '')
+    gen_x2 = request.GET.get('gen_x2', '')
+
+    annotations = Annotation.objects.all().filter(
+            species__name=species,
+            gen_x1__gte=gen_x1,
+            gen_x2__lte=gen_x2
+        ).order_by('gen_x1')#[:50]
     print(annotations)
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())

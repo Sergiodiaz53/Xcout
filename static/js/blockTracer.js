@@ -391,12 +391,9 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                     if (d3.select(this).style("opacity") == 1) return true;
                     else return false;
                 });
+
             // ANNOTATION
-            /*showAnnotation();
-            getAnnotationFrom(d.specie, d.x1, d.x2).done( function (response) {
-                appendInfo(d.specie, d.x1, d.x2);
-                populateTable(response, '#annotation-table');
-            });*/
+
             showAnnotation();
             resetPagination();
             getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done( function (response) {
@@ -406,7 +403,11 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                 $("#input-search").val(0);
                 showPageInfo(d.specie, d.x1, d.x2)
             });
-;
+
+            console.log(getGapsCSV(d.specie, d.x1, d.x2));
+            //saveGapsCSV(d.specie, d.x1, d.x2);
+
+            //paintGaps(d.x1, d.x2);
 
             trace = d3.selectAll('.tracedBlock.clicked');
             //console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
@@ -1370,9 +1371,82 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
         .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
         .attr('fill', 'none')
         .attr('stroke', inverted_color)
-        .attr('stroke-width','3px')
+        .attr('stroke-width','2px')
             .append("svg:title")
                 .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
+}
+
+function paintGaps(gen_x1, gen_x2){
+    console.log('AMO A PINTA');
+    let block = selectedBlock[0][0];
+    let species = block.__data__.specie;
+    getAnnotationFrom(species, gen_x1, gen_x2).done( function (response) {
+        let parsed = JSON.parse(response);
+        console.log(response);
+        let length = parsed.keys.length;
+        let previous_x2 = -1;
+        $.each(parsed, function (index, annotation){
+            let name = 'Gap #' + index;
+            console.log('name: ' + name + 'annotation:');
+            console.log(annotation);
+            if(index === 0){
+                paintAnnotation(block, svgInverted, gen_x1,annotation.gen_x1, name);
+                previous_x2 = annotation.gen_x2;
+            } else if(index === (length - 1)){
+                paintAnnotation(block, svgInverted, annotation.gen_x1, gen_x2, name);
+            } else {
+                paintAnnotation(block, svgInverted, previous_x2, annotation.gen_x1, name);
+                previous_x2 = annotation.gen_x2;
+            }
+        });
+
+        /*$.each(parsed, function(index) {
+            //console.log('PARSED:');console.log(parsed);
+            let data = parsed[index];
+            if(principio){
+                //paint(start, data.gen_x1);
+                paintAnnotation()
+            } else if(fin){
+                paint(data.gen_x2, end);
+            } else {
+                paint(data.gen_x2, data.next.gen_x1);
+            }
+        });*/
+    });
+}
+
+function getGapsCSV(species, gen_x1, gen_x2){
+    return $.ajax({
+        type: "GET",
+        url: FORCE_URL + "/API/annotation_gaps_csv/",
+        data: {
+            species: species,
+            gen_x1: gen_x1,
+            gen_x2: gen_x2
+        }
+    });
+}
+
+function saveGapsCSV(){
+    let block = selectedBlock[0][0];
+    let species = block.__data__.specie;
+    let gen_x1 = block.__data__.x1;
+    let gen_x2 = block.__data__.x2;
+
+    getGapsCSV(species, gen_x1, gen_x2).done( function (response) {
+        let filename = species + '_' + gen_x1 + '_' + gen_x2 + '.csv';
+        console.log(filename);
+
+        let blob = new Blob([response], { type: 'text/csv;charset=utf8' });
+        let csvUrl = URL.createObjectURL(blob);
+        console.log(csvUrl);
+
+        let link = document.createElement('a');
+        document.body.appendChild(link);
+        link.href = csvUrl;
+        link.download = filename;
+        link.click();
+    });
 }
 
 function invertColor(hex) {
