@@ -101,7 +101,7 @@ def generateCSVAnnotationGaps(request):
             species__name=species,
             gen_x1__gte=gen_x1,
             gen_x2__lte=gen_x2
-        ).order_by('gen_x1')[:50]
+        ).order_by('gen_x1')#[:50]
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'

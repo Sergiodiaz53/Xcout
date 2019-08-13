@@ -373,6 +373,9 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
             // ANNOTATION
             hideAnnotation();
             d3.selectAll('#annotation_block').remove();
+
+            console.log('Ocultando seleccion');
+            hideSelectedAnnotation();
             //
         } else {
             d3.select(this).classed("clicked");
@@ -405,6 +408,8 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
             });
 
             console.log(getGapsCSV(d.specie, d.x1, d.x2));
+            console.log('Ocultando seleccion');
+            hideSelectedAnnotation();
             //saveGapsCSV(d.specie, d.x1, d.x2);
 
             //paintGaps(d.x1, d.x2);
