@@ -125,8 +125,13 @@ def generateCSVAnnotationGaps(request):
 @permission_classes([])
 def generateJSONAnnotationFromSpecieBetweenPositions(request):
     species = request.GET.get('species', '')
-    gen_x1 = request.GET.get('gen_x1', '')
-    gen_x2 = request.GET.get('gen_x2', '')
+    gen_x1 = int(request.GET.get('gen_x1', ''))
+    gen_x2 = int(request.GET.get('gen_x2', ''))
+
+    if gen_x1 > gen_x2:
+        aux = gen_x1
+        gen_x1 = gen_x2
+        gen_x2 = aux
 
     annotations = Annotation.objects.all().filter(
             species__name=species,
@@ -146,10 +151,16 @@ def generateJSONAnnotationFromSpecieBetweenPositions(request):
 @permission_classes([])
 def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
     species = request.GET.get('species', '')
-    gen_x1 = request.GET.get('gen_x1', '')
-    gen_x2 = request.GET.get('gen_x2', '')
+    gen_x1 = int(request.GET.get('gen_x1', ''))
+    gen_x2 = int(request.GET.get('gen_x2', ''))
     start = int(request.GET.get('start', ''))
     end = int(request.GET.get('end', ''))
+
+    if gen_x1 > gen_x2:
+        aux = gen_x1
+        gen_x1 = gen_x2
+        gen_x2 = aux
+        # print("x1: " + str(gen_x1) + " x2: " + str(gen_x2) + "\n")
 
     if start < 0:
         annotations = Annotation.objects.all().filter(
