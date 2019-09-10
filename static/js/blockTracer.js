@@ -373,6 +373,9 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
             // ANNOTATION
             hideAnnotation();
             d3.selectAll('#annotation_block').remove();
+
+            console.log('Ocultando seleccion');
+            hideSelectedAnnotation();
             //
         } else {
             d3.select(this).classed("clicked");
@@ -391,18 +394,25 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                     if (d3.select(this).style("opacity") == 1) return true;
                     else return false;
                 });
+
             // ANNOTATION
-            /*showAnnotation();
-            getAnnotationFrom(d.specie, d.x1, d.x2).done( function (response) {
-                appendInfo(d.specie, d.x1, d.x2);
-                populateTable(response, '#annotation-table');
-            });*/
+
             showAnnotation();
             resetPagination();
             getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done( function (response) {
-                appendInfo(d.specie, d.x1, d.x2);
+                appendInfo(d.specie, d.x1, d.x2, '#annotation-top');
                 populateTable(response, '#annotation-table');
+
+                $("#input-search").val(0);
+                showPageInfo(d.specie, d.x1, d.x2)
             });
+
+            console.log(getGapsCSV(d.specie, d.x1, d.x2));
+            console.log('Ocultando seleccion');
+            hideSelectedAnnotation();
+            //saveGapsCSV(d.specie, d.x1, d.x2);
+
+            //paintGaps(d.x1, d.x2);
 
             trace = d3.selectAll('.tracedBlock.clicked');
             //console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
@@ -969,17 +979,72 @@ function getAnnotationFrom(species, gen_x1, gen_x2){
     });
 }
 
-function traceAnnotation(species, gen_x1, gen_x2, blocks){
+function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks){
+    $('#annotation-others').empty();
+
+    // Set data for relative search
+    let annotation_length = gen_x2 - gen_x1;
+    let distance_block_annotation = 0;
+    $.each(blocks[0] , function (index, block){
+        if(block.__data__.specie === species){
+            // Distance between block start and annotation start
+            distance_block_annotation = gen_x1 - block.__data__.x1;
+        }
+    });
+
     $.each(blocks[0] , function (index, block){
         //console.log(index + ':' + block.__data__);
         if(block.__data__.specie !== species){
-            getAnnotationFrom(block.__data__.specie, gen_x1, gen_x2).done( function (annotations) {
-                //console.log('Annotations', annotations);
-                $.each(JSON.parse(annotations), function (index, annotation){
-                    //console.log('block',block);
-                    //console.log('$(block)',$(block));
-                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
-                });
+            // Use relative location
+            let annotation_x1 = block.__data__.x1 + distance_block_annotation;
+            let annotation_x2 = annotation_x1 + annotation_length;
+            console.log('annotation_length: ' + annotation_length);
+            console.log('distance_block_annotation: ' + distance_block_annotation);
+            console.log('annotation_x1: ' + annotation_x1);
+            console.log('annotation_x2: ' + annotation_x2);
+            getAnnotationFrom(block.__data__.specie, annotation_x1, annotation_x2).done( function (annotations) {
+                let parsed = JSON.parse(annotations);
+                /*console.log('Annotations:', annotations);
+                console.log('Length:', annotations.length);
+                console.log('Size:', annotations.size);
+                console.log('Annotations:', Array.isArray(annotations));
+                console.log('==================');
+                console.log('Annotations:', parsed);
+                console.log('Length:', parsed.length);
+                console.log('Size:', parsed.size);
+                console.log('Annotations:', Array.isArray(parsed));*/
+                if(Array.isArray(parsed) && parsed.length === 0){
+                    console.log('No annotations found');
+                    $('#annotation-others')
+                        .append($('<p>')
+                        .attr('id', 'annotation-species')
+                        .attr('class', 'h4 text-center')
+                        .append($('<small>')
+                            .attr('class', 'text-muted')
+                            .text('Species: '))
+                        .append($('<span>')
+                            .attr('class', 'block_species')
+                            .text(block.__data__.specie))
+                        .append($('<h5>')
+                        .text('No annotations found')
+                        ));
+                }else{
+                    let parsed = JSON.parse(annotations);
+                    //Crear tabla
+                    let newSpecieTableId = createSpeciesTable(block.__data__.specie, parsed.length, '#annotation-others');
+                    //poblar tabla
+                    console.log(newSpecieTableId);
+                    //newSpecieTableId = newSpecieTableId.replace('#annotation-selected-table ', '');
+                    console.log(newSpecieTableId);
+                    populateTable(annotations, newSpecieTableId); // tiene que llevar # en el id
+
+                    $.each(parsed, function (index, annotation){
+                        //console.log('block',block);
+                        //console.log('$(block)',$(block));
+                        paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
+                    });
+                }
+
             });
 
             /*let annotations = getAnnotationFrom(block.__data__.specie, gen_x1, gen_x2);
@@ -987,6 +1052,19 @@ function traceAnnotation(species, gen_x1, gen_x2, blocks){
             $.each(annotations, function (index, annotation){
                paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2);
             });*/
+        } else {
+            //Selected block
+            let selected = {
+                gen_x1,
+                gen_x2,
+                product,
+                note
+            };
+            let array = new Array(selected);
+            populateTable(JSON.stringify(array), '#annotation-selected-table');
+            $('#annotation-selected #annotation-species').empty()
+                .append('<small class="text-muted">Species: </small>')
+                .append('<span class="block_species">' + species + '</span>');
         }
     });
 }
@@ -1006,7 +1084,7 @@ function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end){
     });
 }
 
-var PAGE_SIZE = 8;
+var PAGE_SIZE = 10;
 var page_start = 0;
 var page_end = PAGE_SIZE;
 
@@ -1016,49 +1094,198 @@ function resetPagination(){
 }
 
 function nextAnnotationPage(){
+    console.log('===================\n-->\n ANTES - page_start: ' + page_start + ' page_end: ' + page_end);
     page_start+=PAGE_SIZE;
     page_end+=PAGE_SIZE;
+    console.log(' DESPU - page_start: ' + page_start + ' page_end: ' + page_end);
 
     let species = $(".block_species").html();
     let gen_x1 = parseInt($(".block_pos_x1").html());
     let gen_x2 = parseInt($(".block_pos_x2").html());
 
+    //$("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
+    //showPageInfo(species);
+
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
                     populateTable(response, '#annotation-table');
+                    getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
+                        if(page_start < 0) {
+                            $("#input-search").val(Math.ceil((annotations_count/PAGE_SIZE) + Math.ceil(page_start/PAGE_SIZE)));
+                        } else if(Math.ceil(page_start/PAGE_SIZE) >= Math.ceil(annotations_count/PAGE_SIZE)){
+                            resetPagination()
+                        } else {
+                            $("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
+                        }
+                        showPageInfo(species, gen_x1, gen_x2);
+                        //console.log('NEXT: page_start: ' + page_start + ' page_end: ' + page_end);
+                    });
                 } else {
                     resetPagination()
                 }
+
+                //console.log('NEXT: page_start: ' + page_start + ' page_end: ' + page_end);
             });
 }
 
 function previousAnnotationPage(){
+    console.log('===================\n<--\n ANTES - page_start: ' + page_start + ' page_end: ' + page_end);
     page_start-=PAGE_SIZE;
     page_end-=PAGE_SIZE;
+    console.log(' DESPU - page_start: ' + page_start + ' page_end: ' + page_end);
 
     let species = $(".block_species").html();
     let gen_x1 = parseInt($(".block_pos_x1").html());
     let gen_x2 = parseInt($(".block_pos_x2").html());
 
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
+        //appendInfo(species, gen_x1, gen_x2);
+        if ($.trim(response)) {// si no está vacio
+            populateTable(response, '#annotation-table');
+            getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
+                if(page_start < 0) {
+                    $("#input-search").val(Math.ceil((annotations_count/PAGE_SIZE) + Math.ceil(page_start/PAGE_SIZE)));
+                } else {
+                    $("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
+                }
+                showPageInfo(species, gen_x1, gen_x2);
+                //console.log('PREVIOUS: page_start: ' + page_start + ' page_end: ' + page_end);
+            });
+        } else {
+            resetPagination()
+        }
+    });
+}
+
+function getAnnotationsLength(species, gen_x1, gen_x2){
+   return $.ajax({
+        type: "GET",
+        url: FORCE_URL + "/API/annotation_count/",
+        data: {
+            species: species,
+            gen_x1: gen_x1,
+            gen_x2: gen_x2
+        }
+    });
+}
+
+function goToPage(){
+    let species = $(".block_species").html();
+    let gen_x1 = parseInt($(".block_pos_x1").html());
+    let gen_x2 = parseInt($(".block_pos_x2").html());
+    let page = parseInt($("#input-search").val());
+    let current_page = parseInt($("#current-page").html());
+    console.log('===================\nGOTO\n ANTES - page_start: ' + page_start + ' page_end: ' + page_end);
+
+    getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
+        let last_page = Math.ceil(annotations_count/PAGE_SIZE);
+
+        //console.log('species: ' + species + ' gen_x1: ' + gen_x1 + ' gen_x2: ' + gen_x2 + ' page: ' + page + ' last_page: ' + last_page + ' annotation count: ' + annotations_count);
+        console.log('page: ' + page + ' current_page: ' + current_page);
+        if ((page >= 0) && (page <= last_page) && (page !== current_page)){
+            page_start = page * PAGE_SIZE;
+            page_end = (page * PAGE_SIZE) + PAGE_SIZE;
+            //console.log('SEARCH: page_start: ' + page_start + ' page_end: ' + page_end);
+
+            getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done( function (response) {
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
+                    showPageInfo(species, gen_x1, gen_x2);
                     populateTable(response, '#annotation-table');
                 } else {
-                    resetPagination()
+                    resetPagination();
                 }
             });
+        }
+        console.log(' DESPU - page_start: ' + page_start + ' page_end: ' + page_end);
+    });
+
+
+}
+
+function showPageInfo(species, gen_x1, gen_x2){
+    let page = parseInt($("#input-search").val());
+    getAnnotationsLength(species, gen_x1, gen_x2).done( function (annotations_count) {
+        $('#current-page').text(page);
+        $('#last-page').text(Math.ceil(annotations_count/PAGE_SIZE)-1);
+    //console.log('species: ' + species + ' page: ' + page + ' annotations_count: ' + annotations_count)
+    });
+}
+
+// SELECTED ANNOTATION ===================================================
+
+function showSelectedAnnotation() {
+    $('#annotation-selection-sidebar-wrapper').show();
+}
+
+function hideSelectedAnnotation() {
+    $('#annotation-selection-sidebar-wrapper').hide();
+}
+
+function createSpeciesTable(species, coincidences, div){
+    $(div).append($('<p>')
+        .attr('id', 'annotation-species')
+        .attr('class', 'h4 text-center')
+        .append($('<small>')
+            .attr('class', 'text-muted')
+            .text('Species: '))
+        .append($('<span>')
+            .attr('class', 'block_species')
+            .text(species))
+    );
+
+    $(div).append($('<p>')
+        .attr('id', 'annotation-count')
+        .attr('class', 'h4 text-center')
+        .append($('<small>')
+            .attr('class', 'text-muted')
+            .text('Coincidences: '))
+        .append($('<span>')
+            .attr('class', 'block_coincidences')
+            .text(coincidences))
+    );
+
+    let tableId = 'annotation-table-' + species;
+
+    $(div).append($('<table>')
+        .attr('id', tableId)
+        .attr('class', 'table table-sm table-bordered annotation-comparison-tables')
+        .append($('<thead>')
+            .append($('<tr>')
+                .append($('<th>')
+                    .attr('scope', 'col')
+                    .text('Start'))
+                .append($('<th>')
+                    .attr('scope', 'col')
+                    .text('End'))
+                .append($('<th>')
+                    .attr('scope', 'col')
+                    .text('Length'))
+                .append($('<th>')
+                    .attr('scope', 'col')
+                    .text('Product'))
+                .append($('<th>')
+                    .attr('scope', 'col')
+                    .text('Note'))))
+        .append($('<tbody>'))
+    );
+
+    //return '#annotation-comparison-tables #' + tableId;
+    return '#' + tableId;
 }
 
 //==========================================================================
 
 function populateTable(response, table){
+    //console.log('RESPONSE:');console.log(response);
     let tbody = $(table).children('tbody');
     tbody.empty();
     let parsed = JSON.parse(response);
     $.each(parsed, function(index) {
+        //console.log('PARSED:');console.log(parsed);
         let data = parsed[index];
+        //console.log('DATA:');console.log(data);
         let row = $('<tr>')
             //.attr('class', 'clickable-row')
             .append($('<th>')
@@ -1082,11 +1309,11 @@ function populateTable(response, table){
     });
 }
 
-function appendInfo(species, block_x1, block_x2){
-    $('#annotation-species').empty()
+function appendInfo(species, block_x1, block_x2, div){
+    $(div + ' #annotation-species').empty()
         .append('<small class="text-muted">Selected species: </small>')
         .append('<span class="block_species">' + species + '</span>');
-    $('#annotation-fragment').empty()
+    $(div + ' #annotation-fragment').empty()
         .append('<small class="text-muted">Fragment coordinates: </small>')
         .append('<span class="block_pos_x1">' + block_x1 + '</span>..<span class="block_pos_x2">' + block_x2 + '</span>');
 }
@@ -1095,17 +1322,17 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
     // get annotation range
     //let gen_x1 = annotation.find('.gen_x1').html();
     //let gen_x2 = annotation.find('.gen_x2').html();
-    console.log('block----------------',block);
+    //console.log('block----------------',block);
     // hay que comprobar si están invertidos
     let escalated_x1 = parseFloat(inverted ? block.attributes.y.value : block.attributes.x.value);
     let escalated_width = parseFloat(inverted ? block.attributes.height.value : block.attributes.width.value);
     let escalated_x2 = escalated_width + escalated_x1;
     let escalated_y = parseFloat(inverted ? block.attributes.x.value : block.attributes.y.value);
 
-    console.log('escalated_x1',escalated_x1);
+    /*console.log('escalated_x1',escalated_x1);
     console.log('escalated_x2',escalated_x2);
     console.log('escalated_width',escalated_width);
-    console.log('escalated_y',escalated_y);
+    console.log('escalated_y',escalated_y);*/
 
     // ESCALADO
     // data bound to the DOM object(rect)
@@ -1113,8 +1340,8 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
     let block_x2 = block.__data__.x2;
 
 
-    console.log('block_x1',block_x1);
-    console.log('block_x2',block_x2);
+    /*console.log('block_x1',block_x1);
+    console.log('block_x2',block_x2);*/
 
     // scale annotation size to the block size
     let widthDomain = [block_x1, block_x2],
@@ -1124,13 +1351,13 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
         .domain(widthDomain)
         .range(widthRange);
 
-    console.log('blockScale(gen_x1)',blockScale(gen_x1));
+    /*console.log('blockScale(gen_x1)',blockScale(gen_x1));
     console.log('gen_x1',gen_x1);
     console.log('gen_x2 - gen_x1',gen_x2 - gen_x1);
 
     console.log('x1:escalated_x1 + blockScale(gen_x1)', escalated_x1 + blockScale(gen_x1));
     console.log('width:blockScale(gen_x2 - gen_x1)',blockScale(gen_x2 - gen_x1));
-    console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2)-blockScale(gen_x1));
+    console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2)-blockScale(gen_x1));*/
 
     // lets invert the color for the annotation
     let inverted_color = invertColor(block.attributes.fill.value);
@@ -1149,9 +1376,82 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
         .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
         .attr('fill', 'none')
         .attr('stroke', inverted_color)
-        .attr('stroke-width','3px')
+        .attr('stroke-width','2px')
             .append("svg:title")
                 .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
+}
+
+function paintGaps(gen_x1, gen_x2){
+    console.log('AMO A PINTA');
+    let block = selectedBlock[0][0];
+    let species = block.__data__.specie;
+    getAnnotationFrom(species, gen_x1, gen_x2).done( function (response) {
+        let parsed = JSON.parse(response);
+        console.log(response);
+        let length = parsed.keys.length;
+        let previous_x2 = -1;
+        $.each(parsed, function (index, annotation){
+            let name = 'Gap #' + index;
+            console.log('name: ' + name + 'annotation:');
+            console.log(annotation);
+            if(index === 0){
+                paintAnnotation(block, svgInverted, gen_x1,annotation.gen_x1, name);
+                previous_x2 = annotation.gen_x2;
+            } else if(index === (length - 1)){
+                paintAnnotation(block, svgInverted, annotation.gen_x1, gen_x2, name);
+            } else {
+                paintAnnotation(block, svgInverted, previous_x2, annotation.gen_x1, name);
+                previous_x2 = annotation.gen_x2;
+            }
+        });
+
+        /*$.each(parsed, function(index) {
+            //console.log('PARSED:');console.log(parsed);
+            let data = parsed[index];
+            if(principio){
+                //paint(start, data.gen_x1);
+                paintAnnotation()
+            } else if(fin){
+                paint(data.gen_x2, end);
+            } else {
+                paint(data.gen_x2, data.next.gen_x1);
+            }
+        });*/
+    });
+}
+
+function getGapsCSV(species, gen_x1, gen_x2){
+    return $.ajax({
+        type: "GET",
+        url: FORCE_URL + "/API/annotation_gaps_csv/",
+        data: {
+            species: species,
+            gen_x1: gen_x1,
+            gen_x2: gen_x2
+        }
+    });
+}
+
+function saveGapsCSV(){
+    let block = selectedBlock[0][0];
+    let species = block.__data__.specie;
+    let gen_x1 = block.__data__.x1;
+    let gen_x2 = block.__data__.x2;
+
+    getGapsCSV(species, gen_x1, gen_x2).done( function (response) {
+        let filename = species + '_' + gen_x1 + '_' + gen_x2 + '.csv';
+        console.log(filename);
+
+        let blob = new Blob([response], { type: 'text/csv;charset=utf8' });
+        let csvUrl = URL.createObjectURL(blob);
+        console.log(csvUrl);
+
+        let link = document.createElement('a');
+        document.body.appendChild(link);
+        link.href = csvUrl;
+        link.download = filename;
+        link.click();
+    });
 }
 
 function invertColor(hex) {
@@ -1185,15 +1485,20 @@ $(document).ready(function() {
         if(row.hasClass('highlight')){
             row.removeClass('highlight');
             d3.selectAll('#annotation_block').remove();
+            //$('#annotation-selected').empty();
+            //$('#annotation-others').empty();
         } else {
             d3.selectAll('#annotation_block').remove();
             row.addClass('highlight').siblings().removeClass('highlight');
             let gen_x1 = row.find('.gen_x1').html();
             let gen_x2 = row.find('.gen_x2').html();
             let product = row.find('.product').html();
+            let note = row.find('.note').html();
             paintAnnotation(selectedBlock[0][0], svgInverted, gen_x1, gen_x2, product);
             console.log('LETS TRACE=============================    ');
-            traceAnnotation(selectedBlock[0][0].__data__.specie, gen_x1, gen_x2, trace);
+            traceAnnotation(selectedBlock[0][0].__data__.specie, gen_x1, gen_x2, product, note, trace);
+            showSelectedAnnotation();
+
         }
     });
 });
