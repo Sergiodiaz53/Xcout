@@ -244,6 +244,17 @@ def loadAnnotations(request):
                             sin_repetir += 1
 
                             try:
+                                gene = feature.qualifiers['gene'][0]
+                                print(gene)
+                            except KeyError:
+                                gene = 'Unknown'
+
+                            try:
+                                gene_synonym = feature.qualifiers['gene_synonym'][0]
+                            except KeyError:
+                                gene_synonym = 'Unknown'
+
+                            try:
                                 product = feature.qualifiers['product'][0]
                             except KeyError:
                                 product = 'Unknown'
@@ -260,6 +271,8 @@ def loadAnnotations(request):
                                                           gen_x1=int(feature.location.start),
                                                           gen_x2=int(feature.location.end),
                                                           strand=int(feature.location.strand),
+                                                          gene=gene,
+                                                          gene_synonym=gene_synonym,
                                                           product=product,
                                                           note=note)
                             except Exception as e:
