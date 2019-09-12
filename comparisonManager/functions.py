@@ -245,7 +245,7 @@ def loadAnnotations(request):
 
                             try:
                                 gene = feature.qualifiers['gene'][0]
-                                print(gene)
+                                # print(gene)
                             except KeyError:
                                 gene = 'Unknown'
 
@@ -267,14 +267,15 @@ def loadAnnotations(request):
                                 note = 'No note'
 
                             try:
-                                Annotation.objects.create(species=species,
-                                                          gen_x1=int(feature.location.start),
-                                                          gen_x2=int(feature.location.end),
-                                                          strand=int(feature.location.strand),
-                                                          gene=gene,
-                                                          gene_synonym=gene_synonym,
-                                                          product=product,
-                                                          note=note)
+                                if gene != 'Unknown':
+                                    Annotation.objects.create(species=species,
+                                                              gen_x1=int(feature.location.start),
+                                                              gen_x2=int(feature.location.end),
+                                                              strand=int(feature.location.strand),
+                                                              gene=gene,
+                                                              gene_synonym=gene_synonym,
+                                                              product=product,
+                                                              note=note)
                             except Exception as e:
                                 print('Exception: Cannot create annotation in position ' + str(i) + ' - e: ' + str(e))
                                 # print(e.message, e.args)
@@ -290,6 +291,7 @@ def loadAnnotations(request):
                 print('====> TOTAL ANOTACIONES: ' + str(total))
                 print('====> TOTAL ANOTACIONES SIN REPETIR: ' + str(sin_repetir))
                 print('====> SOBRAN: ' + str(total - sin_repetir))
+        # FALTA MOVER LOS ARCHIVOS LEIDOS A LA CARPETA lib
 
     return HttpResponse('OK', content_type="text/plain")
 
