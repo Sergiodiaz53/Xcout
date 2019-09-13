@@ -40,11 +40,13 @@ class Annotation(models.Model):
     gen_x1 = models.BigIntegerField(null=False)
     gen_x2 = models.BigIntegerField(null=False)
     strand = models.IntegerField(null=False, default=1)
-    #locus_tag = models.CharField(max_length=20)
-    #db_xref = models.CharField(max_length=20)
+    gene = models.CharField(max_length=500, null=False)
+    gene_synonym = models.CharField(max_length=500, default="No data found.")
     product = models.CharField(max_length=500, default="No data found.")
     note = models.CharField(max_length=500, default="No data found.")
 
     def __str__(self):
-        return u'Species: %s | %s:%s(%s) | Product: %s | Note: %s' % (self.species, str(self.gen_x1), str(self.gen_x2), str(self.strand), self.product, self.note)
+        return u'Species: %s | %s:%s(%s) | Gene: %s (Synonym: %s) Product: %s | Note: %s' % \
+               (self.species, str(self.gen_x1), str(self.gen_x2), str(self.strand), self.gene, self.gene_synonym,
+                self.product, self.note)
         #return u'Species: %s | %s:%s Locus: %s XRef: %s' % (self.specie, str(self.gen_x1), str(self.gen_x2), self.locus_tag, self.db_xref)
