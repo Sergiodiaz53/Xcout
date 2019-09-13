@@ -245,7 +245,7 @@ def loadAnnotations(request):
 
                             try:
                                 gene = feature.qualifiers['gene'][0]
-                                # print(gene)
+                                print(gene)
                             except KeyError:
                                 gene = 'Unknown'
 
@@ -294,6 +294,90 @@ def loadAnnotations(request):
         # FALTA MOVER LOS ARCHIVOS LEIDOS A LA CARPETA lib
 
     return HttpResponse('OK', content_type="text/plain")
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def generateAnnotationsBlastResultsCSV(request):
+    '''print('-------------------')
+    print(Specie.objects.all().values('name'))
+    print('-------------------')
+    print(Specie.objects.all().values('short_name'))
+    print('-------------------')
+    print(Specie.objects.all().values('accesion_number'))
+    print('-------------------')
+    print(species_name, gen_x1, gen_x2, product, note)
+    print('-------------------')'''
+
+    blast_results_path = os.getcwd() + '/blast_results/'
+    # output_path = os.getcwd() + '/blast_results/output/'
+    blast_result_file = [f.split('.')[0] for f in listdir(blast_results_path) if isfile(join(blast_results_path, f))]
+    print(blast_result_file)
+    print(os.getcwd())
+
+    for blast_result_file_name in listdir(blast_results_path):
+        if isfile(join(blast_results_path, blast_result_file_name)):
+            print(blast_result_file_name)
+
+            #cambiar
+            species = Specie.objects.get(name='HOMSA')
+
+            #preparar la respuesta http en formato csv
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="annotations_of_' + blast_result_file_name + '"'
+
+            csv_w = csv.writer(response)
+            csv_w.writerow(['id_query', 'id_db', 'pos_blast_x1', 'pos_blast_x2', 'pos_gen_x1',
+                            'pos_gen_x2', 'gene', 'gene_synonym', 'product', 'note'])
+
+            with open(blast_results_path + blast_result_file_name, 'r') as result_file:
+                    #open(blast_results_path + 'output_' + blast_result_file_name, 'w') as output_file:
+                # Primera parte:
+                # filtrar los resultados para que no se repitan los mismos trozos
+                visited_positions = []
+                results = []
+
+                # lectura de cada csv
+                csv_reader = csv.reader(result_file, delimiter=',')
+                line_count = 0
+                for row in csv_reader:
+                    position = [row[8], row[9]]
+                    print(position)
+                    if position not in visited_positions:
+                        print('no esta')
+                        visited_positions.append(position)
+                        #blast_res = BlastResult(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8],
+                                                #row[9], row[10], row[11], row[12], row[13], row[14])
+                        results.append([row[0], row[1], row[8], row[9]])
+
+                    line_count += 1
+                print(str(line_count) + ' processed lines.')
+
+                # Segunda parte:
+                # utilizar las posiciones filtradas para obtener las anotaciones contenidas
+                # por cada resultado
+                for result in results:
+                    # obtenemos las anotaciones comprendidas entre ambas posiciones
+                    annotations = Annotation.objects.all().filter(
+                        species__name=species,
+                        gen_x1__gte=result[2],
+                        gen_x2__lte=result[3]
+                    ).order_by('gen_x1')
+
+                    # lo añadimos al csv junto con la info del resultado
+                    for annotation in annotations:
+                        '''row = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s' % (result[0], result[1], result[2], result[3],
+                                                                 annotation.gen_x1, annotation.gen_x2, annotation.gene,
+                                                                 annotation.gene_synonym, annotation.product,
+                                                                 annotation.note)
+                        #print(row)
+                        #output_file.write(row + '\n')'''
+                        csv_w.writerow([result[0], result[1], result[2], result[3],
+                                        annotation.gen_x1, annotation.gen_x2, annotation.gene, annotation.gene_synonym,
+                                        annotation.product, annotation.note])
+
+                return response
+                #return HttpResponse('OK', content_type="text/plain")
 
 # ============
 
