@@ -40,7 +40,7 @@ class Annotation(models.Model):
     gen_x1 = models.BigIntegerField(null=False)
     gen_x2 = models.BigIntegerField(null=False)
     strand = models.IntegerField(null=False, default=1)
-    gene = models.CharField(max_length=500, null=False)
+    gene = models.CharField(max_length=500, default="No data found.")
     gene_synonym = models.CharField(max_length=500, default="No data found.")
     product = models.CharField(max_length=500, default="No data found.")
     note = models.CharField(max_length=500, default="No data found.")
