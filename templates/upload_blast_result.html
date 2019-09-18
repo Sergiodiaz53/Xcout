@@ -1,20 +1,31 @@
 {% extends 'includes/basic.html' %}
-{%load staticfiles%}
+{% load staticfiles %}
 
 {% block content %}
-    <h2>Upload blast results</h2>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" id="blast_result" name="blast_result">
-        <button type="submit">Upload file</button>
-    </form>
-    <div class="progress">
-        <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
-    </div>
-    {% if asset_url %}
+    <!--<script type="text/javascript" src="{% static "js/update.js" %}"></script>-->
+    <div style="padding: 20px">
+        <h2>Upload blast results</h2>
         <p>
-            Download annotations:
-            <a href="{{ asset_url }}">{{ asset_url }}</a>
+            <h4>Instructions before uploading</h4>
+            <ol>
+                <li>Check the csv for empty line breaks and remove them.</li>
+                <li>Make sure to remove the header from the csv.</li>
+            </ol>
         </p>
-    {% endif %}
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" id="blast_result" name="blast_result">
+            <button type="submit">Upload file</button>
+        </form>
+        <div class="progress">
+            <div id="progressBar" class="progress-bar progress-bar-info" role="progressbar" style="width: 100%;" aria-valuenow="100"
+                 aria-valuemin="0" aria-valuemax="100">Waiting</div>
+        </div>
+        {% if asset_url %}
+            <p>
+                Download annotations:
+                <a href="{{ asset_url }}">{{ asset_url }}</a>
+            </p>
+        {% endif %}
+    </div>
 {% endblock content %}

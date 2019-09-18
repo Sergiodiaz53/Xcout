@@ -21,6 +21,7 @@ def upload_blast_result(request):
         print(url)
         print(location)
         annotation_file_name = handle_blast_result(location, file_name, 'HOMSA')
+
         context['asset_url'] = fss.url(annotation_file_name)
         print(context['asset_url'])
 
@@ -31,13 +32,13 @@ def handle_blast_result(location, file_name, species_name):
             #cambiar
             species = Specie.objects.get(name=species_name)
 
-            #preparar la respuesta http en formato csv
+            '''#preparar la respuesta http en formato csv
             response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename="annotations_of_' + file_name+ '"'
 
             csv_w = csv.writer(response)
             csv_w.writerow(['id_query', 'id_db', 'pos_blast_x1', 'pos_blast_x2', 'pos_gen_x1',
-                            'pos_gen_x2', 'gene', 'gene_synonym', 'product', 'note'])
+                            'pos_gen_x2', 'gene', 'gene_synonym', 'product', 'note'])'''
 
             with open(os.path.join(location, file_name), 'r') as result_file,\
                     open(os.path.join(location, 'annotations_of_' + file_name), 'w') as output_file:
@@ -63,8 +64,10 @@ def handle_blast_result(location, file_name, species_name):
                 print(str(line_count) + ' processed lines.')
 
                 # Segunda parte:
-                # utilizar las posiciones filtradas para obtener las anotaciones contenidas
-                # por cada resultado
+                # utilizar las posiciones filtradas para obtener las anotaciones contenidas por cada resultado
+                # escribimos la cabecera
+                output_file.write('id_query, id_db, pos_blast_x1, pos_blast_x2, pos_gen_x1, pos_gen_x2, gene, gene_synonym, product, note\n')
+
                 for result in results:
                     # obtenemos las anotaciones comprendidas entre ambas posiciones
                     annotations = Annotation.objects.all().filter(
@@ -79,7 +82,7 @@ def handle_blast_result(location, file_name, species_name):
                                                                  annotation.gen_x1, annotation.gen_x2, annotation.gene,
                                                                  annotation.gene_synonym, annotation.product,
                                                                  annotation.note)
-                        print(row)
+                        # print(row)
                         output_file.write(row + '\n')
                         '''csv_w.writerow([result[0], result[1], result[2], result[3],
                                         annotation.gen_x1, annotation.gen_x2, annotation.gene, annotation.gene_synonym,
