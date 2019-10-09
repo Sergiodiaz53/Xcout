@@ -122,6 +122,7 @@ function changeSpecieAndChromosome(specieSelect, chromosomeSelect, specie, chrom
         callback();
     });
 }
+
 // Export selected overlay to blocktracer
 function exportToBlockTracer(spX, chrX, spY, chrY){
     // Check if LOCAL or SERVER
@@ -944,7 +945,7 @@ function fitBlockTracer(){
 }
 
 
-// ANNOTATION =========================================================================
+// ANNOTATIONS =========================================================================
 
 function showAnnotation() {
     $('#annotation-sidebar-wrapper').show();
