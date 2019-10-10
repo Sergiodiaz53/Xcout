@@ -184,6 +184,7 @@ function executeBlockTracer(){
         paintBlockTracer(currSpecies, currChromosomes, currResults.events, currResults.lengths, $("#verticalBT").hasClass('active'));
         $("#blockModalButton").prop('disabled', false);
         showAlert("Loaded", "BlockTracer succesfully finished", "info");
+    generateBlockInfos();
     } else 
     $.ajax({
         type:"POST",
@@ -201,6 +202,7 @@ function executeBlockTracer(){
             paintBlockTracer(species, chromosomes, results.events, results.lengths, $("#verticalBT").hasClass('active'));
             $("#blockModalButton").prop('disabled', false);
             showAlert("Loaded", "BlockTracer succesfully finished", "info");
+    generateBlockInfos();
         }
     });
 }
@@ -241,7 +243,7 @@ var SPECIES_LABEL_OFFSET_X = -60;
 var SPECIES_LABEL_OFFSET_Y = 40;
 var MINIMUM_CHROMOSOME_PIXELS = 800;
 
-var selectedBlock, svgInverted, trace;
+var selectedBlock, svgInverted, trace, currentBlockInfo;
 
 
 function paintBlockTracer(species, chromosomes, events, lengths, inverted){
@@ -346,7 +348,8 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     var tracedBlocks = svg.selectAll('blockInfo')
         .data(preparedData.eventData)
         .enter().append('g').classed('blockInfo', true);
-
+    //console.log('tracedBlocks');
+    //console.log(tracedBlocks);
     // Draw blocks
     tracedBlocks.append('rect')
     .attr('class', function(d) { return 'tracedBlock block'+d.block_id} )
@@ -360,7 +363,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
     .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT)
     .attr('fill', function(d) { return d.color }) //preparedData.colors[d.block_id]
     .on("click", function(d) {
-        //ANNOTATION
+        //========> ANNOTATION
         hideConnectionLines();
         selectedBlock = d3.select(this);
         svgInverted = inverted;
@@ -371,7 +374,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                 .style("z-index", 10)
                 .classed("clicked", false);
 
-            // ANNOTATION
+            //========> ANNOTATION
             hideAnnotation();
             d3.selectAll('#annotation_block').remove();
 
@@ -396,8 +399,8 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
                     else return false;
                 });
 
-            // ANNOTATION
-
+            //========> ANNOTATION
+            //generateBlockInfos(); // <---- testing
             showAnnotation();
             resetPagination();
             getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done( function (response) {
@@ -416,6 +419,10 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted){
             //paintGaps(d.x1, d.x2);
 
             trace = d3.selectAll('.tracedBlock.clicked');
+            /*console.log('tracedBlocks');
+    console.log(tracedBlocks);
+    console.log('trace');
+    console.log(trace);*/
             //console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
 
             //let pos_x1 = xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE * d.chromoIndex;
@@ -765,7 +772,7 @@ $("#downloadDataButton").click(function() {
 
 $("#myModal").draggable({
     handle: ".modal-header"
-}); 
+});
 
 function generateBlockInfos(){
     let blockInfos = [], blockID = 0;
@@ -803,6 +810,8 @@ function generateBlockInfos(){
                 })
             }
             blockID++;
+
+            currentBlockInfo = blockInfos;
         }
     }
     return blockInfos;
@@ -1042,6 +1051,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks){
                     $.each(parsed, function (index, annotation){
                         //console.log('block',block);
                         //console.log('$(block)',$(block));
+
                         paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
                     });
                 }
@@ -1320,11 +1330,25 @@ function appendInfo(species, block_x1, block_x2, div){
 }
 
 function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
+    let strand='';
+    $.each(currentBlockInfo, function(index, blockInfo) {
+        if((blockInfo.block_id===block.__data__.block_id)&&(blockInfo.specie===block.__data__.specie)){
+            console.log(blockInfo.strand);
+            strand = blockInfo.strand;
+        }
+    });
+    /*if (strand==='r'){
+        console.log(block.__data__.block_id + ' - ' + block.__data__.specie + ' - ' + strand + ' - ' + product);
+    } else if (strand==='f'){
+        console.log(block.__data__.block_id + ' - ' + block.__data__.specie + ' - ' + strand + ' - ' + product);
+    }*/
+
     // get annotation range
     //let gen_x1 = annotation.find('.gen_x1').html();
     //let gen_x2 = annotation.find('.gen_x2').html();
-    //console.log('block----------------',block);
+    //console.log('block----------------', block);
     // hay que comprobar si están invertidos
+
     let escalated_x1 = parseFloat(inverted ? block.attributes.y.value : block.attributes.x.value);
     let escalated_width = parseFloat(inverted ? block.attributes.height.value : block.attributes.width.value);
     let escalated_x2 = escalated_width + escalated_x1;
@@ -1367,19 +1391,35 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product){
     // attach the annotation somewhere
     let parent = block.parentElement;
     //d3.select('.blockInfo').append('rect')
-    d3.select(parent).append('rect')
-        .attr('id', 'annotation_block')
-        //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
-        .attr(getPositionAttribute('x', inverted), function() { return  blockScale(gen_x1); })
-        .attr(getPositionAttribute('y', inverted), function() { return escalated_y + 1.5; })
-        //.attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
-        .attr(getPositionAttribute('width', inverted), function() { return  Math.abs(blockScale(gen_x2)-blockScale(gen_x1)); })
-        .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
-        .attr('fill', 'none')
-        .attr('stroke', inverted_color)
-        .attr('stroke-width','2px')
-            .append("svg:title")
-                .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
+    if (strand==='r'){
+        d3.select(parent).append('rect')
+            .attr('id', 'annotation_block')
+            //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
+            .attr(getPositionAttribute('x', inverted), function() { return  blockScale(block_x2-gen_x1); })
+            .attr(getPositionAttribute('y', inverted), function() { return escalated_y + 1.5; })
+            //.attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
+            .attr(getPositionAttribute('width', inverted), function() { return  Math.abs(blockScale(gen_x2)-blockScale(gen_x1)); })
+            .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
+            .attr('fill', 'none')
+            .attr('stroke', inverted_color)
+            .attr('stroke-width','2px')
+                .append("svg:title")
+                    .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
+    } else {
+        d3.select(parent).append('rect')
+            .attr('id', 'annotation_block')
+            //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
+            .attr(getPositionAttribute('x', inverted), function() { return  blockScale(gen_x1); })
+            .attr(getPositionAttribute('y', inverted), function() { return escalated_y + 1.5; })
+            //.attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
+            .attr(getPositionAttribute('width', inverted), function() { return  Math.abs(blockScale(gen_x2)-blockScale(gen_x1)); })
+            .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
+            .attr('fill', 'none')
+            .attr('stroke', inverted_color)
+            .attr('stroke-width','2px')
+                .append("svg:title")
+                    .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
+    }
 }
 
 function paintGaps(gen_x1, gen_x2){
