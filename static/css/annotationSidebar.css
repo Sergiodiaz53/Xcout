@@ -66,16 +66,16 @@
     background-color: white;
 }
 
-#annotation-selected-table tbody tr{
+#annotation-selected-table tbody tr {
     background-color: crimson;
     color: white;
 }
 
-#annotation-sidebar-wrapper tbody{
+#annotation-sidebar-wrapper tbody {
     font-size: 11px;
 }
 
-#annotation-selection-sidebar-wrapper tbody{
+#annotation-selection-sidebar-wrapper tbody {
     font-size: 11px;
 }
 
@@ -84,7 +84,7 @@
     margin-left: 6px;
 }
 
-.search-container button{
+.search-container button {
     margin-right: 6px;
 }
 
@@ -92,7 +92,7 @@
     display: inline-block;
 }
 
-.search-container input{
+.search-container input {
     width: 110px;
 }
 
@@ -102,4 +102,32 @@
 
 #search-info {
     font-style: italic;
+}
+
+.search-product-container {
+    display: flex;
+    justify-content: space-around;
+    padding: 5px;
+}
+
+.page-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+#product-search {
+    width: 95%;
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+#top-sidebar-menu {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#menu-export-csv {
+    margin-top: -50px;
+    margin-bottom: 25px;
+    margin-right: 30px;
 }
