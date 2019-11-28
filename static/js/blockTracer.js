@@ -1204,7 +1204,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
     });
 
     $.each(blocks[0], function (index, block) {
-        //console.log(index + ':' + block.__data__);
+        //console.log(index + ':' + block.__data__.specie);
         if (block.__data__.specie !== species) {
             // Use relative location
             let annotation_x1 = block.__data__.x1 + distance_block_annotation;
@@ -1282,7 +1282,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
     });
 }
 
-// LAZY LOADING ===================================================
+// LAZY LOADING - FOR PRINCIPAL SEARCH - DEPRECATED (but still works)===================================================
 function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end) {
     return $.ajax({
         type: "GET",
@@ -1426,6 +1426,64 @@ function showPageInfo(species, gen_x1, gen_x2) {
     });
 }
 
+// =======================================================================
+
+// PAGINATION VERSION 2 ==================================================
+
+var ALL_SELECTED_SPECIES_TAGS = [];
+
+function showAnnotationProduct() {
+    $('#annotation-product-sidebar-wrapper').show();
+}
+
+function hideAnnotationProduct() {
+    $('#annotation-product-sidebar-wrapper').hide();
+}
+
+function getAnnotationProductPage(species, gen_x1, gen_x2, product, page) {
+    return $.ajax({
+        type: "GET",
+        url: FORCE_URL + "/API/annotation_by_product/",
+        data: {
+            species: species,
+            gen_x1: gen_x1,
+            gen_x2: gen_x2,
+            product: product,
+            page_number: page
+        }
+    });
+}
+
+function loadAnnotationByProduct() {
+    ALL_SELECTED_SPECIES_TAGS = [];
+    $('#annotation-product').empty();
+    showAnnotationProduct();
+    for (let i = 0; i < trace[0].length; i++) {
+        // donde guardo las etiquetas de cada tabla --> array: cada indice es el indice de cada especie cargada
+        ALL_SELECTED_SPECIES_TAGS[i] = createSpeciesTable(trace[0][i].__data__.specie, -1, "#annotation-product");
+        goToProductPage(trace[0][i].__data__.specie, 1);
+    }
+}
+
+function goToProductPage(species, page) {
+    let gen_x1 = selectedBlock[0][0].__data__.x1;
+    let gen_x2 = selectedBlock[0][0].__data__.x2;
+    let product = $('#product-search')[0].value;
+    console.log(species, gen_x1, gen_x2, product, page);
+    getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
+        let page_control = $('#annotation-table-' + species + '#page-control-product');
+        console.log(page_control);
+        let parsed = JSON.parse(response);
+
+        // do stuff with controls
+
+        let unparsed = JSON.stringify(parsed.object_list);
+        populateTable(unparsed, table);
+    });
+}
+
+// =======================================================================
+
 // SELECTED ANNOTATION ===================================================
 
 function showSelectedAnnotation() {
@@ -1448,16 +1506,45 @@ function createSpeciesTable(species, coincidences, div) {
             .text(species))
     );
 
-    $(div).append($('<p>')
-        .attr('id', 'annotation-count')
-        .attr('class', 'h4 text-center')
-        .append($('<small>')
-            .attr('class', 'text-muted')
-            .text('Coincidences: '))
-        .append($('<span>')
-            .attr('class', 'block_coincidences')
-            .text(coincidences))
-    );
+    // si es -1 son los controles de paginacion
+    if (coincidences === -1) {
+        $(div).append($('<div>')
+            .attr('id', 'page-control-product')
+            .append($('<button>')
+                .attr('id', 'menu-left')
+                .attr('class', 'btn btn-info')
+                .append($('<span>')
+                    .attr('class', 'glyphicon glyphicon-chevron-left')))
+            .append($('<div>')
+                .attr('id', 'search_container')
+                .attr('class', 'text-muted')
+                .append($('<input>')
+                    .attr('type', 'number')
+                    .attr('placeholder', 'Page')
+                    .attr('name', 'search')
+                    .attr('min', 0)
+                    .attr('size', 4))
+                .append(' of ')
+                .append($('<span>')
+                    .attr('id', 'last-page')))
+            .append($('<button>')
+                .attr('id', 'menu-right')
+                .attr('class', 'btn btn-info')
+                .append($('<span>')
+                    .attr('class', 'glyphicon glyphicon-chevron-right')))
+        );
+    } else {
+        $(div).append($('<p>')
+            .attr('id', 'annotation-count')
+            .attr('class', 'h4 text-center')
+            .append($('<small>')
+                .attr('class', 'text-muted')
+                .text('Coincidences: '))
+            .append($('<span>')
+                .attr('class', 'block_coincidences')
+                .text(coincidences))
+        );
+    }
 
     let tableId = 'annotation-table-' + species;
 

@@ -373,7 +373,7 @@
                     <span class="glyphicon glyphicon-remove"></span>
                 </button>
                 <input id="product-search" name="search_prod">
-                <button class="btn btn-default" id="menu-toggle" onclick="goToPage()">
+                <button class="btn btn-default" id="menu-toggle" onclick="loadAnnotationByProduct()">
                     <span class="glyphicon glyphicon-search"></span> Search by product
                 </button>
 
@@ -456,29 +456,11 @@
      <!-- ANNOTATION PRODUCT RESULTS SIDEBAR -->
 
     <div class="border-right" id="annotation-product-sidebar-wrapper">
-        <button class="btn btn-danger" id="menu-toggle" onclick="hideSelectedAnnotation()">
+        <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotationProduct()">
             <span class="glyphicon glyphicon-remove"></span>
         </button>
         <div id="annotation-product">
-            <p class="h5 text-center" id="annotation-product"></p>
-            <p class="h4 text-center" id="annotation-species"></p>
-            <table id="annotation-product-table" class="table table-sm table-bordered">
-                <thead>
-                <tr>
-                    <th scope="col">Start</th>
-                    <th scope="col">End</th>
-                    <th scope="col">Length</th>
-                    <th scope="col">Product</th>
-                    <th scope="col">Note</th>
-                </tr>
-                </thead>
-                <tbody>
-
-                </tbody>
-            </table>
-        </div>
-        <div id="annotation-others-products">
-
+            <p class="h5 text-center" id="annotation-product-name-search"></p>
         </div>
     </div>
 

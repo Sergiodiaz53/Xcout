@@ -1,4 +1,5 @@
 from comparisonManager.models import *
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
@@ -142,6 +143,8 @@ def generateJSONAnnotationFromSpecieBetweenPositions(request):
         gen_x2__lte=gen_x2
     ).order_by('gen_x1')  # [:50]
     print(annotations)
+    print(type(annotations))
+    print(type(annotations.values()))
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())
     # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
@@ -189,16 +192,18 @@ def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
 @authentication_classes([])
 @permission_classes([])
 def generateJSONAnnotationFromSpecieByProduct(request):
+    print('heyyyyyyyyyyyyyyyyyyyyyyyyyyy')
+    print(request)
     species = request.GET.get('species', '')
     gen_x1 = int(request.GET.get('gen_x1', ''))
     gen_x2 = int(request.GET.get('gen_x2', ''))
     product = request.GET.get('product', '')
+    page_number = int(request.GET.get('page_number', ''))
 
     if gen_x1 > gen_x2:
         aux = gen_x1
         gen_x1 = gen_x2
         gen_x2 = aux
-        # print("x1: " + str(gen_x1) + " x2: " + str(gen_x2) + "\n")
 
     annotations = Annotation.objects.all().filter(
         species__name=species,
@@ -206,13 +211,18 @@ def generateJSONAnnotationFromSpecieByProduct(request):
         gen_x2__lte=gen_x2,
         product__contains=product
     ).order_by('-gen_x1')
-    print(len(annotations))
-    print(annotations)
-    # You MUST convert QuerySet to List object
-    jsonAnnotationList = list(annotations.values())
-    # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
 
-    return JsonResponse(json.dumps(jsonAnnotationList), safe=False)
+    paginator = Paginator(annotations, 10)
+    page = paginator.page(page_number)
+    json_annotation_list = list(page.object_list.values())
+
+    return JsonResponse(json.dumps({
+        'object_list': json_annotation_list,
+        'paginator_count': paginator.count,
+        'num_pages': paginator.num_pages,
+        'page_number': page.number,
+        'has_next': page.has_next(),
+        'has_prev': page.has_previous()}), safe=False)
 
 
 @api_view(['GET'])
