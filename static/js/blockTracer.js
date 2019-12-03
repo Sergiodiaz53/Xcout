@@ -1465,7 +1465,7 @@ function loadAnnotationByProduct() {
             .append($("<div>")
                 .attr("id", div_id));
         div_id = "#" + div_id;
-        createSpeciesTable(species, -1, div_id);
+        createSpeciesTable(species, null, div_id);
         goToProductPage(species, 1);
     }
 }
@@ -1533,7 +1533,7 @@ function createSpeciesTable(species, coincidences, div) {
     );
 
     // si es -1 son los controles de paginacion
-    if (coincidences === -1) {
+    if (coincidences === null) {
         $(div).append($('<div>')
             .attr('id', 'page-control-product')
             .append($('<button>')
@@ -1589,7 +1589,7 @@ function createSpeciesTable(species, coincidences, div) {
     let tableId = 'annotation-table';
 
     $(div).append($('<table>')
-        //.attr('class', tableId)
+    //.attr('class', tableId)
         .attr('class', 'table table-sm table-bordered annotation-comparison-tables ' + tableId)
         .append($('<thead>')
             .append($('<tr>')
@@ -1608,13 +1608,33 @@ function createSpeciesTable(species, coincidences, div) {
                 .append($('<th>')
                     .attr('scope', 'col')
                     .text('Note'))))
-        .append($('<tbody>'))
-    );
+        .append($('<tbody>')));
+    if (coincidences === null) {
+        $(div).on('click', 'tbody tr', function () {
+            let row = $(this);
+            if (row.hasClass('highlight')) {
+                row.removeClass('highlight');
+                d3.selectAll('#annotation_block').remove();
+            } else {
+                d3.selectAll('#annotation_block').remove();
+                row.addClass('highlight').siblings().removeClass('highlight');
+                let gen_x1 = row.find('.gen_x1').html();
+                let gen_x2 = row.find('.gen_x2').html();
+                let product = row.find('.product').html();
+                let note = row.find('.note').html();
+                paintAnnotation(selectedBlock[0][0], svgInverted, gen_x1, gen_x2, product);
+                console.log('LETS TRACE=============================    ');
+                //species = row.parentsUntil()[2].id.split("-")[2];
+                traceAnnotation(species, gen_x1, gen_x2, product, note, trace);
+                showSelectedAnnotation();
+            }
+        });
+    }
 
     //return '#annotation-comparison-tables #' + tableId;
     return '.' + tableId;
 }
-
+var ROWMAMA;
 //==========================================================================
 
 function populateTable(response, table) {
