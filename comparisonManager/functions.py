@@ -211,7 +211,7 @@ def generateJSONAnnotationFromSpecieByProduct(request):
         product__contains=product
     ).order_by('-gen_x1')
 
-    paginator = Paginator(annotations, 10)
+    paginator = Paginator(annotations, 5)
     page = paginator.page(page_number)
     json_annotation_list = list(page.object_list.values())
 

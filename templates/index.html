@@ -408,7 +408,7 @@
             </div>
         </div>
         <div id="annotation-content">
-            <table id="annotation-table" class="table table-sm table-bordered"> <!--table-striped table-hover-->
+            <table class="table table-sm table-bordered annotation-comparison-tables annotation-table"> <!--table-striped table-hover-->
                 <thead>
                 <tr>
                     <th scope="col">Start</th>
@@ -422,6 +422,18 @@
 
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- ANNOTATION PRODUCT RESULTS SIDEBAR -->
+
+    <div class="border-right" id="annotation-product-sidebar-wrapper">
+        <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotationProduct()">
+            <span class="glyphicon glyphicon-remove"></span>
+        </button>
+        <div id="product-search-name"></div>
+        <div id="annotation-product">
+            <p class="h5 text-center" id="annotation-product-name-search"></p>
         </div>
     </div>
 
@@ -453,17 +465,7 @@
         </div>
     </div>
 
-     <!-- ANNOTATION PRODUCT RESULTS SIDEBAR -->
 
-    <div class="border-right" id="annotation-product-sidebar-wrapper">
-        <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotationProduct()">
-            <span class="glyphicon glyphicon-remove"></span>
-        </button>
-        <div id="product-search-name"></div>
-        <div id="annotation-product">
-            <p class="h5 text-center" id="annotation-product-name-search"></p>
-        </div>
-    </div>
 
     <link rel="stylesheet" href="{% static "css/annotationSidebar.css" %}">
 

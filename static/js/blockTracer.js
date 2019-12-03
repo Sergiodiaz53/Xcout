@@ -467,7 +467,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
                 resetPagination();
                 getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done(function (response) {
                     appendInfo(d.specie, d.x1, d.x2, '#annotation-top');
-                    populateTable(response, '#annotation-table');
+                    populateTable(response, '.annotation-table');
 
                     $("#input-search").val(0);
                     showPageInfo(d.specie, d.x1, d.x2)
@@ -1172,7 +1172,7 @@ function hideAnnotation() {
             species: 'PONAB'
         },
         success: function(response) {
-            populateTable(response, '#annotation-table');
+            populateTable(response, '.annotation-table');
         }
     });
 }*/
@@ -1322,7 +1322,7 @@ function nextAnnotationPage() {
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done(function (response) {
         //appendInfo(species, gen_x1, gen_x2);
         if ($.trim(response)) {// si no está vacio
-            populateTable(response, '#annotation-table');
+            populateTable(response, '.annotation-table');
             getAnnotationsLength(species, gen_x1, gen_x2).done(function (annotations_count) {
                 if (page_start < 0) {
                     $("#input-search").val(Math.ceil((annotations_count / PAGE_SIZE) + Math.ceil(page_start / PAGE_SIZE)));
@@ -1355,7 +1355,7 @@ function previousAnnotationPage() {
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done(function (response) {
         //appendInfo(species, gen_x1, gen_x2);
         if ($.trim(response)) {// si no está vacio
-            populateTable(response, '#annotation-table');
+            populateTable(response, '.annotation-table');
             getAnnotationsLength(species, gen_x1, gen_x2).done(function (annotations_count) {
                 if (page_start < 0) {
                     $("#input-search").val(Math.ceil((annotations_count / PAGE_SIZE) + Math.ceil(page_start / PAGE_SIZE)));
@@ -1405,7 +1405,7 @@ function goToPage() {
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
                     showPageInfo(species, gen_x1, gen_x2);
-                    populateTable(response, '#annotation-table');
+                    populateTable(response, '.annotation-table');
                 } else {
                     resetPagination();
                 }
@@ -1477,7 +1477,7 @@ function goToProductPage(species, page) {
     console.log(species, gen_x1, gen_x2, product, page);
     getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
         let div_id = "#product-results-" + species;
-        let table = div_id + " #annotation-table";
+        let table = div_id + " .annotation-table";
         let page_control = div_id + " #page-control-product";
 
         let parsed = JSON.parse(response);
@@ -1487,6 +1487,8 @@ function goToProductPage(species, page) {
 
         let unparsed = JSON.stringify(parsed.object_list);
         populateTable(unparsed, table);
+    }).fail(function (event) {
+        //console.log(event);
     });
 }
 
@@ -1548,7 +1550,18 @@ function createSpeciesTable(species, coincidences, div) {
                     .attr('placeholder', 'Page')
                     .attr('name', 'search')
                     .attr('min', 0)
-                    .attr('size', 4))
+                    .attr('size', 4)
+                    .keypress(function (event) {
+                        if (event.key !== "Enter") {
+                            return;
+                        }
+                        event.preventDefault();
+
+                        let page = $(this)[0].value;
+                        let div_id = $(this).parent().parent().parent()[0].id;
+                        let species = div_id.split("-")[2];
+                        goToProductPage(species, page);
+                    }))
                 .append(' of ')
                 .append($('<span>')
                     .attr('id', 'last-page')))
@@ -1576,8 +1589,8 @@ function createSpeciesTable(species, coincidences, div) {
     let tableId = 'annotation-table';
 
     $(div).append($('<table>')
-        .attr('id', tableId)
-        .attr('class', 'table table-sm table-bordered annotation-comparison-tables')
+        //.attr('class', tableId)
+        .attr('class', 'table table-sm table-bordered annotation-comparison-tables ' + tableId)
         .append($('<thead>')
             .append($('<tr>')
                 .append($('<th>')
@@ -1599,7 +1612,7 @@ function createSpeciesTable(species, coincidences, div) {
     );
 
     //return '#annotation-comparison-tables #' + tableId;
-    return '#' + tableId;
+    return '.' + tableId;
 }
 
 //==========================================================================
@@ -1878,14 +1891,12 @@ function padZero(str, len) {
 
 // Highlight row / remove rect / paint
 $(document).ready(function () {
-    $('#annotation-table').on('click', 'tbody tr', function (event) {
+    $('.annotation-table').on('click', 'tbody tr', function (event) {
         //console.log(event);
         let row = $(this);
         if (row.hasClass('highlight')) {
             row.removeClass('highlight');
             d3.selectAll('#annotation_block').remove();
-            //$('#annotation-selected').empty();
-            //$('#annotation-others').empty();
         } else {
             d3.selectAll('#annotation_block').remove();
             row.addClass('highlight').siblings().removeClass('highlight');
@@ -1897,7 +1908,6 @@ $(document).ready(function () {
             console.log('LETS TRACE=============================    ');
             traceAnnotation(selectedBlock[0][0].__data__.specie, gen_x1, gen_x2, product, note, trace);
             showSelectedAnnotation();
-
         }
     });
 
