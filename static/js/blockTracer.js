@@ -1455,13 +1455,18 @@ function getAnnotationProductPage(species, gen_x1, gen_x2, product, page) {
 }
 
 function loadAnnotationByProduct() {
-    ALL_SELECTED_SPECIES_TAGS = [];
+    $('#product-search-name').empty().append('Results for: <b>\"' + $('#product-search')[0].value + '\"</b>');
     $('#annotation-product').empty();
     showAnnotationProduct();
     for (let i = 0; i < trace[0].length; i++) {
-        // donde guardo las etiquetas de cada tabla --> array: cada indice es el indice de cada especie cargada
-        ALL_SELECTED_SPECIES_TAGS[i] = createSpeciesTable(trace[0][i].__data__.specie, -1, "#annotation-product");
-        goToProductPage(trace[0][i].__data__.specie, 1);
+        let species = trace[0][i].__data__.specie;
+        let div_id = "product-results-" + species;
+        $("#annotation-product")
+            .append($("<div>")
+                .attr("id", div_id));
+        div_id = "#" + div_id;
+        createSpeciesTable(species, -1, div_id);
+        goToProductPage(species, 1);
     }
 }
 
@@ -1471,15 +1476,34 @@ function goToProductPage(species, page) {
     let product = $('#product-search')[0].value;
     console.log(species, gen_x1, gen_x2, product, page);
     getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
-        let page_control = $('#annotation-table-' + species + '#page-control-product');
-        console.log(page_control);
+        let div_id = "#product-results-" + species;
+        let table = div_id + " #annotation-table";
+        let page_control = div_id + " #page-control-product";
+
         let parsed = JSON.parse(response);
 
-        // do stuff with controls
+        $(page_control).find('input')[0].value = page;
+        $(page_control).find('#last-page').empty().append(parsed.num_pages);
 
         let unparsed = JSON.stringify(parsed.object_list);
         populateTable(unparsed, table);
     });
+}
+
+function nextPage(element) {
+    let div_id = $(element).parent().parent()[0].id;
+    let species = div_id.split("-")[2];
+    let current_page = parseInt($(element).parent().find("#search-container").find('input')[0].value);
+    current_page++;
+    goToProductPage(species, current_page);
+}
+
+function previousPage(element) {
+    let div_id = $(element).parent().parent()[0].id;
+    let species = div_id.split("-")[2];
+    let current_page = parseInt($(element).parent().find("#search-container").find('input')[0].value);
+    current_page--;
+    goToProductPage(species, current_page);
 }
 
 // =======================================================================
@@ -1513,10 +1537,11 @@ function createSpeciesTable(species, coincidences, div) {
             .append($('<button>')
                 .attr('id', 'menu-left')
                 .attr('class', 'btn btn-info')
+                .attr('onclick', 'previousPage(this)')
                 .append($('<span>')
                     .attr('class', 'glyphicon glyphicon-chevron-left')))
             .append($('<div>')
-                .attr('id', 'search_container')
+                .attr('id', 'search-container')
                 .attr('class', 'text-muted')
                 .append($('<input>')
                     .attr('type', 'number')
@@ -1530,6 +1555,7 @@ function createSpeciesTable(species, coincidences, div) {
             .append($('<button>')
                 .attr('id', 'menu-right')
                 .attr('class', 'btn btn-info')
+                .attr('onclick', 'nextPage(this)')
                 .append($('<span>')
                     .attr('class', 'glyphicon glyphicon-chevron-right')))
         );
@@ -1546,7 +1572,8 @@ function createSpeciesTable(species, coincidences, div) {
         );
     }
 
-    let tableId = 'annotation-table-' + species;
+    //let tableId = 'annotation-table-' + species;
+    let tableId = 'annotation-table';
 
     $(div).append($('<table>')
         .attr('id', tableId)

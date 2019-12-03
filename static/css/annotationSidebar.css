@@ -162,3 +162,19 @@
 #annotation-product-sidebar-wrapper.page-control {
     font-size: 11px;
 }
+
+#page-control-product {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+#product-search-name {
+    text-align: center;
+    margin-top: -28px;
+    font-size: larger;
+}
+
+#search-container input{
+    width: 70px;
+}

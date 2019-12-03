@@ -192,7 +192,6 @@ def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
 @authentication_classes([])
 @permission_classes([])
 def generateJSONAnnotationFromSpecieByProduct(request):
-    print('heyyyyyyyyyyyyyyyyyyyyyyyyyyy')
     print(request)
     species = request.GET.get('species', '')
     gen_x1 = int(request.GET.get('gen_x1', ''))
