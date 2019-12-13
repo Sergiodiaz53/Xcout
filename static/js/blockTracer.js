@@ -1157,11 +1157,11 @@ function fitBlockTracer() {
 // ANNOTATIONS =========================================================================
 
 function showAnnotation() {
-    $('#annotation-sidebar-wrapper').show();
+    if ($('#show-annotation-feature').find('input').is(':checked')) $('#annotation-sidebar-wrapper').show();
 }
 
 function hideAnnotation() {
-    $('#annotation-sidebar-wrapper').hide();
+    if ($('#show-annotation-feature').find('input').is(':checked')) $('#annotation-sidebar-wrapper').hide();
 }
 
 /*function getAnnotationTest(){
@@ -1589,7 +1589,7 @@ function createSpeciesTable(species, coincidences, div) {
     let tableId = 'annotation-table';
 
     $(div).append($('<table>')
-    //.attr('class', tableId)
+        //.attr('class', tableId)
         .attr('class', 'table table-sm table-bordered annotation-comparison-tables ' + tableId)
         .append($('<thead>')
             .append($('<tr>')
@@ -1634,7 +1634,9 @@ function createSpeciesTable(species, coincidences, div) {
     //return '#annotation-comparison-tables #' + tableId;
     return '.' + tableId;
 }
+
 var ROWMAMA;
+
 //==========================================================================
 
 function populateTable(response, table) {
@@ -1647,7 +1649,7 @@ function populateTable(response, table) {
         let data = parsed[index];
         //console.log('DATA:');console.log(data);
         let row = $('<tr>')
-        //.attr('class', 'clickable-row')
+            //.attr('class', 'clickable-row')
             .append($('<th>')
                 .attr('scope', 'row')
                 .attr('class', 'gen_x1')
