@@ -1,6 +1,6 @@
-{%extends "includes/basic.html"%}
-{%load staticfiles%}
-{%block content%}
+{% extends "includes/basic.html" %}
+{% load staticfiles %}
+{% block content %}
     <script type="text/javascript" src="{% static 'js/visualizationManager.js' %}"></script>
     <script> var myJSON = "{{ chromosomes }}"</script>
 
@@ -8,215 +8,264 @@
 
     <div class="row">
 
-        <div id="overlay">
-            <div id="spinner" class="spinner">
-                <div class="rect1"></div>
-                <div class="rect2"></div>
-                <div class="rect3"></div>
-                <div class="rect4"></div>
-                <div class="rect5"></div>
-                <p id="loadingtext">Loading...</p>
-            </div>
+    <div id="overlay">
+        <div id="spinner" class="spinner">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+            <p id="loadingtext">Loading...</p>
         </div>
-        
-        <div class="col-sm-3 center-block">
-            <div class="affix sidemenu">
+    </div>
+
+    <div class="col-sm-3 center-block">
+        <div class="affix sidemenu">
             <!-- ANNOTATION TEST -->
             <!--<button class="btn btn-primary" id="menu-toggle" onclick="showAnnotation()">Open annotation menu</button>-->
             <!-- !ANNOTATION TEST -->
-                <!-- Functionalities Tabs -->
-                <ul class="nav nav-tabs nav-justified">
-                    <li class="active"> <a href="#xcoutSideMenu" data-target="#xcoutSideMenu, #xcoutCanvas" data-toggle="tab" >XCout</a> </li>
-                    <li> <a href="#blockTracerSideMenu" data-target="#blockTracerSideMenu, #blockTracerCanvas" data-toggle="tab">BlockTracer</a> </li>
-                </ul>
-                
-                <!-- Functionalities Tab Content -->
-                <div id="sidemenu" class="tab-content">
-                    <!-- XCout Sidemenu -->
-                    <div id="xcoutSideMenu" class="tab-pane fade in active">
-                        <!-- Species Table -->
-                        <div class="form-inline text-center sidemenu_member">
-                            <div class="form-group">
-                                <select class="form-control input-sm" id="specieX">
+            <!-- Functionalities Tabs -->
+            <ul class="nav nav-tabs nav-justified">
+                <li class="active"><a href="#xcoutSideMenu" data-target="#xcoutSideMenu, #xcoutCanvas"
+                                      data-toggle="tab">XCout</a></li>
+                <li><a href="#blockTracerSideMenu" data-target="#blockTracerSideMenu, #blockTracerCanvas"
+                       data-toggle="tab">BlockTracer</a></li>
+            </ul>
+
+            <!-- Functionalities Tab Content -->
+            <div id="sidemenu" class="tab-content">
+                <!-- XCout Sidemenu -->
+                <div id="xcoutSideMenu" class="tab-pane fade in active">
+                    <!-- Species Table -->
+                    <div class="form-inline text-center sidemenu_member">
+                        <div class="form-group">
+                            <select class="form-control input-sm" id="specieX">
                                 {% for chromosome in chromosomes %}
                                     <option value="{{ chromosome }}">{{ chromosome }}</option>
                                 {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <select class="form-control input-sm" id="specieY">
-                                {% for chromosome in chromosomes %}
-                                    <option value="{{ chromosome }}">{{ chromosome }}</option>
-                                {% endfor %}
-                                </select>
-                            </div>
-
-                            <button type="button" class="btn btn-default" id="addComparison" data-toggle="tooltip" title="Load from Server" data-placement="bottom"><bs-glyphicon icon="plus"></bs-glyphicon></button>
-                            
-                            <button type="button" class="btn btn-secondary" id="loadLocal" data-toggle="tooltip" title="Load from Local" data-placement="bottom"><bs-glyphicon icon="folder-open"></bs-glyphicon></button>
-                            <div id="collapseLocal" class="panel-collapse collapse" >
-                                <input type="file" id="file-input" webkitdirectory directory multiple>
-                            </div>
+                            </select>
                         </div>
 
-                        <div id="comparisonList">
-                            <table class="table table-striped">
-                                <tbody>
-                                <thead>
-                                    <tr>
-                                        <th class="col-md-4">Specie X</th>
-                                        <th class="col-md-2"> </th>
-                                        <th class="col-md-4">Specie Y</th>
-                                        <th class="col-md-2"></th>
-                                    </tr>
-                                    </thead>
+                        <div class="form-group">
+                            <select class="form-control input-sm" id="specieY">
+                                {% for chromosome in chromosomes %}
+                                    <option value="{{ chromosome }}">{{ chromosome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn btn-default" id="addComparison" data-toggle="tooltip"
+                                title="Load from Server" data-placement="bottom">
+                            <bs-glyphicon icon="plus"></bs-glyphicon>
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" id="loadLocal" data-toggle="tooltip"
+                                title="Load from Local" data-placement="bottom">
+                            <bs-glyphicon icon="folder-open"></bs-glyphicon>
+                        </button>
+                        <div id="collapseLocal" class="panel-collapse collapse">
+                            <input type="file" id="file-input" webkitdirectory directory multiple>
+                        </div>
+                    </div>
+
+                    <div id="comparisonList">
+                        <table class="table table-striped">
+                            <tbody>
+                            <thead>
+                            <tr>
+                                <th class="col-md-4">Specie X</th>
+                                <th class="col-md-2"></th>
+                                <th class="col-md-4">Specie Y</th>
+                                <th class="col-md-2"></th>
+                            </tr>
+                            </thead>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Comparison Data -->
+
+                    <div id="comparisonData" class="text-center sidemenu_member"></div>
+
+                    <!-- Overlay -->
+
+                    <div id="comparisonOverlay" class="text-center sidemenu_member"></div>
+
+                    <!-- Preview -->
+
+                    <div id="comparisonInfo" style="display: none" class="text-center sidemenu_member">
+                        <div class="btn-group text-center" role="group" aria-label="Button tools menu">
+                            <button id="legendButton" type="button" class="btn btn-secondary" data-toggle="collapse"
+                                    data-target="#collapseOverlay">Legend
+                            </button>
+                        </div>
+
+                        <div id="collapseOverlay" class="panel-collapse collapse">
+                            <!-- <table class="table table-sm" style='table-layout: fixed'>
+                                <tbody id="collapseOverlayInfo">
+
                                 </tbody>
-                            </table>
+                            </table>   -->
+                            <div id="collapseOverlayInfo" class='col-sm-12'></div>
                         </div>
+                    </div>
 
-                        <!-- Comparison Data -->
-                    
-                        <div id="comparisonData" class="text-center sidemenu_member"></div>
-                        
-                        <!-- Overlay -->
-
-                        <div id="comparisonOverlay" class="text-center sidemenu_member"></div>
-
-                        <!-- Preview -->
-
-                        <div id="comparisonInfo" style="display: none" class="text-center sidemenu_member">
-                            <div class="btn-group text-center" role="group" aria-label="Button tools menu">
-                                <button id="legendButton" type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseOverlay">Legend</button>
-                            </div>
-
-                            <div id="collapseOverlay" class="panel-collapse collapse">
-                                <!-- <table class="table table-sm" style='table-layout: fixed'> 
-                                    <tbody id="collapseOverlayInfo">
-                                        
-                                    </tbody>
-                                </table>   -->  
-                            <div id="collapseOverlayInfo" class='col-sm-12'></div>                  
-                            </div>
-                        </div>
-                        
-                        <div id="comparisonPreview" class="text-center sidemenu_member">
-
-                        </div>
-
-                        <!-- Config -->
-                        <div class="horizontal-line"></div>
-
-                        <div class="text-center sidemenu_member">
-                            <div class="btn-group text-center" role="group" aria-label="Button tools menu">
-                                <button type="button" id="configButton" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseConfig">Configuration <bs-glyphicon icon="cog"></bs-glyphicon></button>
-                            </div>
-                        </div>
-
-                        <div id="collapseConfig" class="panel-collapse collapse">
-                            <div id="cellSizeRow" class="row config_row">
-                                <div class="text-center sidemenu_member">
-                                    Cell size</br>
-                                    <div class="form-group col-md-12 config_slider" id="itemSize_slider"> </div> 
-                                    <button type="button" class="btn btn-secondary config_button" id="fitScreen" data-toggle="tooltip" title="Fit to Screen" data-placement="top"><bs-glyphicon icon="resize-full"></bs-glyphicon></button> </br> 
-                                </div>
-                            </div>
-                            <div id="colorRow" class="row config_row">
-                                <div class="text-center sidemenu_member">
-                                    Color thresholds</br>
-                                    <div class="form-group col-md-12 config_slider" id="color_slider"> </div> 
-                                    <button type="button" class="btn btn-warning config_button" id="autoThreshold" data-toggle="tooltip" title="Suggested Thresholds" data-placement="top"><bs-glyphicon icon="refresh"></bs-glyphicon></button> </br> 
-                                </div>
-                            </div>
-                            <div id="thresholdRow" class="row config_row">
-                                <div class="text-center sidemenu_member">
-                                    Overlay threshold</br>
-                                    <div class="form-group col-md-12 config_slider" id="threshold_slider"> </div>
-                                    <input id="numberChromosomesCheck" type="checkbox" onclick="numberChromosomesChecked()" style="margin-left: 10px"/>
-                                    <input id='numberChromosomes' type="number" min="1" max="99" disabled value="0">
-                                </div>
-                            </div>
-                        </div>
+                    <div id="comparisonPreview" class="text-center sidemenu_member">
 
                     </div>
 
-                    <!-- BlockTracer Sidemenu -->
-                    <div id="blockTracerSideMenu" class="tab-pane fade">
-                        <!-- BlockTracer Species and Chromosome Selection -->
-                        <div class="form-inline text-center sidemenu_member">
-                            
-                            <div id="blockTracerRow0" class="blockTracerRow form-group row col-xs-12">
-                                <div class="col-xs-3">
-                                    <select id="blocktracer0" class="form-control blockTracerSpecie" onload="blockTracerSpecieBehavior(0)">
-                                        {% for chromosome in chromosomes %}
-                                            <option value="{{ chromosome }}">{{ chromosome }}</option>
-                                        {% endfor %}
-                                    </select>
+                    <!-- Config -->
+                    <div class="horizontal-line"></div>
 
-                                </div>
-                                <div class="col-xs-6">
-                                    <select id="blocktracer0" multiple class="selectpicker" data-live-search="true" title="Select chromosomes..." data-actions-box="true">
-                                    </select>
-                                </div>
-                                
+                    <div class="text-center sidemenu_member">
+                        <div class="btn-group text-center" role="group" aria-label="Button tools menu">
+                            <button type="button" id="configButton" class="btn btn-secondary" data-toggle="collapse"
+                                    data-target="#collapseConfig">Configuration
+                                <bs-glyphicon icon="cog"></bs-glyphicon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="collapseConfig" class="panel-collapse collapse">
+                        <div id="cellSizeRow" class="row config_row">
+                            <div class="text-center sidemenu_member">
+                                Cell size</br>
+                                <div class="form-group col-md-12 config_slider" id="itemSize_slider"></div>
+                                <button type="button" class="btn btn-secondary config_button" id="fitScreen"
+                                        data-toggle="tooltip" title="Fit to Screen" data-placement="top">
+                                    <bs-glyphicon icon="resize-full"></bs-glyphicon>
+                                </button>
+                                </br>
                             </div>
                         </div>
-
-                        <!-- BlockTracer Options -->
-
-                        <div class="text-center sidemenu_member">
-                            <button id="blockTracerButton" type="button" class="btn btn-primary" onclick="executeBlockTracer()" data-toggle="tooltip" title="Execute BlockTracer" data-placement="top" disabled>Execute BlockTracer <bs-glyphicon icon="resize-sort"></bs-glyphicon></button>
-                        </div>
-
-                        <div id="blocktracerOptions" class="row config_row text-center sidemenu_member">
-                            <div class="col-xs-6 btOption">View</div>
-                            <div id="blocktracerView" class="col-xs-6 btn-group text-center  btOption" role="group" aria-label="Button tools menu">
-                                <button id="horizontalBT" type="button" class="btView btn btn-default active">Horizontal <bs-glyphicon icon="resize-horizontal"></bs-glyphicon></button>
-                                <button id="verticalBT" type="button" class="btView btn btn-default" >Vertical <bs-glyphicon icon="resize-vertical"></bs-glyphicon></button>
-                            </div>
-
-                            <div class="col-xs-6 btOption">Detected blocks</div>
-                            <div id="blocktracerView" class="col-xs-6 text-center btOption">
-                                <button id="blockModalButton" type="button" class="btn btn-info" disabled data-toggle="modal" data-target="#myModal"><bs-glyphicon icon="list"></bs-glyphicon></button>
+                        <div id="colorRow" class="row config_row">
+                            <div class="text-center sidemenu_member">
+                                Color thresholds</br>
+                                <div class="form-group col-md-12 config_slider" id="color_slider"></div>
+                                <button type="button" class="btn btn-warning config_button" id="autoThreshold"
+                                        data-toggle="tooltip" title="Suggested Thresholds" data-placement="top">
+                                    <bs-glyphicon icon="refresh"></bs-glyphicon>
+                                </button>
+                                </br>
                             </div>
                         </div>
-
-                        <div id="emptyChromosomesRow" class="row config_row text-center sidemenu_member" style="margin-top:15px">
-                            <div class="col-xs-8">Hide Empty Chromosomes</br></div>
-                            <div class="col-xs-2 text-center"><input id="emptyChromosomesCheck" type="checkbox"/></div>
-                        </div>
-
-
-                        
-
-                        <!-- Config -->
-                        <div class="horizontal-line" style="margin-top: 15px"></div>
-
-                        <div class="text-center sidemenu_member">
-                            <div class="btn-group text-center" role="group" aria-label="Button tools menu">
-                                <button type="button" id="configBlockTracerButton" class="btn btn-secondary" data-toggle="collapse" data-target="#blockTracerConfig">Configuration <bs-glyphicon icon="cog"></bs-glyphicon></button>
+                        <div id="thresholdRow" class="row config_row">
+                            <div class="text-center sidemenu_member">
+                                Overlay threshold</br>
+                                <div class="form-group col-md-12 config_slider" id="threshold_slider"></div>
+                                <input id="numberChromosomesCheck" type="checkbox" onclick="numberChromosomesChecked()"
+                                       style="margin-left: 10px"/>
+                                <input id='numberChromosomes' type="number" min="1" max="99" disabled value="0">
                             </div>
                         </div>
+                    </div>
 
-                        <div id="blockTracerConfig" class="panel-collapse collapse">
-                            <div id="resizeRow" class="row config_row text-center sidemenu_member">
-                                <div class="col-xs-8">Resize</br></div>
-                                <div class="col-xs-2 text-left"><button type="button" class="btn btn-secondary btn-block" id="fitBlockTracer"><bs-glyphicon icon="resize-full"></bs-glyphicon></button></br></div>
+                </div>
+
+                <!-- BlockTracer Sidemenu -->
+                <div id="blockTracerSideMenu" class="tab-pane fade">
+                    <!-- BlockTracer Species and Chromosome Selection -->
+                    <div class="form-inline text-center sidemenu_member">
+
+                        <div id="blockTracerRow0" class="blockTracerRow form-group row col-xs-12">
+                            <div class="col-xs-3">
+                                <select id="blocktracer0" class="form-control blockTracerSpecie"
+                                        onload="blockTracerSpecieBehavior(0)">
+                                    {% for chromosome in chromosomes %}
+                                        <option value="{{ chromosome }}">{{ chromosome }}</option>
+                                    {% endfor %}
+                                </select>
+
                             </div>
-                            <div id="connectionLinesRow" class="row config_row text-center sidemenu_member">
-                                <div id="connectionLineText" class="col-xs-8">Show connection lines</br></div>
-                                <div class="col-xs-2 text-left"><button type="button" class="btn btn-warning btn-block" id="showConnectionLines"><bs-glyphicon icon="eye-open"></bs-glyphicon></button></br></div>
+                            <div class="col-xs-6">
+                                <select id="blocktracer0" multiple class="selectpicker" data-live-search="true"
+                                        title="Select chromosomes..." data-actions-box="true">
+                                </select>
                             </div>
+
+                        </div>
+                    </div>
+
+                    <!-- BlockTracer Options -->
+
+                    <div class="text-center sidemenu_member">
+                        <button id="blockTracerButton" type="button" class="btn btn-primary"
+                                onclick="executeBlockTracer()" data-toggle="tooltip" title="Execute BlockTracer"
+                                data-placement="top" disabled>Execute BlockTracer
+                            <bs-glyphicon icon="resize-sort"></bs-glyphicon>
+                        </button>
+                    </div>
+
+                    <div id="blocktracerOptions" class="row config_row text-center sidemenu_member">
+                        <div class="col-xs-6 btOption">View</div>
+                        <div id="blocktracerView" class="col-xs-6 btn-group text-center  btOption" role="group"
+                             aria-label="Button tools menu">
+                            <button id="horizontalBT" type="button" class="btView btn btn-default active">Horizontal
+                                <bs-glyphicon icon="resize-horizontal"></bs-glyphicon>
+                            </button>
+                            <button id="verticalBT" type="button" class="btView btn btn-default">Vertical
+                                <bs-glyphicon icon="resize-vertical"></bs-glyphicon>
+                            </button>
+                        </div>
+
+                        <div class="col-xs-6 btOption">Detected blocks</div>
+                        <div id="blocktracerView" class="col-xs-6 text-center btOption">
+                            <button id="blockModalButton" type="button" class="btn btn-info" disabled
+                                    data-toggle="modal" data-target="#myModal">
+                                <bs-glyphicon icon="list"></bs-glyphicon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="emptyChromosomesRow" class="row config_row text-center sidemenu_member"
+                         style="margin-top:15px">
+                        <div class="col-xs-8">Hide Empty Chromosomes</br></div>
+                        <div class="col-xs-2 text-center"><input id="emptyChromosomesCheck" type="checkbox"/></div>
+                    </div>
+
+
+                    <!-- Config -->
+                    <div class="horizontal-line" style="margin-top: 15px"></div>
+
+                    <div class="text-center sidemenu_member">
+                        <div class="btn-group text-center" role="group" aria-label="Button tools menu">
+                            <button type="button" id="configBlockTracerButton" class="btn btn-secondary"
+                                    data-toggle="collapse" data-target="#blockTracerConfig">Configuration
+                                <bs-glyphicon icon="cog"></bs-glyphicon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="blockTracerConfig" class="panel-collapse collapse">
+                        <div id="resizeRow" class="row config_row text-center sidemenu_member">
+                            <div class="col-xs-8">Resize</br></div>
+                            <div class="col-xs-2 text-left">
+                                <button type="button" class="btn btn-secondary btn-block" id="fitBlockTracer">
+                                    <bs-glyphicon icon="resize-full"></bs-glyphicon>
+                                </button>
+                                </br></div>
+                        </div>
+                        <div id="connectionLinesRow" class="row config_row text-center sidemenu_member">
+                            <div id="connectionLineText" class="col-xs-8">Show connection lines</br></div>
+                            <div class="col-xs-2 text-left">
+                                <button type="button" class="btn btn-warning btn-block" id="showConnectionLines">
+                                    <bs-glyphicon icon="eye-open"></bs-glyphicon>
+                                </button>
+                                </br></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-sm-1"></div>
-        <div class="col-sm-8" style='height: 100%;'>
-            <div id="canvas" class="col-sm-12 tab-content">
-                <div id="xcoutCanvas" class="col-sm-12 tab-pane fade in active"><div class="heatmap"></div></div>
-                <div id="blockTracerCanvas" class="col-sm-12 tab-pane fade"><div class="blocktracer"></div>
+    </div>
+    <div class="col-sm-1"></div>
+    <div class="col-sm-8" style='height: 100%;'>
+        <div id="canvas" class="col-sm-12 tab-content">
+            <div id="xcoutCanvas" class="col-sm-12 tab-pane fade in active">
+                <div class="heatmap"></div>
+            </div>
+            <div id="blockTracerCanvas" class="col-sm-12 tab-pane fade">
+                <div class="blocktracer"></div>
             </div>
         </div>
         <!-- Modal -->
@@ -224,42 +273,55 @@
             <div class="modal-dialog">
                 <!-- Modal content -->
                 <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">BlockTracer Results</h4>
-                </div>
-                <div class="modal-body">
-                    <!-- Nav tabs -->
-                    <ul class="nav nav-tabs">
-                        <li class="active"><a href="#allBlocks" data-toggle="tab">Blocks</a></li>
-                        <li><a href="#specificZone" data-toggle="tab">Specific Zone</a></li>
-                    </ul>
-                    <!-- Tab panes -->
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="allBlocks">
-                            <table id='blockInfoTable' class='table table-bordered table-responsive'>
-                                <thead>
-                                    <tr> <th>BlockID</th> <th>Specie</th> <th>Chromosome</th> <th>X</th> <th>Y</th> <th>Strand</th> </tr>
-                                </thead>
-                                <tbody id="blockInfoTableBody"></tbody>
-                            </table>
-                        </div>
-                        <div class="tab-pane" id="specificZone">
-                            <p>This only works for the first two species</p>
-                            <table id='specificZoneInfoTable' class='table table-bordered table-responsive'>
-                                <thead>
-                                    <tr> <th>ZoneID</th> <th>Specie</th> <th>Chromosome</th> <th>X</th> <th>Y</th> </tr>
-                                </thead>
-                                <tbody id="specificZoneInfoTableBody"></tbody>
-                            </table>
-                        </div>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">BlockTracer Results</h4>
                     </div>
+                    <div class="modal-body">
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#allBlocks" data-toggle="tab">Blocks</a></li>
+                            <li><a href="#specificZone" data-toggle="tab">Specific Zone</a></li>
+                        </ul>
+                        <!-- Tab panes -->
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="allBlocks">
+                                <table id='blockInfoTable' class='table table-bordered table-responsive'>
+                                    <thead>
+                                    <tr>
+                                        <th>BlockID</th>
+                                        <th>Specie</th>
+                                        <th>Chromosome</th>
+                                        <th>X</th>
+                                        <th>Y</th>
+                                        <th>Strand</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="blockInfoTableBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="specificZone">
+                                <p>This only works for the first two species</p>
+                                <table id='specificZoneInfoTable' class='table table-bordered table-responsive'>
+                                    <thead>
+                                    <tr>
+                                        <th>ZoneID</th>
+                                        <th>Specie</th>
+                                        <th>Chromosome</th>
+                                        <th>X</th>
+                                        <th>Y</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="specificZoneInfoTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                </div>
-                <div class="modal-footer">
-                    <button id="downloadDataButton" type="button" class="btn btn-primary">Download</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="downloadDataButton" type="button" class="btn btn-primary">Download</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -274,11 +336,14 @@
 
     <!-- Config Modal End -->
 
-    <link rel="stylesheet" href="{% static "bower_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" %}">
-    <script type="text/javascript" src="{% static "bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js" %}"></script>
+    <link rel="stylesheet"
+          href="{% static "bower_components/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" %}">
+    <script type="text/javascript"
+            src="{% static "bower_components/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js" %}"></script>
 
-    <link rel="stylesheet" href="{% static "bower_components/bootstrap-select/dist/css/bootstrap-select.min.css" %}">    
-    <script type="text/javascript" src="{% static "bower_components/bootstrap-select/dist/js/bootstrap-select.min.js" %}"></script>
+    <link rel="stylesheet" href="{% static "bower_components/bootstrap-select/dist/css/bootstrap-select.min.css" %}">
+    <script type="text/javascript"
+            src="{% static "bower_components/bootstrap-select/dist/js/bootstrap-select.min.js" %}"></script>
 
     <script type='text/javascript' src="{% static "bower_components/tinycolor/tinycolor.js" %}"></script>
 
@@ -290,83 +355,118 @@
 
     <!-- ANNOTATION SIDEBAR -->
 
-<div class="bg-light border-right" id="annotation-sidebar-wrapper">
-  <div id="annotation-top">
-    <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotation()">
-        <span class="glyphicon glyphicon-remove"></span>
-    </button>
-    <!--<button class="btn btn-primary" id="menu-toggle" onclick="getAnnotationTest()">Test</button>-->
-    <button class="btn btn-success" id="menu-left" onclick="previousAnnotationPage()">
-        <span class="glyphicon glyphicon-chevron-left"></span>
-    </button>
-    <button class="btn btn-success" id="menu-right" onclick="nextAnnotationPage()">
-        <span class="glyphicon glyphicon-chevron-right"></span>
-    </button>
-    <button class="btn btn-warning" id="menu-export-csv" onclick="saveGapsCSV()">
-        <span class="glyphicon glyphicon-save"></span>
-    </button>
+    <div class="bg-light border-right" id="annotation-sidebar-wrapper">
+        <div id="annotation-top">
 
-    <div class="search-container">
-        <!--<form action="#" onsubmit="return goToPage(this);">-->
-            <input id="input-search" type="number" placeholder="Page" name="search" min="0">
-            <button class="btn btn-default" id="menu-toggle" onclick="goToPage()">
-                <span class="glyphicon glyphicon-search"></span>
-            </button>
-        <!--</form>-->
-        <div id="search-info">
-            Page <span id="current-page"></span> of <span id="last-page"></span>
+            <!--<div class="search-container">
+                <input id="input-search" type="number" placeholder="Page" name="search" min="0">
+                <button class="btn btn-default" id="menu-toggle" onclick="goToPage()">
+                    <span class="glyphicon glyphicon-search"></span>
+                </button>
+                <div id="search-info">
+                    Page <span id="current-page"></span> of <span id="last-page"></span>
+                </div>
+            </div>-->
+
+            <div class="search-product-container">
+                <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotation()">
+                    <span class="glyphicon glyphicon-remove"></span>
+                </button>
+                <input id="product-search" name="search_prod">
+                <button class="btn btn-default" id="menu-toggle" onclick="loadAnnotationByProduct()">
+                    <span class="glyphicon glyphicon-search"></span> Search by product
+                </button>
+
+            </div>
+
+            <div class="page-container">
+                <button class="btn btn-info" id="menu-left" onclick="previousAnnotationPage()">
+                    <span class="glyphicon glyphicon-chevron-left"></span>
+                </button>
+                <div class="search-container">
+                    <!--<button class="btn btn-default" id="menu-toggle" onclick="goToPage()" style="display: none;">
+                        <span class="glyphicon glyphicon-search" hidden></span>
+                    </button>-->
+                    <div id="search-info">
+                        Page
+                        <input id="input-search" type="number" placeholder="Page" name="search" min="0" size="4">
+                        <span id="current-page" style="display: none;"></span>
+                        of <span id="last-page"></span>
+                    </div>
+                </div>
+                <button class="btn btn-info" id="menu-right" onclick="nextAnnotationPage()">
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </button>
+            </div>
+
+            <p class="h4 text-center" id="annotation-species"></p>
+            <p class="h5 text-center" id="annotation-fragment"></p>
+            <div id="top-sidebar-menu">
+                <button class="btn" id="menu-export-csv" onclick="saveGapsCSV()">
+                    <span class="glyphicon glyphicon-save"></span>
+                </button>
+            </div>
+        </div>
+        <div id="annotation-content">
+            <table class="table table-sm table-bordered annotation-comparison-tables annotation-table"> <!--table-striped table-hover-->
+                <thead>
+                <tr>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">Length</th>
+                    <th scope="col">Product</th>
+                    <th scope="col">Note</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <p class="h4 text-center" id="annotation-species"></p>
-    <p class="h5 text-center" id="annotation-fragment"></p>
-  </div>
-  <div id="annotation-content">
-    <table id="annotation-table" class="table table-sm table-bordered"> <!--table-striped table-hover-->
-      <thead>
-        <tr>
-          <th scope="col">Start</th>
-          <th scope="col">End</th>
-          <th scope="col">Length</th>
-          <th scope="col">Product</th>
-          <th scope="col">Note</th>
-        </tr>
-      </thead>
-      <tbody>
+    <!-- ANNOTATION PRODUCT RESULTS SIDEBAR -->
 
-      </tbody>
-    </table>
-  </div>
-</div>
+    <div class="border-right" id="annotation-product-sidebar-wrapper">
+        <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotationProduct()">
+            <span class="glyphicon glyphicon-remove"></span>
+        </button>
+        <div id="product-search-name"></div>
+        <div id="annotation-product">
+            <p class="h5 text-center" id="annotation-product-name-search"></p>
+        </div>
+    </div>
 
     <!-- ANNOTATION SELECTION SIDEBAR -->
 
-<div class="border-right" id="annotation-selection-sidebar-wrapper">
-    <button class="btn btn-danger" id="menu-toggle" onclick="hideSelectedAnnotation()">
-        <span class="glyphicon glyphicon-remove"></span>
-    </button>
-  <div id="annotation-selected">
-    <p class="h4 text-center" id="annotation-species"></p>
-      <table id="annotation-selected-table" class="table table-sm table-bordered">
-      <thead>
-        <tr>
-          <th scope="col">Start</th>
-          <th scope="col">End</th>
-          <th scope="col">Length</th>
-          <th scope="col">Product</th>
-          <th scope="col">Note</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div class="border-right" id="annotation-selection-sidebar-wrapper">
+        <button class="btn btn-danger" id="menu-toggle" onclick="hideSelectedAnnotation()">
+            <span class="glyphicon glyphicon-remove"></span>
+        </button>
+        <div id="annotation-selected">
+            <p class="h4 text-center" id="annotation-species"></p>
+            <table id="annotation-selected-table" class="table table-sm table-bordered">
+                <thead>
+                <tr>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">Length</th>
+                    <th scope="col">Product</th>
+                    <th scope="col">Note</th>
+                </tr>
+                </thead>
+                <tbody>
 
-      </tbody>
-    </table>
-  </div>
-  <div id="annotation-others">
+                </tbody>
+            </table>
+        </div>
+        <div id="annotation-others">
 
-  </div>
-</div>
+        </div>
+    </div>
 
-<link rel="stylesheet" href="{% static "css/annotationSidebar.css" %}">
+
+
+    <link rel="stylesheet" href="{% static "css/annotationSidebar.css" %}">
 
 {% endblock %}
