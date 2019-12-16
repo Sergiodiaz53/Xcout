@@ -467,7 +467,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
                 resetPagination();
                 getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done(function (response) {
                     appendInfo(d.specie, d.x1, d.x2, '#annotation-top');
-                    populateTable(response, '.annotation-table');
+                    populateTable(response, '#annotation-content');
 
                     $("#input-search").val(0);
                     showPageInfo(d.specie, d.x1, d.x2)
@@ -1245,6 +1245,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
                     let parsed = JSON.parse(annotations);
                     //Crear tabla
                     let newSpecieTableId = createSpeciesTable(block.__data__.specie, parsed.length, '#annotation-others');
+                    console.log('------------->' + newSpecieTableId);
                     //poblar tabla
                     //newSpecieTableId = newSpecieTableId.replace('#annotation-selected-table ', '');
                     //console.log(newSpecieTableId);
@@ -1477,7 +1478,7 @@ function goToProductPage(species, page) {
     console.log(species, gen_x1, gen_x2, product, page);
     getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
         let div_id = "#product-results-" + species;
-        let table = div_id + " .annotation-table";
+        let table = div_id + " .annotation-table-"+species;
         let page_control = div_id + " #page-control-product";
 
         let parsed = JSON.parse(response);
@@ -1586,11 +1587,12 @@ function createSpeciesTable(species, coincidences, div) {
     }
 
     //let tableId = 'annotation-table-' + species;
-    let tableId = 'annotation-table';
+    let tableClass = 'annotation-table-' + species;
+    let tableId = div + " ."+ tableClass;
 
     $(div).append($('<table>')
         //.attr('class', tableId)
-        .attr('class', 'table table-sm table-bordered annotation-comparison-tables ' + tableId)
+        .attr('class', 'table table-sm table-bordered annotation-comparison-tables ' + tableClass)
         .append($('<thead>')
             .append($('<tr>')
                 .append($('<th>')
@@ -1632,16 +1634,14 @@ function createSpeciesTable(species, coincidences, div) {
     }
 
     //return '#annotation-comparison-tables #' + tableId;
-    return '.' + tableId;
+    return  tableId;
 }
-
-var ROWMAMA;
 
 //==========================================================================
 
 function populateTable(response, table) {
     //console.log('RESPONSE:');console.log(response);
-    let tbody = $(table).children('tbody');
+    let tbody = $(table).find('tbody');
     tbody.empty();
     let parsed = JSON.parse(response);
     $.each(parsed, function (index) {
