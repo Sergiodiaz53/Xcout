@@ -1472,49 +1472,45 @@ function loadAnnotationByProduct() {
 }
 
 function goToProductPage(species, page) {
-    let gen_x1 = selectedBlock[0][0].__data__.x1;
-    let gen_x2 = selectedBlock[0][0].__data__.x2;
-    let product = $('#product-search')[0].value;
-    console.log(species, gen_x1, gen_x2, product, page);
-    getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
-        let div_id = "#product-results-" + species;
-        let table = div_id + " .annotation-table-"+species;
-        let page_control = div_id + " #page-control-product";
+    // por cada nloque de la traza
+    $.each(trace[0], function (index, block) {
+        if (block.__data__.specie === species) {
+            let gen_x1 = block.__data__.x1;
+            let gen_x2 = block.__data__.x2;
+            let product = $('#product-search')[0].value;
+            //console.log(species, gen_x1, gen_x2, product, page);
+            getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
+                let div_id = "#product-results-" + species;
+                let table = div_id + " .annotation-table-"+species;
+                let page_control = div_id + " #page-control-product";
 
-        let parsed = JSON.parse(response);
+                let parsed = JSON.parse(response);
 
-        $(page_control).find('input')[0].value = page;
-        $(page_control).find('#last-page').empty().append(parsed.num_pages);
+                $(page_control).find('input')[0].value = page;
+                $(page_control).find('#last-page').empty().append(parsed.num_pages);
 
-        //pintar cada una de las anotaciones recibidas
+                //pintar cada una de las anotaciones recibidas
 
-        //obtener el indice de la especie
-        //obtener el bloque con el indice anterior
-        //para cada anotacion recibida
-            //pintar anotacion
+                //obtener el indice de la especie
+                //obtener el bloque con el indice anterior
+                //para cada anotacion recibida
+                    //pintar anotacion
 
-        $.each(trace[0], function (index, block) {
-            if (block.__data__.specie === species) {
-                console.log("es un " + species);
-                console.log(parsed.object_list);
-                console.log("block");
-            console.log(block);
-            console.log(index);
-                $.each(parsed.object_list, function(index, annotation){
-                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
-                });
+                        /*console.log("es un " + species);
+                        console.log(parsed.object_list);
+                        console.log("block");
+                        console.log(block);
+                        console.log(index);*/
+                        $.each(parsed.object_list, function(index, annotation){
+                            paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
+                        });
 
-                // Distance between block start and annotation start
-                //distance_block_annotation = gen_x1 - block.__data__.x1;
-                //console.log("specie: " + block.__data__.specie);
-            }
-        });
-        //paintAnnotation(block, svgInverted,
-
-        let unparsed = JSON.stringify(parsed.object_list);
-        populateTable(unparsed, table);
-    }).fail(function (event) {
-        //console.log(event);
+                let unparsed = JSON.stringify(parsed.object_list);
+                populateTable(unparsed, table);
+            }).fail(function (event) {
+                //console.log(event);
+            });
+        }
     });
 }
 
