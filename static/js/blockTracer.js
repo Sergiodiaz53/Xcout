@@ -1486,6 +1486,31 @@ function goToProductPage(species, page) {
         $(page_control).find('input')[0].value = page;
         $(page_control).find('#last-page').empty().append(parsed.num_pages);
 
+        //pintar cada una de las anotaciones recibidas
+
+        //obtener el indice de la especie
+        //obtener el bloque con el indice anterior
+        //para cada anotacion recibida
+            //pintar anotacion
+
+        $.each(trace[0], function (index, block) {
+            if (block.__data__.specie === species) {
+                console.log("es un " + species);
+                console.log(parsed.object_list);
+                console.log("block");
+            console.log(block);
+            console.log(index);
+                $.each(parsed.object_list, function(index, annotation){
+                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
+                });
+
+                // Distance between block start and annotation start
+                //distance_block_annotation = gen_x1 - block.__data__.x1;
+                //console.log("specie: " + block.__data__.specie);
+            }
+        });
+        //paintAnnotation(block, svgInverted,
+
         let unparsed = JSON.stringify(parsed.object_list);
         populateTable(unparsed, table);
     }).fail(function (event) {
@@ -1700,19 +1725,19 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
         }
     }*/
 
-    console.log('----------------------------');
-    /**/
+    //console.log('----------------------------');
+    /*
     if (strand === 'r') {
         console.log(block.__data__.block_id + ' - ' + block.__data__.specie + ' - ' + strand + ' - ' + product);
     } else if (strand === 'f') {
         console.log(block.__data__.block_id + ' - ' + block.__data__.specie + ' - ' + strand + ' - ' + product);
-    }
-    console.log('----------------------------');
+    }*/
+    //console.log('----------------------------');
 
     // get annotation range
     //let gen_x1 = annotation.find('.gen_x1').html();
     //let gen_x2 = annotation.find('.gen_x2').html();
-    console.log('block----------------', block);
+    //console.log('block----------------', block);
     // hay que comprobar si están invertidos
 
     let escalated_x1 = parseFloat(inverted ? block.attributes.y.value : block.attributes.x.value);
@@ -1720,22 +1745,22 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
     let escalated_x2 = escalated_width + escalated_x1;
     let escalated_y = parseFloat(inverted ? block.attributes.x.value : block.attributes.y.value);
 
-    /**/
+    /*
     console.log('escalated_x1', escalated_x1);
     console.log('escalated_x2', escalated_x2);
     console.log('escalated_width', escalated_width);
     console.log('escalated_y', escalated_y);
-
+*/
     // ESCALADO
     // data bound to the DOM object(rect)
     let block_x1 = block.__data__.x1;
     let block_x2 = block.__data__.x2;
 
 
-    /**/
+    /*
     console.log('block_x1', block_x1);
     console.log('block_x2', block_x2);
-
+*/
     // scale annotation size to the block size
     let widthDomain = [block_x1, block_x2],
         widthRange = [escalated_x1, escalated_x2];
@@ -1744,11 +1769,11 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
         .domain(widthDomain)
         .range(widthRange);
 
-    /**/
+    /*
     console.log('blockScale(gen_x1)', blockScale(gen_x1));
     console.log('gen_x1', gen_x1);
     console.log('gen_x2 - gen_x1', gen_x2 - gen_x1);
-
+*/
 
     // lets invert the color for the annotation
     let inverted_color = invertColor(block.attributes.fill.value);
@@ -1758,10 +1783,10 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
     let parent = block.parentElement;
     //d3.select('.blockInfo').append('rect')
     if (strand === 'r') {
-        console.log('x1:escalated_x1 + blockScale(gen_x1)', escalated_x1 + blockScale(gen_x1));
-        console.log('x1:escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1)', escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1));
+        //console.log('x1:escalated_x1 + blockScale(gen_x1)', escalated_x1 + blockScale(gen_x1));
+        //console.log('x1:escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1)', escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1));
         //console.log('width:blockScale(gen_x2 - gen_x1)',blockScale(gen_x2 - gen_x1));
-        console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2) - blockScale(gen_x1));
+        //console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2) - blockScale(gen_x1));
 
         let rect = d3.select(parent).append('rect')
             .attr('id', 'annotation_block')
@@ -1782,10 +1807,10 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
             .attr('stroke-width', '2px')
             .append("svg:title")
             .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
-        console.log('rect', rect);
+        //console.log('rect', rect);
     } else {
-        console.log('x1:blockScale(gen_x1)', blockScale(gen_x1));
-        console.log('width:Math.abs(blockScale(gen_x2)-blockScale(gen_x1))', Math.abs(blockScale(gen_x2) - blockScale(gen_x1)));
+        //console.log('x1:blockScale(gen_x1)', blockScale(gen_x1));
+        //console.log('width:Math.abs(blockScale(gen_x2)-blockScale(gen_x1))', Math.abs(blockScale(gen_x2) - blockScale(gen_x1)));
 
         let rect = d3.select(parent).append('rect')
             .attr('id', 'annotation_block')
@@ -1807,12 +1832,12 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
             .append("svg:title")
             .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
 
-        console.log('rect', rect);
+        //console.log('rect', rect);
     }
 
     LAST_SPECIES = block.__data__.specie;
     LAST_STRAND = strand;
-    console.log('LAST: ' + LAST_SPECIES + ' ' + LAST_STRAND);
+    //console.log('LAST: ' + LAST_SPECIES + ' ' + LAST_STRAND);
 }
 
 function paintGaps(gen_x1, gen_x2) {
