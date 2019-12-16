@@ -482,9 +482,9 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
 
                 trace = d3.selectAll('.tracedBlock.clicked');
                 /*console.log('tracedBlocks');
-        console.log(tracedBlocks);
-        console.log('trace');
-        console.log(trace);*/
+                console.log(tracedBlocks);
+                console.log('trace');
+                console.log(trace);*/
                 //console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
 
                 //let pos_x1 = xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE * d.chromoIndex;
@@ -1164,19 +1164,6 @@ function hideAnnotation() {
     if ($('#show-annotation-feature').find('input').is(':checked')) $('#annotation-sidebar-wrapper').hide();
 }
 
-/*function getAnnotationTest(){
-    $.ajax({
-        type: "GET",
-        url: FORCE_URL + "/API/annotation_test/",
-        data: {
-            species: 'PONAB'
-        },
-        success: function(response) {
-            populateTable(response, '.annotation-table');
-        }
-    });
-}*/
-
 function getAnnotationFrom(species, gen_x1, gen_x2) {
     return $.ajax({
         type: "GET",
@@ -1480,8 +1467,11 @@ function goToProductPage(species, page) {
             let product = $('#product-search')[0].value;
             //console.log(species, gen_x1, gen_x2, product, page);
             getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
+
+                d3.selectAll('#annotation_block.' + species).remove();
+
                 let div_id = "#product-results-" + species;
-                let table = div_id + " .annotation-table-"+species;
+                let table = div_id + " .annotation-table-" + species;
                 let page_control = div_id + " #page-control-product";
 
                 let parsed = JSON.parse(response);
@@ -1494,16 +1484,16 @@ function goToProductPage(species, page) {
                 //obtener el indice de la especie
                 //obtener el bloque con el indice anterior
                 //para cada anotacion recibida
-                    //pintar anotacion
+                //pintar anotacion
 
-                        /*console.log("es un " + species);
-                        console.log(parsed.object_list);
-                        console.log("block");
-                        console.log(block);
-                        console.log(index);*/
-                        $.each(parsed.object_list, function(index, annotation){
-                            paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
-                        });
+                /*console.log("es un " + species);
+                console.log(parsed.object_list);
+                console.log("block");
+                console.log(block);
+                console.log(index);*/
+                $.each(parsed.object_list, function (index, annotation) {
+                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
+                });
 
                 let unparsed = JSON.stringify(parsed.object_list);
                 populateTable(unparsed, table);
@@ -1609,7 +1599,7 @@ function createSpeciesTable(species, coincidences, div) {
 
     //let tableId = 'annotation-table-' + species;
     let tableClass = 'annotation-table-' + species;
-    let tableId = div + " ."+ tableClass;
+    let tableId = div + " ." + tableClass;
 
     $(div).append($('<table>')
         //.attr('class', tableId)
@@ -1655,7 +1645,7 @@ function createSpeciesTable(species, coincidences, div) {
     }
 
     //return '#annotation-comparison-tables #' + tableId;
-    return  tableId;
+    return tableId;
 }
 
 //==========================================================================
@@ -1786,6 +1776,7 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
 
         let rect = d3.select(parent).append('rect')
             .attr('id', 'annotation_block')
+            .attr('class', block.__data__.specie)
             //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
             .attr(getPositionAttribute('x', inverted), function () {
                 return escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1);
@@ -1810,6 +1801,7 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
 
         let rect = d3.select(parent).append('rect')
             .attr('id', 'annotation_block')
+            .attr('class', block.__data__.specie)
             //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
             .attr(getPositionAttribute('x', inverted), function () {
                 return blockScale(gen_x1);
