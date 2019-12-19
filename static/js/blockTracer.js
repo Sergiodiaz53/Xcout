@@ -470,7 +470,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
                     populateTable(response, '#annotation-content');
 
                     $("#input-search").val(0);
-                    showPageInfo(d.specie, d.x1, d.x2)
+                    showPageInfo(d.specie, d.x1, d.x2);
                 });
 
                 //console.log(getGapsCSV(d.specie, d.x1, d.x2));
@@ -481,6 +481,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
                 //paintGaps(d.x1, d.x2);
 
                 trace = d3.selectAll('.tracedBlock.clicked');
+                simplifyTrace();
                 /*console.log('tracedBlocks');
                 console.log(tracedBlocks);
                 console.log('trace');
@@ -1667,6 +1668,28 @@ function getBlockFromTraceBySpecies(species) {
         }
         //console.log(block);
     });
+}
+
+function simplifyTrace() {
+    let simplified_trace = trace[0];
+    for (let i = 1; i < simplified_trace.length; i++) {
+        if (simplified_trace[i].__data__.specie === simplified_trace[i - 1].__data__.specie) {
+            //comparo tamaños
+            let block1_size = Math.abs(simplified_trace[i-1].__data__.x2 - simplified_trace[i-1].__data__.x1);
+            let block2_size = Math.abs(simplified_trace[i].__data__.x2 - simplified_trace[i].__data__.x1);
+            if (block1_size > block2_size) {
+                simplified_trace.splice(i, 1);
+            } else {
+                simplified_trace.splice(i - 1, 1);
+            }
+        }
+    }
+    console.log("antes");
+    console.log(trace[0]);
+    console.log("despues");
+    console.log(simplified_trace);
+
+    trace[0] = simplified_trace;
 }
 
 //==========================================================================
