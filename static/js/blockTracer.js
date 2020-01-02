@@ -183,6 +183,11 @@ function extractBlockTracerRowsData() {
 var BLOCK_TRACER_PARAMS = {'species': [], 'chromosomes': [], 'results': {}};
 
 function executeBlockTracer() {
+
+    hideAnnotationProduct();
+    hideSelectedAnnotation();
+    hideAnnotation();
+
     let data = extractBlockTracerRowsData();
     let species = data[0], chromosomes = data[1], emptyCheck = document.getElementById('emptyChromosomesCheck').checked;
     //console.log(data);
@@ -1516,6 +1521,22 @@ function previousPage(element) {
     goToProductPage(species, current_page);
 }
 
+function updateAllPages() {
+    d3.selectAll('#annotation_block').remove();
+    if(trace[0] === undefined){
+        return;
+    }
+    for (let i = 0; i < trace[0].length; i++) {
+        let species = trace[0][i].__data__.specie;
+        let page = parseInt($('.amazing-current-page')[i].value);
+        if (page === undefined) {
+            return;
+        } else {
+            goToProductPage(species, page);
+        }
+    }
+}
+
 // =======================================================================
 
 // SELECTED ANNOTATION ===================================================
@@ -1526,6 +1547,7 @@ function showSelectedAnnotation() {
 
 function hideSelectedAnnotation() {
     $('#annotation-selection-sidebar-wrapper').hide();
+    updateAllPages();
 }
 
 function createSpeciesTable(species, coincidences, div) {
@@ -1554,6 +1576,7 @@ function createSpeciesTable(species, coincidences, div) {
                 .attr('id', 'search-container')
                 .attr('class', 'text-muted')
                 .append($('<input>')
+                    .attr('class', 'amazing-current-page')
                     .attr('type', 'number')
                     .attr('placeholder', 'Page')
                     .attr('name', 'search')
@@ -1666,29 +1689,30 @@ function getBlockFromTraceBySpecies(species) {
             traceSelectedBlock = block;
             return block;
         }
-        //console.log(block);
     });
 }
 
+/**
+ * Filters the trace, removing the shorter blocks of the same species
+ */
 function simplifyTrace() {
     let simplified_trace = trace[0];
     for (let i = 1; i < simplified_trace.length; i++) {
         if (simplified_trace[i].__data__.specie === simplified_trace[i - 1].__data__.specie) {
-            //comparo tamaños
-            let block1_size = Math.abs(simplified_trace[i-1].__data__.x2 - simplified_trace[i-1].__data__.x1);
+            // Compare CSB sizes
+            let block1_size = Math.abs(simplified_trace[i - 1].__data__.x2 - simplified_trace[i - 1].__data__.x1);
             let block2_size = Math.abs(simplified_trace[i].__data__.x2 - simplified_trace[i].__data__.x1);
             if (block1_size > block2_size) {
+                // If not hidden the annotations of the other CSB cannot be seen
+                simplified_trace[i].style.opacity = 0;
                 simplified_trace.splice(i, 1);
             } else {
+                // If not hidden the annotations of the other CSB cannot be seen
+                simplified_trace[i - 1].style.opacity = 0;
                 simplified_trace.splice(i - 1, 1);
             }
         }
     }
-    console.log("antes");
-    console.log(trace[0]);
-    console.log("despues");
-    console.log(simplified_trace);
-
     trace[0] = simplified_trace;
 }
 
