@@ -1522,17 +1522,17 @@ function previousPage(element) {
 }
 
 function updateAllPages() {
-    d3.selectAll('#annotation_block').remove();
-    if(trace[0] === undefined){
+    if ((trace === undefined) || (trace === null)) {
         return;
     }
+    d3.selectAll('#annotation_block').remove();
     for (let i = 0; i < trace[0].length; i++) {
-        let species = trace[0][i].__data__.specie;
-        let page = parseInt($('.amazing-current-page')[i].value);
-        if (page === undefined) {
-            return;
-        } else {
+        try {
+            let species = trace[0][i].__data__.specie;
+            let page = parseInt($('.amazing-current-page')[i].value);
             goToProductPage(species, page);
+        } catch (e) {
+            //console.error(e.message);
         }
     }
 }
