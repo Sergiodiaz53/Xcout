@@ -24,7 +24,8 @@ urlpatterns = [
     url(r'^upload_blast_result/', views.upload_blast_result, name='uploadBlastResult'),
 
     url(r'^annotation_by_product/', functions.generateJSONAnnotationFromSpecieByProduct,
-        name='generateJSONAnnotationFromSpecieByProduct')
+        name='generateJSONAnnotationFromSpecieByProduct'),
+    url(r'^drop_annotations/', functions.dropAnnotations, name='dropAnnotations')
 ]
 
 if settings.DEBUG:

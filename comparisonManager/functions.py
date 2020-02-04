@@ -84,8 +84,10 @@ def generateJSONChromosomesFromSpecie(request):
 @permission_classes([])
 def generateJSONAnnotationFromSpecie(request):
     species = request.GET.get('species', '')
+    chromosome = request.GET.get('chromosome', '')
 
-    annotations = Annotation.objects.all().filter(species__name=species).order_by('gen_x1')
+    annotations = Annotation.objects.all().filter(species__name=species,
+                                                  chromosome=chromosome).order_by('gen_x1')
     # You MUST convert QuerySet to List object
     jsonAnnotationList = list(annotations.values())
     # jsonAnnotationList = sorted(annotationsList, key=annotationsList[0])
@@ -104,7 +106,8 @@ def generateCSVAnnotationGaps(request):
     annotations = Annotation.objects.all().filter(
         species__name=species,
         gen_x1__gte=gen_x1,
-        gen_x2__lte=gen_x2
+        gen_x2__lte=gen_x2,
+        chromosome=chromosome
     ).order_by('gen_x1')  # [:50]
 
     response = HttpResponse(content_type='text/csv')
@@ -131,6 +134,7 @@ def generateJSONAnnotationFromSpecieBetweenPositions(request):
     species = request.GET.get('species', '')
     gen_x1 = int(request.GET.get('gen_x1', ''))
     gen_x2 = int(request.GET.get('gen_x2', ''))
+    chromosome = request.GET.get('chromosome', '')
 
     if gen_x1 > gen_x2:
         aux = gen_x1
@@ -140,7 +144,8 @@ def generateJSONAnnotationFromSpecieBetweenPositions(request):
     annotations = Annotation.objects.all().filter(
         species__name=species,
         gen_x1__gte=gen_x1,
-        gen_x2__lte=gen_x2
+        gen_x2__lte=gen_x2,
+        chromosome=chromosome
     ).order_by('gen_x1')  # [:50]
     print(annotations)
     print(type(annotations))
@@ -161,6 +166,7 @@ def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
     gen_x2 = int(request.GET.get('gen_x2', ''))
     start = int(request.GET.get('start', ''))
     end = int(request.GET.get('end', ''))
+    chromosome = request.GET.get('chromosome', '')
 
     if gen_x1 > gen_x2:
         aux = gen_x1
@@ -172,13 +178,15 @@ def generateJSONAnnotationFromSpecieBetweenPositionsPaginated(request):
         annotations = Annotation.objects.all().filter(
             species__name=species,
             gen_x1__gte=gen_x1,
-            gen_x2__lte=gen_x2
+            gen_x2__lte=gen_x2,
+            chromosome=chromosome
         ).order_by('-gen_x1')[abs(end):abs(start)]
     else:
         annotations = Annotation.objects.all().filter(
             species__name=species,
             gen_x1__gte=gen_x1,
-            gen_x2__lte=gen_x2
+            gen_x2__lte=gen_x2,
+            chromosome=chromosome
         ).order_by('gen_x1')[start:end]
     # print(annotations)
     # You MUST convert QuerySet to List object
@@ -198,6 +206,7 @@ def generateJSONAnnotationFromSpecieByProduct(request):
     gen_x2 = int(request.GET.get('gen_x2', ''))
     product = request.GET.get('product', '')
     page_number = int(request.GET.get('page_number', ''))
+    chromosome = request.GET.get('chromosome', '')
 
     if gen_x1 > gen_x2:
         aux = gen_x1
@@ -208,7 +217,8 @@ def generateJSONAnnotationFromSpecieByProduct(request):
         species__name=species,
         gen_x1__gte=gen_x1,
         gen_x2__lte=gen_x2,
-        product__contains=product
+        product__contains=product,
+        chromosome=chromosome
     ).order_by('-gen_x1')
 
     paginator = Paginator(annotations, 5)
@@ -231,10 +241,22 @@ def getAnnotationsCount(request):
     species = request.GET.get('species', '')
     gen_x1 = request.GET.get('gen_x1', '')
     gen_x2 = request.GET.get('gen_x2', '')
+    chromosome = request.GET.get('chromosome', '')
 
     count = Annotation.objects.all().filter(species__name=species,
                                             gen_x1__gte=gen_x1,
-                                            gen_x2__lte=gen_x2).count()
+                                            gen_x2__lte=gen_x2,
+                                            chromosome=chromosome).count()
+    print('===> count: ' + str(count))
+    return HttpResponse(count, content_type="text/plain")
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([])
+def dropAnnotations(request):
+    print("borrando todo")
+    count = Annotation.objects.all().delete()
     print('===> count: ' + str(count))
     return HttpResponse(count, content_type="text/plain")
 
@@ -243,16 +265,7 @@ def getAnnotationsCount(request):
 @authentication_classes([])
 @permission_classes([])
 def loadAnnotations(request):
-    '''print('-------------------')
-    print(Specie.objects.all().values('name'))
-    print('-------------------')
-    print(Specie.objects.all().values('short_name'))
-    print('-------------------')
-    print(Specie.objects.all().values('accesion_number'))
-    print('-------------------')
-    print(species_name, gen_x1, gen_x2, product, note)
-    print('-------------------')'''
-
+    print("==> Loading annotations")
     annotations_path = os.getcwd() + '/annotations/'
     # output_path = os.getcwd() + '\\output\\'
     annotation_file = [f.split('.')[0] for f in listdir(annotations_path) if isfile(join(annotations_path, f))]
@@ -286,8 +299,13 @@ def loadAnnotations(request):
                             sin_repetir += 1
 
                             try:
+                                chromosome = record.features[0].qualifiers['chromosome'][0]
+                                # Chromosome.objects.get(name="Cheddar Talk")
+                            except KeyError:
+                                chromosome = 'unknown'
+
+                            try:
                                 gene = feature.qualifiers['gene'][0]
-                                print(gene)
                             except KeyError:
                                 gene = 'Unknown'
 
@@ -311,6 +329,7 @@ def loadAnnotations(request):
                             try:
                                 if gene != 'Unknown':
                                     Annotation.objects.create(species=species,
+                                                              chromosome=chromosome,
                                                               gen_x1=int(feature.location.start),
                                                               gen_x2=int(feature.location.end),
                                                               strand=int(feature.location.strand),
