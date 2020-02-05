@@ -473,7 +473,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
                 let chromosome = selectedBlock[0][0].__data__.chromosome.toUpperCase();
                 getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end, chromosome).done(function (response) {
                     appendInfo(d.specie, d.x1, d.x2, '#annotation-top');
-                    populateTable(response, '#annotation-content');
+                    populateTable(response, '#annotation-content', chromosome);
 
                     $("#input-search").val(0);
                     showPageInfo(d.specie, d.x1, d.x2);
@@ -1240,7 +1240,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
                     //poblar tabla
                     //newSpecieTableId = newSpecieTableId.replace('#annotation-selected-table ', '');
                     //console.log(newSpecieTableId);
-                    populateTable(annotations, newSpecieTableId); // tiene que llevar # en el id
+                    populateTable(annotations, newSpecieTableId, chromosome); // tiene que llevar # en el id
 
                     $.each(parsed, function (index, annotation) {
                         //console.log('block',block);
@@ -1276,7 +1276,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
             console.log(JSON.stringify(array));
 
 
-            populateTable(JSON.stringify(array), '#annotation-selected-table');
+            populateTable(JSON.stringify(array), '#annotation-selected-table', chromosome);
             $('#annotation-selected #annotation-species').empty()
                 .append('<small class="text-muted">Species: </small>')
                 .append('<span class="block_species">' + species + '</span>');
@@ -1322,11 +1322,10 @@ function nextAnnotationPage() {
 
     //$("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
     //showPageInfo(species);
-    //=============================================> TODO
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end, chromosome).done(function (response) {
         //appendInfo(species, gen_x1, gen_x2);
         if ($.trim(response)) {// si no está vacio
-            populateTable(response, '.annotation-table');
+            populateTable(response, '.annotation-table', chromosome);
             getAnnotationsLength(species, gen_x1, gen_x2, chromosome).done(function (annotations_count) {
                 if (page_start < 0) {
                     $("#input-search").val(Math.ceil((annotations_count / PAGE_SIZE) + Math.ceil(page_start / PAGE_SIZE)));
@@ -1360,7 +1359,7 @@ function previousAnnotationPage() {
     getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end, chromosome).done(function (response) {
         //appendInfo(species, gen_x1, gen_x2);
         if ($.trim(response)) {// si no está vacio
-            populateTable(response, '.annotation-table');
+            populateTable(response, '.annotation-table', chromosome);
             getAnnotationsLength(species, gen_x1, gen_x2, chromosome).done(function (annotations_count) {
                 if (page_start < 0) {
                     $("#input-search").val(Math.ceil((annotations_count / PAGE_SIZE) + Math.ceil(page_start / PAGE_SIZE)));
@@ -1412,7 +1411,7 @@ function goToPage() {
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
                     showPageInfo(species, gen_x1, gen_x2);
-                    populateTable(response, '.annotation-table');
+                    populateTable(response, '.annotation-table', chromosome);
                 } else {
                     resetPagination();
                 }
@@ -1518,7 +1517,7 @@ function goToProductPage(species, page) {
                 });
 
                 let unparsed = JSON.stringify(parsed.object_list);
-                populateTable(unparsed, table);
+                populateTable(unparsed, table, chromosome);
             }).fail(function (event) {
                 //console.log(event);
             });
@@ -1743,7 +1742,7 @@ function simplifyTrace() {
 
 //==========================================================================
 
-function populateTable(response, table) {
+function populateTable(response, table, chromosome) {
     //console.log('RESPONSE:');console.log(response);
     let tbody = $(table).find('tbody');
     tbody.empty();
@@ -1752,6 +1751,14 @@ function populateTable(response, table) {
         //console.log('PARSED:');console.log(parsed);
         let data = parsed[index];
         //console.log('DATA:');console.log(data);
+        console.log("chromosoma: "+chromosome);
+        let note = '';
+        if (typeof chromosome === 'undefined') {
+            note = data.note;
+        } else {
+            note = 'Chr: ' + chromosome + ' - ' + data.note;
+        }
+
         let row = $('<tr>')
             //.attr('class', 'clickable-row')
             .append($('<th>')
@@ -1773,7 +1780,7 @@ function populateTable(response, table) {
                 .text(data.product))
             .append($('<td>')
                 .attr('class', 'note')
-                .text(data.note));
+                .text(note));
         tbody.append(row);
     });
 }
