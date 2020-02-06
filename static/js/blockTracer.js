@@ -1751,7 +1751,7 @@ function populateTable(response, table, chromosome) {
         //console.log('PARSED:');console.log(parsed);
         let data = parsed[index];
         //console.log('DATA:');console.log(data);
-        console.log("chromosoma: "+chromosome);
+        
         let note = '';
         if (typeof chromosome === 'undefined') {
             note = data.note;
