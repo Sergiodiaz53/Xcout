@@ -37,16 +37,18 @@ class Comparison(models.Model):
 
 class Annotation(models.Model):
     species = models.ForeignKey(Specie, on_delete=models.CASCADE)
+    #chromosome = models.ForeignKey(Chromosome, on_delete=models.CASCADE)
+    chromosome = models.CharField(max_length=500, default="Unknown")
     gen_x1 = models.BigIntegerField(null=False)
     gen_x2 = models.BigIntegerField(null=False)
     strand = models.IntegerField(null=False, default=1)
-    gene = models.CharField(max_length=500, default="No data found.")
-    gene_synonym = models.CharField(max_length=500, default="No data found.")
-    product = models.CharField(max_length=500, default="No data found.")
-    note = models.CharField(max_length=500, default="No data found.")
+    gene = models.CharField(max_length=500, default="Unknown")
+    gene_synonym = models.CharField(max_length=500, default="Unknown")
+    product = models.CharField(max_length=500, default="Unknown")
+    note = models.CharField(max_length=500, default="Unknown")
 
     def __str__(self):
-        return u'Species: %s | %s:%s(%s) | Gene: %s (Synonym: %s) Product: %s | Note: %s' % \
-               (self.species, str(self.gen_x1), str(self.gen_x2), str(self.strand), self.gene, self.gene_synonym,
+        return u'Species: %s | Chr: %s | %s:%s(%s) | Gene: %s (Synonym: %s) Product: %s | Note: %s' % \
+               (self.species, self.chromosome, str(self.gen_x1), str(self.gen_x2), str(self.strand), self.gene, self.gene_synonym,
                 self.product, self.note)
         #return u'Species: %s | %s:%s Locus: %s XRef: %s' % (self.specie, str(self.gen_x1), str(self.gen_x2), self.locus_tag, self.db_xref)

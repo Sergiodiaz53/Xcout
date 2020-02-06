@@ -14,9 +14,9 @@ class ComparisonAdmin(admin.ModelAdmin):
 
 
 class AnnotationAdmin(admin.ModelAdmin):
-    list_display = ('species', 'gen_x1', 'gen_x2', 'strand', 'gene', 'gene_synonym', 'product', 'note')
-    list_display_links = ('species', 'gen_x1', 'gen_x2', 'gene', 'gene_synonym', 'strand', 'product', 'note')
-    list_filter = ('species', 'strand')
+    list_display = ('species', 'chromosome', 'gen_x1', 'gen_x2', 'strand', 'gene', 'gene_synonym', 'product', 'note')
+    list_display_links = ('species', 'chromosome', 'gen_x1', 'gen_x2', 'gene', 'gene_synonym', 'strand', 'product', 'note')
+    list_filter = ('species', 'chromosome', 'strand')
     ordering = ['species']
     # search_fields = ('species', 'strand')
     list_per_page = 20
