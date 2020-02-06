@@ -183,6 +183,11 @@ function extractBlockTracerRowsData() {
 var BLOCK_TRACER_PARAMS = {'species': [], 'chromosomes': [], 'results': {}};
 
 function executeBlockTracer() {
+
+    hideAnnotationProduct();
+    hideSelectedAnnotation();
+    hideAnnotation();
+
     let data = extractBlockTracerRowsData();
     let species = data[0], chromosomes = data[1], emptyCheck = document.getElementById('emptyChromosomesCheck').checked;
     //console.log(data);
@@ -420,6 +425,7 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
         }) //preparedData.colors[d.block_id]
         .on("click", function (d) {
             //========> ANNOTATION
+            hideAnnotationProduct();
             hideConnectionLines();
             selectedBlock = d3.select(this);
             svgInverted = inverted;
@@ -431,12 +437,11 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
                     .classed("clicked", false);
 
                 //========> ANNOTATION
-                hideAnnotation();
                 d3.selectAll('#annotation_block').remove();
-
-                //console.log('Ocultando seleccion');
+                hideAnnotation();
                 hideSelectedAnnotation();
-                //
+                hideAnnotationProduct()
+
             } else {
                 d3.select(this).classed("clicked");
                 var block_id = d.block_id;
@@ -462,35 +467,32 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
                     });
 
                 //========> ANNOTATION
-                //generateBlockInfos(); // <---- testing
+                d3.selectAll('#annotation_block').remove();
                 showAnnotation();
                 resetPagination();
-                getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end).done(function (response) {
+                let chromosome = selectedBlock[0][0].__data__.chromosome.toUpperCase();
+                getAnnotationBetweenPaginated(d.specie, d.x1, d.x2, page_start, page_end, chromosome).done(function (response) {
                     appendInfo(d.specie, d.x1, d.x2, '#annotation-top');
-                    populateTable(response, '.annotation-table');
+                    populateTable(response, '#annotation-content', chromosome);
 
                     $("#input-search").val(0);
-                    showPageInfo(d.specie, d.x1, d.x2)
+                    showPageInfo(d.specie, d.x1, d.x2);
                 });
 
-                console.log(getGapsCSV(d.specie, d.x1, d.x2));
-                console.log('Ocultando seleccion');
+                //console.log(getGapsCSV(d.specie, d.x1, d.x2));
+                //console.log('Ocultando seleccion');
                 hideSelectedAnnotation();
                 //saveGapsCSV(d.specie, d.x1, d.x2);
 
                 //paintGaps(d.x1, d.x2);
 
                 trace = d3.selectAll('.tracedBlock.clicked');
+                simplifyTrace();
                 /*console.log('tracedBlocks');
-        console.log(tracedBlocks);
-        console.log('trace');
-        console.log(trace);*/
+                console.log(tracedBlocks);
+                console.log('trace');
+                console.log(trace);*/
                 //console.log("--- DEBUG ANNO1 ---"); console.log("x1: ", d.x1); console.log("x2: ", d.x2); console.log("x2-x1: ", d.x2 -d.x1); console.log("specie: ", d.specie);
-
-                //let pos_x1 = xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE * d.chromoIndex;
-                //let pos_y = yScale(d.specie) + d.y_gap;
-
-                //paintAnnotation(tracedBlocks, inverted, pos_x1, pos_y, xScale(10013156), xScale(27713156));
             }
         });
 
@@ -1157,34 +1159,22 @@ function fitBlockTracer() {
 // ANNOTATIONS =========================================================================
 
 function showAnnotation() {
-    $('#annotation-sidebar-wrapper').show();
+    if ($('#show-annotation-feature').find('input').is(':checked')) $('#annotation-sidebar-wrapper').show();
 }
 
 function hideAnnotation() {
-    $('#annotation-sidebar-wrapper').hide();
+    if ($('#show-annotation-feature').find('input').is(':checked')) $('#annotation-sidebar-wrapper').hide();
 }
 
-/*function getAnnotationTest(){
-    $.ajax({
-        type: "GET",
-        url: FORCE_URL + "/API/annotation_test/",
-        data: {
-            species: 'PONAB'
-        },
-        success: function(response) {
-            populateTable(response, '.annotation-table');
-        }
-    });
-}*/
-
-function getAnnotationFrom(species, gen_x1, gen_x2) {
+function getAnnotationFrom(species, gen_x1, gen_x2, chromosome) {
     return $.ajax({
         type: "GET",
         url: FORCE_URL + "/API/annotation_between/",
         data: {
             species: species,
             gen_x1: gen_x1,
-            gen_x2: gen_x2
+            gen_x2: gen_x2,
+            chromosome: chromosome
         }
     });
 }
@@ -1199,7 +1189,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
         if (block.__data__.specie === species) {
             // Distance between block start and annotation start
             distance_block_annotation = gen_x1 - block.__data__.x1;
-            console.log("specie: " + block.__data__.specie);
+            //console.log("specie: " + block.__data__.specie);
         }
     });
 
@@ -1209,11 +1199,12 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
             // Use relative location
             let annotation_x1 = block.__data__.x1 + distance_block_annotation;
             let annotation_x2 = annotation_x1 + annotation_length;
-            console.log('annotation_length: ' + annotation_length);
+            let chromosome = block.__data__.chromosome.toUpperCase();
+            /*console.log('annotation_length: ' + annotation_length);
             console.log('distance_block_annotation: ' + distance_block_annotation);
             console.log('annotation_x1: ' + annotation_x1);
-            console.log('annotation_x2: ' + annotation_x2);
-            getAnnotationFrom(block.__data__.specie, annotation_x1, annotation_x2).done(function (annotations) {
+            console.log('annotation_x2: ' + annotation_x2);*/
+            getAnnotationFrom(block.__data__.specie, annotation_x1, annotation_x2, chromosome).done(function (annotations) {
                 let parsed = JSON.parse(annotations);
                 /*
                 console.log(':3 ==================');
@@ -1245,10 +1236,11 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
                     let parsed = JSON.parse(annotations);
                     //Crear tabla
                     let newSpecieTableId = createSpeciesTable(block.__data__.specie, parsed.length, '#annotation-others');
+                    console.log('------------->' + newSpecieTableId);
                     //poblar tabla
                     //newSpecieTableId = newSpecieTableId.replace('#annotation-selected-table ', '');
                     //console.log(newSpecieTableId);
-                    populateTable(annotations, newSpecieTableId); // tiene que llevar # en el id
+                    populateTable(annotations, newSpecieTableId, chromosome); // tiene que llevar # en el id
 
                     $.each(parsed, function (index, annotation) {
                         //console.log('block',block);
@@ -1267,14 +1259,24 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
             });*/
         } else {
             //Selected block
+            let gene = block.__data__.gene;
+            gene = $('.highlight')[$('.highlight').length - 1].cells[3].innerHTML;
             let selected = {
                 gen_x1,
                 gen_x2,
+                gene,
                 product,
                 note
             };
             let array = new Array(selected);
-            populateTable(JSON.stringify(array), '#annotation-selected-table');
+
+
+            console.log(block);
+            console.log(array);
+            console.log(JSON.stringify(array));
+
+
+            populateTable(JSON.stringify(array), '#annotation-selected-table', chromosome);
             $('#annotation-selected #annotation-species').empty()
                 .append('<small class="text-muted">Species: </small>')
                 .append('<span class="block_species">' + species + '</span>');
@@ -1283,7 +1285,7 @@ function traceAnnotation(species, gen_x1, gen_x2, product, note, blocks) {
 }
 
 // LAZY LOADING - FOR PRINCIPAL SEARCH - DEPRECATED (but still works)===================================================
-function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end) {
+function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end, chromosome) {
     return $.ajax({
         type: "GET",
         url: FORCE_URL + "/API/annotation_between_paginated/",
@@ -1292,7 +1294,8 @@ function getAnnotationBetweenPaginated(species, gen_x1, gen_x2, start, end) {
             gen_x1: gen_x1,
             gen_x2: gen_x2,
             start: start,
-            end: end
+            end: end,
+            chromosome: chromosome
         }
     });
 }
@@ -1315,15 +1318,15 @@ function nextAnnotationPage() {
     let species = $(".block_species").html();
     let gen_x1 = parseInt($(".block_pos_x1").html());
     let gen_x2 = parseInt($(".block_pos_x2").html());
+    let chromosome = selectedBlock[0][0].__data__.chromosome.toUpperCase();
 
     //$("#input-search").val(Math.ceil(page_start/PAGE_SIZE));
     //showPageInfo(species);
-
-    getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done(function (response) {
+    getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end, chromosome).done(function (response) {
         //appendInfo(species, gen_x1, gen_x2);
         if ($.trim(response)) {// si no está vacio
-            populateTable(response, '.annotation-table');
-            getAnnotationsLength(species, gen_x1, gen_x2).done(function (annotations_count) {
+            populateTable(response, '.annotation-table', chromosome);
+            getAnnotationsLength(species, gen_x1, gen_x2, chromosome).done(function (annotations_count) {
                 if (page_start < 0) {
                     $("#input-search").val(Math.ceil((annotations_count / PAGE_SIZE) + Math.ceil(page_start / PAGE_SIZE)));
                 } else if (Math.ceil(page_start / PAGE_SIZE) >= Math.ceil(annotations_count / PAGE_SIZE)) {
@@ -1351,12 +1354,13 @@ function previousAnnotationPage() {
     let species = $(".block_species").html();
     let gen_x1 = parseInt($(".block_pos_x1").html());
     let gen_x2 = parseInt($(".block_pos_x2").html());
+    let chromosome = selectedBlock[0][0].__data__.chromosome.toUpperCase();
 
-    getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done(function (response) {
+    getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end, chromosome).done(function (response) {
         //appendInfo(species, gen_x1, gen_x2);
         if ($.trim(response)) {// si no está vacio
-            populateTable(response, '.annotation-table');
-            getAnnotationsLength(species, gen_x1, gen_x2).done(function (annotations_count) {
+            populateTable(response, '.annotation-table', chromosome);
+            getAnnotationsLength(species, gen_x1, gen_x2, chromosome).done(function (annotations_count) {
                 if (page_start < 0) {
                     $("#input-search").val(Math.ceil((annotations_count / PAGE_SIZE) + Math.ceil(page_start / PAGE_SIZE)));
                 } else {
@@ -1371,14 +1375,15 @@ function previousAnnotationPage() {
     });
 }
 
-function getAnnotationsLength(species, gen_x1, gen_x2) {
+function getAnnotationsLength(species, gen_x1, gen_x2, chromosome) {
     return $.ajax({
         type: "GET",
         url: FORCE_URL + "/API/annotation_count/",
         data: {
             species: species,
             gen_x1: gen_x1,
-            gen_x2: gen_x2
+            gen_x2: gen_x2,
+            chromosome: chromosome
         }
     });
 }
@@ -1389,9 +1394,10 @@ function goToPage() {
     let gen_x2 = parseInt($(".block_pos_x2").html());
     let page = parseInt($("#input-search").val());
     let current_page = parseInt($("#current-page").html());
+    let chromosome = selectedBlock[0][0].__data__.chromosome.toUpperCase();
     //console.log('===================\nGOTO\n ANTES - page_start: ' + page_start + ' page_end: ' + page_end);
 
-    getAnnotationsLength(species, gen_x1, gen_x2).done(function (annotations_count) {
+    getAnnotationsLength(species, gen_x1, gen_x2, chromosome).done(function (annotations_count) {
         let last_page = Math.ceil(annotations_count / PAGE_SIZE);
 
         //console.log('species: ' + species + ' gen_x1: ' + gen_x1 + ' gen_x2: ' + gen_x2 + ' page: ' + page + ' last_page: ' + last_page + ' annotation count: ' + annotations_count);
@@ -1401,11 +1407,11 @@ function goToPage() {
             page_end = (page * PAGE_SIZE) + PAGE_SIZE;
             //console.log('SEARCH: page_start: ' + page_start + ' page_end: ' + page_end);
 
-            getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end).done(function (response) {
+            getAnnotationBetweenPaginated(species, gen_x1, gen_x2, page_start, page_end, chromosome).done(function (response) {
                 //appendInfo(species, gen_x1, gen_x2);
                 if ($.trim(response)) {// si no está vacio
                     showPageInfo(species, gen_x1, gen_x2);
-                    populateTable(response, '.annotation-table');
+                    populateTable(response, '.annotation-table', chromosome);
                 } else {
                     resetPagination();
                 }
@@ -1419,7 +1425,8 @@ function goToPage() {
 
 function showPageInfo(species, gen_x1, gen_x2) {
     let page = parseInt($("#input-search").val());
-    getAnnotationsLength(species, gen_x1, gen_x2).done(function (annotations_count) {
+    let chromosome = selectedBlock[0][0].__data__.chromosome.toUpperCase();
+    getAnnotationsLength(species, gen_x1, gen_x2, chromosome).done(function (annotations_count) {
         $('#current-page').text(page);
         $('#last-page').text(Math.ceil(annotations_count / PAGE_SIZE) - 1);
         //console.log('species: ' + species + ' page: ' + page + ' annotations_count: ' + annotations_count)
@@ -1440,7 +1447,7 @@ function hideAnnotationProduct() {
     $('#annotation-product-sidebar-wrapper').hide();
 }
 
-function getAnnotationProductPage(species, gen_x1, gen_x2, product, page) {
+function getAnnotationProductPage(species, gen_x1, gen_x2, product, page, chromosome) {
     return $.ajax({
         type: "GET",
         url: FORCE_URL + "/API/annotation_by_product/",
@@ -1449,7 +1456,8 @@ function getAnnotationProductPage(species, gen_x1, gen_x2, product, page) {
             gen_x1: gen_x1,
             gen_x2: gen_x2,
             product: product,
-            page_number: page
+            page_number: page,
+            chromosome: chromosome
         }
     });
 }
@@ -1471,24 +1479,49 @@ function loadAnnotationByProduct() {
 }
 
 function goToProductPage(species, page) {
-    let gen_x1 = selectedBlock[0][0].__data__.x1;
-    let gen_x2 = selectedBlock[0][0].__data__.x2;
-    let product = $('#product-search')[0].value;
-    console.log(species, gen_x1, gen_x2, product, page);
-    getAnnotationProductPage(species, gen_x1, gen_x2, product, page).done(function (response) {
-        let div_id = "#product-results-" + species;
-        let table = div_id + " .annotation-table";
-        let page_control = div_id + " #page-control-product";
+    // por cada nloque de la traza
+    $.each(trace[0], function (index, block) {
+        if (block.__data__.specie === species) {
+            let gen_x1 = block.__data__.x1;
+            let gen_x2 = block.__data__.x2;
+            let product = $('#product-search')[0].value;
+            let chromosome = block.__data__.chromosome.toUpperCase();
+            //console.log(species, gen_x1, gen_x2, product, page);
+            getAnnotationProductPage(species, gen_x1, gen_x2, product, page, chromosome).done(function (response) {
 
-        let parsed = JSON.parse(response);
+                d3.selectAll('#annotation_block.' + species).remove();
 
-        $(page_control).find('input')[0].value = page;
-        $(page_control).find('#last-page').empty().append(parsed.num_pages);
+                let div_id = "#product-results-" + species;
+                let table = div_id + " .annotation-table-" + species;
+                let page_control = div_id + " #page-control-product";
 
-        let unparsed = JSON.stringify(parsed.object_list);
-        populateTable(unparsed, table);
-    }).fail(function (event) {
-        //console.log(event);
+                let parsed = JSON.parse(response);
+
+                $(page_control).find('input')[0].value = page;
+                $(page_control).find('#last-page').empty().append(parsed.num_pages);
+
+                //pintar cada una de las anotaciones recibidas
+
+                //obtener el indice de la especie
+                //obtener el bloque con el indice anterior
+                //para cada anotacion recibida
+                //pintar anotacion
+
+                /*console.log("es un " + species);
+                console.log(parsed.object_list);
+                console.log("block");
+                console.log(block);
+                console.log(index);*/
+                $.each(parsed.object_list, function (index, annotation) {
+                    paintAnnotation(block, svgInverted, annotation.gen_x1, annotation.gen_x2, annotation.product);
+                });
+
+                let unparsed = JSON.stringify(parsed.object_list);
+                populateTable(unparsed, table, chromosome);
+            }).fail(function (event) {
+                //console.log(event);
+            });
+        }
     });
 }
 
@@ -1508,6 +1541,23 @@ function previousPage(element) {
     goToProductPage(species, current_page);
 }
 
+function updateAllPages() {
+    if ((trace === undefined) || (trace === null)) {
+        return;
+    }
+    d3.selectAll('#annotation_block').remove();
+    for (let i = 0; i < trace[0].length; i++) {
+        try {
+            let species = trace[0][i].__data__.specie;
+            let page = parseInt($('.amazing-current-page')[i].value);
+            goToProductPage(species, page);
+            º
+        } catch (e) {
+            //console.error(e.message);
+        }
+    }
+}
+
 // =======================================================================
 
 // SELECTED ANNOTATION ===================================================
@@ -1518,6 +1568,7 @@ function showSelectedAnnotation() {
 
 function hideSelectedAnnotation() {
     $('#annotation-selection-sidebar-wrapper').hide();
+    updateAllPages();
 }
 
 function createSpeciesTable(species, coincidences, div) {
@@ -1546,6 +1597,7 @@ function createSpeciesTable(species, coincidences, div) {
                 .attr('id', 'search-container')
                 .attr('class', 'text-muted')
                 .append($('<input>')
+                    .attr('class', 'amazing-current-page')
                     .attr('type', 'number')
                     .attr('placeholder', 'Page')
                     .attr('name', 'search')
@@ -1586,11 +1638,12 @@ function createSpeciesTable(species, coincidences, div) {
     }
 
     //let tableId = 'annotation-table-' + species;
-    let tableId = 'annotation-table';
+    let tableClass = 'annotation-table-' + species;
+    let tableId = div + " ." + tableClass;
 
     $(div).append($('<table>')
-    //.attr('class', tableId)
-        .attr('class', 'table table-sm table-bordered annotation-comparison-tables ' + tableId)
+        //.attr('class', tableId)
+        .attr('class', 'table table-sm table-bordered annotation-comparison-tables ' + tableClass)
         .append($('<thead>')
             .append($('<tr>')
                 .append($('<th>')
@@ -1604,6 +1657,9 @@ function createSpeciesTable(species, coincidences, div) {
                     .text('Length'))
                 .append($('<th>')
                     .attr('scope', 'col')
+                    .text('Id'))
+                .append($('<th>')
+                    .attr('scope', 'col')
                     .text('Product'))
                 .append($('<th>')
                     .attr('scope', 'col')
@@ -1612,6 +1668,7 @@ function createSpeciesTable(species, coincidences, div) {
     if (coincidences === null) {
         $(div).on('click', 'tbody tr', function () {
             let row = $(this);
+            let current_species = row.parents(".annotation-comparison-tables").siblings("#annotation-species").children(".block_species").text();
             if (row.hasClass('highlight')) {
                 row.removeClass('highlight');
                 d3.selectAll('#annotation_block').remove();
@@ -1622,32 +1679,88 @@ function createSpeciesTable(species, coincidences, div) {
                 let gen_x2 = row.find('.gen_x2').html();
                 let product = row.find('.product').html();
                 let note = row.find('.note').html();
-                paintAnnotation(selectedBlock[0][0], svgInverted, gen_x1, gen_x2, product);
-                console.log('LETS TRACE=============================    ');
+
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                let retrieved_block = getBlockFromTraceBySpecies(current_species);
+                paintAnnotation(traceSelectedBlock, svgInverted, gen_x1, gen_x2, product);
+
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                //console.log('LETS TRACE=============================    ');
                 //species = row.parentsUntil()[2].id.split("-")[2];
-                traceAnnotation(species, gen_x1, gen_x2, product, note, trace);
+                traceAnnotation(current_species, gen_x1, gen_x2, product, note, trace);
                 showSelectedAnnotation();
             }
         });
     }
 
     //return '#annotation-comparison-tables #' + tableId;
-    return '.' + tableId;
+    return tableId;
 }
-var ROWMAMA;
+
+var traceSelectedBlock;
+
+function getBlockFromTraceBySpecies(species) {
+    $.each(trace[0], function (index, block) {
+        if (block.__data__.specie === species) {
+            traceSelectedBlock = block;
+            return block;
+        }
+    });
+}
+
+/**
+ * Filters the trace, removing the shorter blocks of the same species
+ */
+function simplifyTrace() {
+    let simplified_trace = trace[0];
+    for (let i = 1; i < simplified_trace.length; i++) {
+        if (simplified_trace[i].__data__.specie === simplified_trace[i - 1].__data__.specie) {
+            // Compare CSB sizes
+            let block1_size = Math.abs(simplified_trace[i - 1].__data__.x2 - simplified_trace[i - 1].__data__.x1);
+            let block2_size = Math.abs(simplified_trace[i].__data__.x2 - simplified_trace[i].__data__.x1);
+            if (block1_size > block2_size) {
+                // If not hidden the annotations of the other CSB cannot be seen
+                simplified_trace[i].style.opacity = 0;
+                simplified_trace.splice(i, 1);
+            } else {
+                // If not hidden the annotations of the other CSB cannot be seen
+                simplified_trace[i - 1].style.opacity = 0;
+                simplified_trace.splice(i - 1, 1);
+            }
+        }
+    }
+    trace[0] = simplified_trace;
+}
+
 //==========================================================================
 
-function populateTable(response, table) {
+function populateTable(response, table, chromosome) {
     //console.log('RESPONSE:');console.log(response);
-    let tbody = $(table).children('tbody');
+    let tbody = $(table).find('tbody');
     tbody.empty();
     let parsed = JSON.parse(response);
     $.each(parsed, function (index) {
         //console.log('PARSED:');console.log(parsed);
         let data = parsed[index];
         //console.log('DATA:');console.log(data);
+        
+        let note = '';
+        if (typeof chromosome === 'undefined') {
+            note = data.note;
+        } else {
+            note = 'Chr: ' + chromosome + ' - ' + data.note;
+        }
+
         let row = $('<tr>')
-        //.attr('class', 'clickable-row')
+            //.attr('class', 'clickable-row')
             .append($('<th>')
                 .attr('scope', 'row')
                 .attr('class', 'gen_x1')
@@ -1660,11 +1773,14 @@ function populateTable(response, table) {
                 .attr('class', 'length')
                 .text(data.gen_x2 - data.gen_x1))
             .append($('<td>')
+                .attr('class', 'Id')
+                .text(data.gene))
+            .append($('<td>')
                 .attr('class', 'product')
                 .text(data.product))
             .append($('<td>')
                 .attr('class', 'note')
-                .text(data.note));
+                .text(note));
         tbody.append(row);
     });
 }
@@ -1698,19 +1814,19 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
         }
     }*/
 
-    console.log('----------------------------');
-    /**/
+    //console.log('----------------------------');
+    /*
     if (strand === 'r') {
         console.log(block.__data__.block_id + ' - ' + block.__data__.specie + ' - ' + strand + ' - ' + product);
     } else if (strand === 'f') {
         console.log(block.__data__.block_id + ' - ' + block.__data__.specie + ' - ' + strand + ' - ' + product);
-    }
-    console.log('----------------------------');
+    }*/
+    //console.log('----------------------------');
 
     // get annotation range
     //let gen_x1 = annotation.find('.gen_x1').html();
     //let gen_x2 = annotation.find('.gen_x2').html();
-    console.log('block----------------', block);
+    //console.log('block----------------', block);
     // hay que comprobar si están invertidos
 
     let escalated_x1 = parseFloat(inverted ? block.attributes.y.value : block.attributes.x.value);
@@ -1718,22 +1834,22 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
     let escalated_x2 = escalated_width + escalated_x1;
     let escalated_y = parseFloat(inverted ? block.attributes.x.value : block.attributes.y.value);
 
-    /**/
+    /*
     console.log('escalated_x1', escalated_x1);
     console.log('escalated_x2', escalated_x2);
     console.log('escalated_width', escalated_width);
     console.log('escalated_y', escalated_y);
-
+*/
     // ESCALADO
     // data bound to the DOM object(rect)
     let block_x1 = block.__data__.x1;
     let block_x2 = block.__data__.x2;
 
 
-    /**/
+    /*
     console.log('block_x1', block_x1);
     console.log('block_x2', block_x2);
-
+*/
     // scale annotation size to the block size
     let widthDomain = [block_x1, block_x2],
         widthRange = [escalated_x1, escalated_x2];
@@ -1742,11 +1858,11 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
         .domain(widthDomain)
         .range(widthRange);
 
-    /**/
+    /*
     console.log('blockScale(gen_x1)', blockScale(gen_x1));
     console.log('gen_x1', gen_x1);
     console.log('gen_x2 - gen_x1', gen_x2 - gen_x1);
-
+*/
 
     // lets invert the color for the annotation
     let inverted_color = invertColor(block.attributes.fill.value);
@@ -1756,13 +1872,14 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
     let parent = block.parentElement;
     //d3.select('.blockInfo').append('rect')
     if (strand === 'r') {
-        console.log('x1:escalated_x1 + blockScale(gen_x1)', escalated_x1 + blockScale(gen_x1));
-        console.log('x1:escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1)', escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1));
+        //console.log('x1:escalated_x1 + blockScale(gen_x1)', escalated_x1 + blockScale(gen_x1));
+        //console.log('x1:escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1)', escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1));
         //console.log('width:blockScale(gen_x2 - gen_x1)',blockScale(gen_x2 - gen_x1));
-        console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2) - blockScale(gen_x1));
+        //console.log('width:blockScale(gen_x2)-blockScale(gen_x1)', blockScale(gen_x2) - blockScale(gen_x1));
 
         let rect = d3.select(parent).append('rect')
             .attr('id', 'annotation_block')
+            .attr('class', block.__data__.specie)
             //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
             .attr(getPositionAttribute('x', inverted), function () {
                 return escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1);
@@ -1780,13 +1897,14 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
             .attr('stroke-width', '2px')
             .append("svg:title")
             .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
-        console.log('rect', rect);
+        //console.log('rect', rect);
     } else {
-        console.log('x1:blockScale(gen_x1)', blockScale(gen_x1));
-        console.log('width:Math.abs(blockScale(gen_x2)-blockScale(gen_x1))', Math.abs(blockScale(gen_x2) - blockScale(gen_x1)));
+        //console.log('x1:blockScale(gen_x1)', blockScale(gen_x1));
+        //console.log('width:Math.abs(blockScale(gen_x2)-blockScale(gen_x1))', Math.abs(blockScale(gen_x2) - blockScale(gen_x1)));
 
         let rect = d3.select(parent).append('rect')
             .attr('id', 'annotation_block')
+            .attr('class', block.__data__.specie)
             //.attr(getPositionAttribute('x', inverted), function() { return  (escalated_x1 + blockScale(gen_x1)); })
             .attr(getPositionAttribute('x', inverted), function () {
                 return blockScale(gen_x1);
@@ -1805,19 +1923,19 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
             .append("svg:title")
             .text(gen_x1 + ':' + gen_x2 + ' - ' + product);
 
-        console.log('rect', rect);
+        //console.log('rect', rect);
     }
 
     LAST_SPECIES = block.__data__.specie;
     LAST_STRAND = strand;
-    console.log('LAST: ' + LAST_SPECIES + ' ' + LAST_STRAND);
+    //console.log('LAST: ' + LAST_SPECIES + ' ' + LAST_STRAND);
 }
 
 function paintGaps(gen_x1, gen_x2) {
     //console.log('AMO A PINTA');
     let block = selectedBlock[0][0];
     let species = block.__data__.specie;
-    getAnnotationFrom(species, gen_x1, gen_x2).done(function (response) {
+    getAnnotationFrom(species, gen_x1, gen_x2, block.__data__.chromosome.toUpperCase()).done(function (response) {
         let parsed = JSON.parse(response);
         //console.log(response);
         let length = parsed.keys.length;
@@ -1836,19 +1954,6 @@ function paintGaps(gen_x1, gen_x2) {
                 previous_x2 = annotation.gen_x2;
             }
         });
-
-        /*$.each(parsed, function(index) {
-            //console.log('PARSED:');console.log(parsed);
-            let data = parsed[index];
-            if(principio){
-                //paint(start, data.gen_x1);
-                paintAnnotation()
-            } else if(fin){
-                paint(data.gen_x2, end);
-            } else {
-                paint(data.gen_x2, data.next.gen_x1);
-            }
-        });*/
     });
 }
 
@@ -1911,8 +2016,7 @@ function padZero(str, len) {
 
 // Highlight row / remove rect / paint
 $(document).ready(function () {
-    $('.annotation-table').on('click', 'tbody tr', function (event) {
-        //console.log(event);
+    $('#annotation-content').children('.annotation-table').on('click', 'tbody tr', function (event) {
         let row = $(this);
         if (row.hasClass('highlight')) {
             row.removeClass('highlight');
@@ -1925,7 +2029,7 @@ $(document).ready(function () {
             let product = row.find('.product').html();
             let note = row.find('.note').html();
             paintAnnotation(selectedBlock[0][0], svgInverted, gen_x1, gen_x2, product);
-            console.log('LETS TRACE=============================    ');
+            //console.log('LETS TRACE=============================    ');
             traceAnnotation(selectedBlock[0][0].__data__.specie, gen_x1, gen_x2, product, note, trace);
             showSelectedAnnotation();
         }

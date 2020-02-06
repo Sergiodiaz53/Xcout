@@ -223,6 +223,12 @@
                         <div class="col-xs-2 text-center"><input id="emptyChromosomesCheck" type="checkbox"/></div>
                     </div>
 
+                    <div id="show-annotation-feature" class="row config_row text-center sidemenu_member"
+                         style="margin-top:15px">
+                        <div class="col-xs-8">Show Annotations</br></div>
+                        <div class="col-xs-2 text-center"><input type="checkbox"/></div>
+                    </div>
+
 
                     <!-- Config -->
                     <div class="horizontal-line" style="margin-top: 15px"></div>
@@ -357,17 +363,6 @@
 
     <div class="bg-light border-right" id="annotation-sidebar-wrapper">
         <div id="annotation-top">
-
-            <!--<div class="search-container">
-                <input id="input-search" type="number" placeholder="Page" name="search" min="0">
-                <button class="btn btn-default" id="menu-toggle" onclick="goToPage()">
-                    <span class="glyphicon glyphicon-search"></span>
-                </button>
-                <div id="search-info">
-                    Page <span id="current-page"></span> of <span id="last-page"></span>
-                </div>
-            </div>-->
-
             <div class="search-product-container">
                 <button class="btn btn-danger" id="menu-toggle" onclick="hideAnnotation()">
                     <span class="glyphicon glyphicon-remove"></span>
@@ -376,7 +371,6 @@
                 <button class="btn btn-default" id="menu-toggle" onclick="loadAnnotationByProduct()">
                     <span class="glyphicon glyphicon-search"></span> Search by product
                 </button>
-
             </div>
 
             <div class="page-container">
@@ -384,9 +378,6 @@
                     <span class="glyphicon glyphicon-chevron-left"></span>
                 </button>
                 <div class="search-container">
-                    <!--<button class="btn btn-default" id="menu-toggle" onclick="goToPage()" style="display: none;">
-                        <span class="glyphicon glyphicon-search" hidden></span>
-                    </button>-->
                     <div id="search-info">
                         Page
                         <input id="input-search" type="number" placeholder="Page" name="search" min="0" size="4">
@@ -414,6 +405,7 @@
                     <th scope="col">Start</th>
                     <th scope="col">End</th>
                     <th scope="col">Length</th>
+                    <th scope="col">Id</th>
                     <th scope="col">Product</th>
                     <th scope="col">Note</th>
                 </tr>
@@ -451,6 +443,7 @@
                     <th scope="col">Start</th>
                     <th scope="col">End</th>
                     <th scope="col">Length</th>
+                    <th scope="col">Id</th>
                     <th scope="col">Product</th>
                     <th scope="col">Note</th>
                 </tr>
