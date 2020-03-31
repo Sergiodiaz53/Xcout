@@ -20,8 +20,9 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 
 urlpatterns = [
-    url(r'^xcout', include('coreViewController.urls')),
-    url(r'^xcout/admin/', admin.site.urls),
-    url(r'^xcout/API/',include('comparisonManager.urls') ),
-    url(r'^xcout/blocktracer/',include('blockTracer.urls') ),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+                  url(r'^xcout/', include('coreViewController.urls')),
+                  url(r'^xcout/admin/', admin.site.urls),
+                  url(r'^xcout/API/', include('comparisonManager.urls')),
+                  url(r'^xcout/blocktracer/', include('blockTracer.urls')),
+                  # url(r'^xcout/help/', ),
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
