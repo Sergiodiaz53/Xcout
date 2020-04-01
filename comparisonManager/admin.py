@@ -18,7 +18,7 @@ class AnnotationAdmin(admin.ModelAdmin):
     list_display_links = ('species', 'chromosome', 'gen_x1', 'gen_x2', 'gene', 'gene_synonym', 'strand', 'product', 'note')
     list_filter = ('species', 'chromosome', 'strand')
     ordering = ['species']
-    # search_fields = ('species', 'strand')
+    search_fields = ('gene', 'gene_synonym', 'product', 'note')
     list_per_page = 20
 
 

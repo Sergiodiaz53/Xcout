@@ -497,24 +497,18 @@ function paintBlockTracer(species, chromosomes, events, lengths, inverted) {
         });
 
     // INICIO DE BLOQUE
+    /*
     tracedBlocks.append('rect')
         .attr(getPositionAttribute('x', inverted), function (d) {
-            /*console.log("--- DEBUG ANNO2 ---");
-            console.log("BlockID: ", d.block_id);
-            console.log("Starting point: ", xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE*(d.chromoIndex));
-            console.log("prepend: ", d.prepend);//Espacio acumulado de los anteriores cromosomas
-            console.log("xScale: ", xScale(d.prepend + d.x1));
-            console.log("without_xScale: ", d.prepend + d.x1);
-            console.log("interchromosome_space: ",INTERCHROMOSOME_SPACE);
-            console.log("chromoIndex:", (d.chromoIndex));*/
             return xScale(d.prepend + d.x1) + INTERCHROMOSOME_SPACE * (d.chromoIndex);
-        })/*s[d.specie] */
+        })
         .attr(getPositionAttribute('y', inverted), function (d) {
             return yScale(d.specie) + d.y_gap;
         })
-        .attr(getPositionAttribute('width', inverted), 1)/*s[d.specie]*/
+        .attr(getPositionAttribute('width', inverted), 1)
         .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT)
         .attr('fill', "black");
+    */
     // -------------------
 
     // DEBUG :: console.log("--- DEBUG5 ---"); console.log(tracedBlocks);
@@ -1885,13 +1879,13 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
                 return escalated_x1 + escalated_width - (blockScale(gen_x1) - escalated_x1);
             })
             .attr(getPositionAttribute('y', inverted), function () {
-                return escalated_y + 1.5;
+                return escalated_y - 4;
             })
             //.attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
             .attr(getPositionAttribute('width', inverted), function () {
                 return Math.abs(blockScale(gen_x2) - blockScale(gen_x1));
             })
-            .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
+            .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT + 6)
             .attr('fill', 'none')
             .attr('stroke', inverted_color)
             .attr('stroke-width', '2px')
@@ -1910,13 +1904,13 @@ function paintAnnotation(block, inverted, gen_x1, gen_x2, product) {
                 return blockScale(gen_x1);
             })
             .attr(getPositionAttribute('y', inverted), function () {
-                return escalated_y + 1.5;
+                return escalated_y -3.5;
             })
             //.attr(getPositionAttribute('width', inverted), function() { return  blockScale(gen_x2 - gen_x1); })
             .attr(getPositionAttribute('width', inverted), function () {
                 return Math.abs(blockScale(gen_x2) - blockScale(gen_x1));
             })
-            .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT - 3)
+            .attr(getPositionAttribute('height', inverted), BLOCK_BASE_HEIGHT + 6)
             .attr('fill', 'none')
             .attr('stroke', inverted_color)
             .attr('stroke-width', '2px')
